@@ -1,26 +1,74 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #030140;
+  --background-soft: #0a0747;
+  --surface: #14104a;
+  --surface-elevated: #1a1660;
+  --surface-strong: #221c78;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --foreground: #ffffff;
+  --foreground-muted: rgba(255, 255, 255, 0.65);
+  --accent: #a855f7;
+  --accent-strong: #7c3aed;
+  --highlight: #facc15;
+  --highlight-soft: rgba(250, 204, 21, 0.16);
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-background-soft: var(--background-soft);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-strong: var(--surface-strong);
+  --color-border-soft: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-highlight: var(--highlight);
+  --color-highlight-soft: var(--highlight-soft);
+  --font-sans: var(--font-inter);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@utility glass {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+}
+
+@utility accent-gradient {
+  background-image: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #d946ef 100%);
+}
+
+@utility accent-gradient-text {
+  background-image: linear-gradient(135deg, #c084fc 0%, #e9d5ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility hero-green {
+  background-image: linear-gradient(120deg, #4d7c0f 0%, #65a30d 35%, #84cc16 70%, #a3e635 100%);
+}
+
+@utility total-gradient {
+  background-image: linear-gradient(135deg, #4338ca 0%, #6d28d9 60%, #7c3aed 100%);
+}
+
+@utility hide-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }

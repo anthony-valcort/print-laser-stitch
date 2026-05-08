@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import Image from "next/image";
@@ -183,9 +184,9 @@ export default function ProductConfigurator() {
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         {/* HERO BANNER */}
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
           <HeroBanner />
-          <DieCutInfoCard />
+          <HeroInfoCarousel />
         </div>
 
         {/* CONFIGURATOR — 4 columns */}
@@ -543,57 +544,133 @@ export default function ProductConfigurator() {
 
 function HeroBanner() {
   return (
-    <div className="relative flex min-h-44 items-center overflow-hidden rounded-2xl hero-green px-6 py-6 sm:px-8">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -right-10 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-white/10 blur-2xl" />
-        <div className="absolute right-12 top-3 text-2xl">✨</div>
-        <div className="absolute right-32 bottom-3 text-xl">⭐</div>
-      </div>
-
-      <div className="relative z-10 flex-1">
-        <div className="text-2xl font-bold text-white sm:text-3xl">
-          Vinyl Stickers
+    <div className="relative min-h-44 overflow-hidden rounded-2xl">
+      <Image
+        src="/StickerShuttle_Banner_CustomStickers_scxnng.png"
+        alt=""
+        fill
+        sizes="(min-width: 1024px) 75vw, 100vw"
+        className="object-cover"
+        priority
+      />
+      <div className="relative flex min-h-44 items-center gap-4 px-6 py-6 sm:px-8">
+        <div className="hidden shrink-0 sm:block">
+          <Image
+            src="/Alien_Rocket_mkwlag.png"
+            alt=""
+            width={140}
+            height={140}
+            className="drop-shadow-xl"
+            priority
+          />
         </div>
-        <div className="mt-1 text-sm font-medium text-white/90">
-          Built for any surface, any season.
+        <div className="flex-1">
+          <div className="text-2xl font-bold text-white sm:text-3xl">
+            Vinyl Stickers
+          </div>
+          <div className="mt-1 text-sm font-semibold text-white/95">
+            Perfect for any application. The perfect sticker.
+          </div>
+          <p className="mt-2 max-w-lg text-xs leading-relaxed text-white/95 sm:text-sm">
+            Premium vinyl stickers built for laptops, water bottles, and the
+            outdoors — waterproof, scratch-resistant, and dishwasher safe.
+          </p>
         </div>
-        <p className="mt-2 max-w-md text-xs text-white/85 sm:text-sm">
-          Premium vinyl stickers designed for laptops, water bottles, helmets,
-          and anywhere life takes them — waterproof, scratch-resistant, and
-          dishwasher safe.
-        </p>
-      </div>
-
-      <div className="relative z-10 hidden shrink-0 items-center justify-center sm:flex">
-        <Image
-          src="/Alien_Rocket_mkwlag.png"
-          alt="Mascot rocket"
-          width={140}
-          height={140}
-          className="drop-shadow-xl"
-          priority
-        />
       </div>
     </div>
   );
 }
 
-function DieCutInfoCard() {
+const HERO_CAROUSEL: { q: string; a: string }[] = [
+  {
+    q: "What's the best size for laptop stickers?",
+    a: '3" (Medium) is our most popular size for laptops — visible but not overwhelming.',
+  },
+  {
+    q: "Best size for water bottles?",
+    a: '3" or 4" wraps cleanly on curved bottles. Round and oval shapes look especially nice.',
+  },
+  {
+    q: "What works for helmets and phone cases?",
+    a: '2" (Small) is the sweet spot — clean fit on hard hats, bike helmets, and phone cases.',
+  },
+  {
+    q: "Best size for cars and coolers?",
+    a: '5" (X-Large) gets the most visibility on vehicles, fridges, and toolboxes.',
+  },
+  {
+    q: "What's the minimum order quantity?",
+    a: "Just 50 stickers — great for testing designs or short small-business runs.",
+  },
+  {
+    q: "How long do they last outdoors?",
+    a: "3–5 years outside, longer indoors. Waterproof, scratch-resistant, and UV-protected.",
+  },
+];
+
+function HeroInfoCarousel() {
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(
+      () => setIdx((v) => (v + 1) % HERO_CAROUSEL.length),
+      5000,
+    );
+    return () => clearInterval(t);
+  }, []);
+
+  const item = HERO_CAROUSEL[idx];
+
   return (
-    <div className="flex flex-col items-start justify-between gap-3 rounded-2xl border border-border-soft bg-surface p-5">
-      <div className="text-xs font-semibold uppercase tracking-wider text-highlight">
-        Quick guide
+    <div className="flex items-center gap-2 sm:gap-3">
+      {/* Chat-bubble card */}
+      <div className="relative flex-1">
+        <button
+          type="button"
+          onClick={() => setIdx((v) => (v + 1) % HERO_CAROUSEL.length)}
+          aria-label="Next size tip"
+          className="flex min-h-44 w-full flex-col rounded-2xl border border-border-soft bg-surface p-5 text-left transition hover:bg-surface-elevated"
+        >
+          <div className="text-sm font-semibold leading-snug text-white">
+            {item.q}
+          </div>
+          <p className="mt-2 text-xs leading-relaxed text-foreground-muted">
+            {item.a}
+          </p>
+          <div className="mt-auto flex items-center justify-center gap-1.5 pt-4">
+            {HERO_CAROUSEL.map((_, i) => (
+              <span
+                key={i}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIdx(i);
+                }}
+                className={`h-1 cursor-pointer rounded-full transition-all ${
+                  i === idx
+                    ? "w-6 bg-blue-400"
+                    : "w-1.5 bg-white/20 hover:bg-white/40"
+                }`}
+              />
+            ))}
+          </div>
+        </button>
+
+        {/* Chat-bubble tail pointing toward alien */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute right-[-6px] top-1/2 h-3 w-3 -translate-y-1/2 rotate-45 border-r border-t border-border-soft bg-surface"
+        />
       </div>
-      <div className="text-sm font-semibold leading-snug">
-        What&apos;s the difference between die-cut and shaped stickers?
-      </div>
-      <p className="text-xs text-foreground-muted">
-        Die-cut follows the exact outline of your artwork. Shaped stickers use
-        a fixed outline — circle, square, or rectangle.
-      </p>
-      <div className="flex items-center gap-2 text-xs text-highlight">
-        <span>Learn more</span>
-        <span>→</span>
+
+      {/* Floating alien */}
+      <div className="shrink-0 animate-float">
+        <Image
+          src="/StickerShuttle_Alien_xfwvvh.svg"
+          alt=""
+          width={104}
+          height={104}
+          className="drop-shadow-xl"
+        />
       </div>
     </div>
   );

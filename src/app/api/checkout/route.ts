@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
     }
   } else if (body.fileName) {
     properties.push({
-      name: "Design Filename (file not uploaded — Cloudinary not configured)",
+      name: "Design Filename (file not uploaded — please email customer for the artwork)",
       value: body.fileName,
     });
   }

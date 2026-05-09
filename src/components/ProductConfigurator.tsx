@@ -139,48 +139,68 @@ export default function ProductConfigurator() {
     setIsUploading(true);
 
     try {
-      // Ask our backend for a short-lived Cloudinary signature.
-      const sigResp = await fetch("/api/cloudinary-signature", {
+      // Step 1: Ask our backend for a Shopify staged upload target.
+      const stageResp = await fetch("/api/shopify-upload/stage", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: f.name,
+          mimeType: f.type || "application/octet-stream",
+          fileSize: f.size,
+        }),
       });
-      const sig = (await sigResp.json()) as
+      const stage = (await stageResp.json()) as
         | {
-            signature: string;
-            timestamp: number;
-            apiKey: string;
-            cloudName: string;
-            uploadPreset: string;
-            folder: string;
+            url: string;
+            resourceUrl: string;
+            parameters: Array<{ name: string; value: string }>;
           }
         | { error: string };
 
-      if (!sigResp.ok || "error" in sig) {
+      if (!stageResp.ok || "error" in stage) {
         const message =
-          "error" in sig ? sig.error : "Could not get upload signature";
+          "error" in stage ? stage.error : "Could not get upload target";
         throw new Error(message);
       }
 
-      // Upload directly from browser to Cloudinary using the signed params.
+      // Step 2: Upload the file directly to Shopify's GCS-backed staging URL.
+      // Order matters: signed params first, then `file` last.
       const fd = new FormData();
+      for (const param of stage.parameters) {
+        fd.append(param.name, param.value);
+      }
       fd.append("file", f);
-      fd.append("api_key", sig.apiKey);
-      fd.append("timestamp", String(sig.timestamp));
-      fd.append("signature", sig.signature);
-      fd.append("upload_preset", sig.uploadPreset);
-      fd.append("folder", sig.folder);
 
-      const uploadResp = await fetch(
-        `https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`,
-        { method: "POST", body: fd },
-      );
-
+      const uploadResp = await fetch(stage.url, { method: "POST", body: fd });
       if (!uploadResp.ok) {
         const text = await uploadResp.text();
-        throw new Error(`Cloudinary rejected upload: ${text.slice(0, 200)}`);
+        throw new Error(
+          `Upload to staging failed (${uploadResp.status}): ${text.slice(0, 200)}`,
+        );
       }
 
-      const result = (await uploadResp.json()) as { secure_url: string };
-      setFileUrl(result.secure_url);
+      // Step 3: Register the staged file with Shopify Files; backend polls
+      // until the permanent CDN URL is ready and returns it.
+      const registerResp = await fetch("/api/shopify-upload/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resourceUrl: stage.resourceUrl,
+          filename: f.name,
+          mimeType: f.type || "application/octet-stream",
+        }),
+      });
+      const registered = (await registerResp.json()) as
+        | { fileId: string; url: string }
+        | { error: string };
+
+      if (!registerResp.ok || "error" in registered) {
+        const message =
+          "error" in registered ? registered.error : "Failed to register file";
+        throw new Error(message);
+      }
+
+      setFileUrl(registered.url);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Upload failed";
       setUploadError(msg);
@@ -570,12 +590,12 @@ export default function ProductConfigurator() {
                   </div>
                   {isUploading && (
                     <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-blue-500/15 px-2 py-0.5 text-[11px] font-semibold text-blue-300">
-                      Uploading to cloud…
+                      Uploading to Shopify…
                     </div>
                   )}
                   {!isUploading && fileUrl && (
                     <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
-                      ✓ Uploaded to cloud
+                      ✓ Uploaded to Shopify Files
                     </div>
                   )}
                   {!isUploading && !fileUrl && uploadError && (

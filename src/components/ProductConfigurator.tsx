@@ -69,6 +69,7 @@ export default function ProductConfigurator() {
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -132,22 +133,46 @@ export default function ProductConfigurator() {
     setFile(f);
   }
 
-  function handleAddToCart() {
-    if (!file) return;
-    const order = {
-      product: "Vinyl Stickers",
-      shape,
-      roundedCorners:
-        shape === "square" || shape === "rectangle" ? roundedCorners : null,
-      material,
-      size: size === "custom" ? `${customWidth}" × ${customHeight}"` : size,
-      quantity: quantity === "custom" ? customQty : quantity,
-      instructions,
-      file: file?.name ?? null,
-      ...price,
-    };
-    console.log("[add-to-cart]", order);
-    setToast(`Added to cart · $${price.total.toFixed(2)}`);
+  async function handleAddToCart() {
+    if (!file || isCheckingOut) return;
+    setIsCheckingOut(true);
+    setToast(null);
+
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shape,
+          roundedCorners:
+            shape === "square" || shape === "rectangle"
+              ? roundedCorners
+              : null,
+          material,
+          size,
+          customWidth: size === "custom" ? customWidth : undefined,
+          customHeight: size === "custom" ? customHeight : undefined,
+          quantity: quantity === "custom" ? customQty : quantity,
+          instructions,
+          fileName: file.name,
+        }),
+      });
+
+      const data = (await response.json()) as {
+        invoiceUrl?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !data.invoiceUrl) {
+        throw new Error(data.error ?? "Checkout failed");
+      }
+
+      window.location.href = data.invoiceUrl;
+    } catch (err) {
+      setIsCheckingOut(false);
+      const msg = err instanceof Error ? err.message : "Checkout failed";
+      setToast(`Error: ${msg}`);
+    }
   }
 
   function applyPopularSize(w: number, h: number) {
@@ -513,20 +538,32 @@ export default function ProductConfigurator() {
           <button
             type="button"
             onClick={handleAddToCart}
-            disabled={!file}
+            disabled={!file || isCheckingOut}
             className={`group relative flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-semibold transition ${
-              file
+              file && !isCheckingOut
                 ? "bg-highlight text-yellow-950 shadow-lg shadow-highlight/20 hover:brightness-105"
                 : "cursor-not-allowed border border-border-soft bg-white/4 text-foreground-muted"
             }`}
           >
-            <span>{file ? "🛒" : "⬆"}</span>
-            {file
-              ? `Add to Cart · $${price.total.toFixed(2)}`
-              : "Upload Artwork to Continue"}
+            {isCheckingOut ? (
+              <>
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                Creating order…
+              </>
+            ) : file ? (
+              <>
+                <span>🛒</span>
+                Add to Cart · ${price.total.toFixed(2)}
+              </>
+            ) : (
+              <>
+                <span>⬆</span>
+                Upload Artwork to Continue
+              </>
+            )}
           </button>
           <p className="mt-2 text-center text-xs text-foreground-muted">
-            Items will be added to your cart for review before checkout.
+            You&apos;ll be redirected to Shopify checkout to complete payment.
           </p>
         </div>
       </div>

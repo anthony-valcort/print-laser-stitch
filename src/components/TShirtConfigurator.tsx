@@ -550,6 +550,7 @@ export default function TShirtConfigurator({
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+1 (555) 123-4567"
                 className="w-full rounded-xl border border-border-soft bg-white/4 px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/60 outline-none ring-highlight/40 focus:ring-2"
+                suppressHydrationWarning
               />
               <p className="mt-1.5 text-[11px] text-foreground-muted">
                 Optional — we&apos;ll text you if there&apos;s something to
@@ -565,6 +566,7 @@ export default function TShirtConfigurator({
                 rows={3}
                 placeholder="Any special requests — e.g. 'Center logo on chest', 'Use a 3-inch print width'…"
                 className="w-full resize-none rounded-xl border border-border-soft bg-white/4 px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/60 outline-none ring-highlight/40 focus:ring-2"
+                suppressHydrationWarning
               />
             </Section>
 
@@ -790,6 +792,7 @@ function QuantityStepper({
             onChange(Number.isFinite(v) && v >= min ? v : min);
           }}
           className="w-16 bg-transparent text-center text-base font-semibold outline-none"
+          suppressHydrationWarning
         />
         <button
           type="button"

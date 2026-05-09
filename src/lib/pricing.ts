@@ -15,6 +15,8 @@ export type ShapeKey = (typeof SHAPE_OPTIONS)[number]["key"];
 export const MATERIAL_OPTIONS = [
   { key: "matte", label: "Matte" },
   { key: "gloss", label: "Gloss" },
+  { key: "holographic", label: "Holographic" },
+  { key: "silver", label: "Silver" },
 ] as const;
 
 export type MaterialKey = (typeof MATERIAL_OPTIONS)[number]["key"];
@@ -65,6 +67,10 @@ const CUSTOM_MIN_AREA_SQ_IN = 1; // 1"×1" minimum
 const MATERIAL_MULTIPLIER: Record<MaterialKey, number> = {
   matte: 1.0,
   gloss: 1.0,
+  // TODO: confirm holographic/silver uplifts with Anthony — keeping 1.0 as
+  // placeholder; specialty materials are typically 1.3–1.6×.
+  holographic: 1.0,
+  silver: 1.0,
 };
 
 const SHAPE_MULTIPLIER: Record<ShapeKey, number> = {

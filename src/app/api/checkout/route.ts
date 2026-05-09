@@ -18,6 +18,8 @@ const SIZE_LABELS: Record<SizeKey, string> = {
 const MATERIAL_LABELS: Record<MaterialKey, string> = {
   matte: "Matte",
   gloss: "Gloss",
+  holographic: "Holographic",
+  silver: "Silver",
 };
 
 const SHAPE_LABELS: Record<ShapeKey, string> = {
@@ -48,7 +50,12 @@ const SHAPES = new Set<ShapeKey>([
   "square",
   "rectangle",
 ]);
-const MATERIALS = new Set<MaterialKey>(["matte", "gloss"]);
+const MATERIALS = new Set<MaterialKey>([
+  "matte",
+  "gloss",
+  "holographic",
+  "silver",
+]);
 const SIZES = new Set<SizeKey | "custom">([
   "2x2",
   "3x3",

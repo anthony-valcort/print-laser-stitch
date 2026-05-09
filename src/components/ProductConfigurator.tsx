@@ -22,24 +22,28 @@ const ACCEPT =
   ".png,.jpg,.jpeg,.pdf,.svg,.ai,image/png,image/jpeg,image/svg+xml,application/pdf";
 
 const SHAPE_ICON: Record<ShapeKey, string> = {
-  custom: "/Alien_Rocket_mkwlag.png",
-  circle: "/StickerShuttle_DieCutIcon_r0vire.png",
-  oval: "/StickerShuttle_OvalIcon_kihbie.png",
-  square: "/StickerShuttle_SquareIcon_jsmbdh.png",
-  rectangle: "/StickerShuttle_RectIcon_yae2rd.png",
+  custom: "/custom_shape-removebg-preview.png",
+  circle: "/circle-removebg-preview.png",
+  oval: "/oval-removebg-preview.png",
+  square: "/square-removebg-preview.png",
+  rectangle: "/rectangle-removebg-preview.png",
 };
 
 const MATERIAL_ICON: Record<MaterialKey, string> = {
-  matte: "/StickerShuttle_MatteIcon_p6lwoy.png",
-  gloss: "/StickerShuttle_GlossIcon_tiyuw4.png",
+  matte: "/matte-removebg-preview.png",
+  gloss: "/glass-removebg-preview.png",
+  holographic: "/holographic-removebg-preview.png",
+  silver: "/silver-removebg-preview.png",
 };
 
 const SIZE_ICON: Record<SizeKey, string> = {
-  "2x2": "/StickerShuttle_CookieIcon_flsyfj.png",
-  "3x3": "/StickerShuttle_PostNoteIcon_p5fv8b.png",
-  "4x4": "/StickerShuttle_bREADIcon_njhgtl.png",
-  "5x5": "/StickerShuttle_cdIcon_gi5w46.png",
+  "2x2": "/small-removebg-preview.png",
+  "3x3": "/medium-removebg-preview.png",
+  "4x4": "/large-removebg-preview.png",
+  "5x5": "/StickerShuttle_cdIcon_gi5w46-removebg-preview.png",
 };
+
+const CUSTOM_SIZE_ICON = "/custom_size-removebg-preview.png";
 
 const SIZE_HOVER_TEXT: Record<SizeKey, string> = {
   "2x2": "About the size of an Oreo",
@@ -375,13 +379,20 @@ export default function ProductConfigurator() {
               <button
                 type="button"
                 onClick={() => setSize("custom")}
-                className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition ${
+                className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition ${
                   size === "custom"
                     ? "border-highlight bg-highlight-soft"
                     : "border-dashed border-border-strong bg-white/2 hover:bg-white/5"
                 }`}
               >
-                Custom size
+                <Image
+                  src={CUSTOM_SIZE_ICON}
+                  alt=""
+                  width={28}
+                  height={28}
+                  className="shrink-0"
+                />
+                <span className="font-medium">Custom size</span>
               </button>
               {size === "custom" && (
                 <div className="mt-3 space-y-3">
@@ -687,7 +698,7 @@ function HeroBanner() {
       <div className="relative flex min-h-44 items-center gap-4 px-6 py-6 sm:px-8">
         <div className="hidden shrink-0 sm:block">
           <Image
-            src="/Alien_Rocket_mkwlag.png"
+            src="/custom_shape-removebg-preview.png"
             alt=""
             width={140}
             height={140}
@@ -766,7 +777,7 @@ function ShapeButton({
         alt={opt?.label ?? shape}
         width={full ? 64 : 56}
         height={full ? 64 : 56}
-        className="transition-transform duration-500 ease-out group-hover:rotate-180"
+        className={`${full ? "h-16 w-16" : "h-14 w-14"} object-contain transition-transform duration-500 ease-out group-hover:rotate-180`}
       />
       <span className="mt-2 text-xs font-medium">{opt?.label}</span>
     </button>
@@ -804,7 +815,7 @@ function MaterialButton({
         alt={label}
         width={56}
         height={56}
-        className="transition-transform duration-500 ease-out group-hover:rotate-180"
+        className="h-14 w-14 object-contain transition-transform duration-500 ease-out group-hover:rotate-180"
       />
       <span className="mt-2 text-xs font-medium">{label}</span>
     </button>
@@ -837,13 +848,13 @@ function SizeButton({
           ★
         </span>
       )}
-      <div className="relative grid h-14 w-14 place-items-center">
+      <div className="relative grid h-14 w-14 place-items-center overflow-hidden">
         <Image
           src={SIZE_ICON[size]}
           alt={label}
           width={56}
           height={56}
-          className="transition-opacity duration-200 group-hover:opacity-0"
+          className="h-14 w-14 object-contain transition-opacity duration-200 group-hover:opacity-0"
         />
         <span className="pointer-events-none absolute inset-0 flex items-center justify-center px-1 text-center text-[10px] font-semibold leading-tight opacity-0 transition-opacity duration-200 group-hover:opacity-100">
           {SIZE_HOVER_TEXT[size]}

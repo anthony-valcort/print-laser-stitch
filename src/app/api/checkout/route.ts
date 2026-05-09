@@ -142,9 +142,12 @@ export async function POST(req: NextRequest) {
 
   if (body.fileUrl) {
     properties.push({ name: "Design File", value: body.fileUrl });
+    if (body.fileName) {
+      properties.push({ name: "Design Filename", value: body.fileName });
+    }
   } else if (body.fileName) {
     properties.push({
-      name: "Design Filename (file pending Cloudinary upload)",
+      name: "Design Filename (file not uploaded — Cloudinary not configured)",
       value: body.fileName,
     });
   }

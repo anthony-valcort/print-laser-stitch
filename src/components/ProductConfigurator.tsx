@@ -67,6 +67,9 @@ export default function ProductConfigurator() {
   const [instructions, setInstructions] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -128,13 +131,66 @@ export default function ProductConfigurator() {
     [size, shape, material, customWidth, customHeight],
   );
 
-  function handleFile(f: File | undefined | null) {
+  async function handleFile(f: File | undefined | null) {
     if (!f) return;
     setFile(f);
+    setFileUrl(null);
+    setUploadError(null);
+    setIsUploading(true);
+
+    try {
+      // Ask our backend for a short-lived Cloudinary signature.
+      const sigResp = await fetch("/api/cloudinary-signature", {
+        method: "POST",
+      });
+      const sig = (await sigResp.json()) as
+        | {
+            signature: string;
+            timestamp: number;
+            apiKey: string;
+            cloudName: string;
+            uploadPreset: string;
+            folder: string;
+          }
+        | { error: string };
+
+      if (!sigResp.ok || "error" in sig) {
+        const message =
+          "error" in sig ? sig.error : "Could not get upload signature";
+        throw new Error(message);
+      }
+
+      // Upload directly from browser to Cloudinary using the signed params.
+      const fd = new FormData();
+      fd.append("file", f);
+      fd.append("api_key", sig.apiKey);
+      fd.append("timestamp", String(sig.timestamp));
+      fd.append("signature", sig.signature);
+      fd.append("upload_preset", sig.uploadPreset);
+      fd.append("folder", sig.folder);
+
+      const uploadResp = await fetch(
+        `https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`,
+        { method: "POST", body: fd },
+      );
+
+      if (!uploadResp.ok) {
+        const text = await uploadResp.text();
+        throw new Error(`Cloudinary rejected upload: ${text.slice(0, 200)}`);
+      }
+
+      const result = (await uploadResp.json()) as { secure_url: string };
+      setFileUrl(result.secure_url);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Upload failed";
+      setUploadError(msg);
+    } finally {
+      setIsUploading(false);
+    }
   }
 
   async function handleAddToCart() {
-    if (!file || isCheckingOut) return;
+    if (!file || isCheckingOut || isUploading) return;
     setIsCheckingOut(true);
     setToast(null);
 
@@ -154,6 +210,7 @@ export default function ProductConfigurator() {
           customHeight: size === "custom" ? customHeight : undefined,
           quantity: quantity === "custom" ? customQty : quantity,
           instructions,
+          fileUrl: fileUrl ?? undefined,
           fileName: file.name,
         }),
       });
@@ -485,31 +542,55 @@ export default function ProductConfigurator() {
             />
             {file ? (
               <div className="flex w-full items-center gap-5">
-                {filePreview ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={filePreview}
-                    alt="Upload preview"
-                    className="h-40 w-40 rounded-xl object-contain bg-white/5 ring-1 ring-border-strong"
-                  />
-                ) : (
-                  <div className="grid h-40 w-40 place-items-center rounded-xl bg-white/5 text-5xl">
-                    📄
-                  </div>
-                )}
+                <div className="relative h-40 w-40 shrink-0">
+                  {filePreview ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={filePreview}
+                      alt="Upload preview"
+                      className="h-40 w-40 rounded-xl object-contain bg-white/5 ring-1 ring-border-strong"
+                    />
+                  ) : (
+                    <div className="grid h-40 w-40 place-items-center rounded-xl bg-white/5 text-5xl">
+                      📄
+                    </div>
+                  )}
+                  {isUploading && (
+                    <div className="absolute inset-0 grid place-items-center rounded-xl bg-black/50 backdrop-blur-sm">
+                      <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    </div>
+                  )}
+                </div>
                 <div className="flex-1 truncate text-left">
                   <div className="truncate font-medium text-foreground">
                     {file.name}
                   </div>
                   <div className="text-xs text-foreground-muted">
-                    {(file.size / 1024).toFixed(1)} KB · ready to print
+                    {(file.size / 1024).toFixed(1)} KB
                   </div>
+                  {isUploading && (
+                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-blue-500/15 px-2 py-0.5 text-[11px] font-semibold text-blue-300">
+                      Uploading to cloud…
+                    </div>
+                  )}
+                  {!isUploading && fileUrl && (
+                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
+                      ✓ Uploaded to cloud
+                    </div>
+                  )}
+                  {!isUploading && !fileUrl && uploadError && (
+                    <div className="mt-2 max-w-md truncate rounded-md bg-amber-500/10 px-2 py-1 text-[11px] text-amber-300">
+                      ⚠ Upload failed: {uploadError}
+                    </div>
+                  )}
                 </div>
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     setFile(null);
+                    setFileUrl(null);
+                    setUploadError(null);
                     if (fileInputRef.current) fileInputRef.current.value = "";
                   }}
                   className="rounded-full border border-border-soft bg-white/5 px-3 py-1 text-xs hover:bg-white/10"
@@ -538,9 +619,9 @@ export default function ProductConfigurator() {
           <button
             type="button"
             onClick={handleAddToCart}
-            disabled={!file || isCheckingOut}
+            disabled={!file || isCheckingOut || isUploading}
             className={`group relative flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-semibold transition ${
-              file && !isCheckingOut
+              file && !isCheckingOut && !isUploading
                 ? "bg-highlight text-yellow-950 shadow-lg shadow-highlight/20 hover:brightness-105"
                 : "cursor-not-allowed border border-border-soft bg-white/4 text-foreground-muted"
             }`}
@@ -549,6 +630,11 @@ export default function ProductConfigurator() {
               <>
                 <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                 Creating order…
+              </>
+            ) : isUploading ? (
+              <>
+                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                Uploading file…
               </>
             ) : file ? (
               <>

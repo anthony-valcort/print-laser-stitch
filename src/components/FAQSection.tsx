@@ -4,32 +4,16 @@ const FAQS: { q: string; a: string }[] = [
     a: "We accept PNG, JPG, PDF, SVG, and AI files. For best results, upload high-resolution files (300 DPI or higher) with transparent backgrounds when possible.",
   },
   {
-    q: "Are vinyl stickers waterproof?",
-    a: "Yes! Our vinyl stickers are waterproof, weather-resistant, and UV protected. Perfect for outdoor use on cars, water bottles, coolers, and more. Dishwasher safe (top rack).",
-  },
-  {
-    q: "How long do vinyl stickers last?",
-    a: "Our premium vinyl stickers are designed to last 3–5 years outdoors and even longer indoors.",
-  },
-  {
     q: "Can I get a proof before printing?",
-    a: "Absolutely! We provide a free online proof before printing. You'll receive it within 24 hours and can request revisions.",
-  },
-  {
-    q: "What's the minimum order quantity?",
-    a: "Our minimum order is 15 stickers. We offer quantity discounts starting at 100+ stickers.",
+    a: "Yes — we provide a free online proof before printing. You'll receive it within 24 hours and can request revisions.",
   },
   {
     q: "How long does shipping take?",
-    a: "Standard orders are printed within 24–48 hours, then shipped UPS Ground (2–4 business days).",
+    a: "Most orders are produced within 24–48 hours, then shipped UPS Ground (2–4 business days).",
   },
   {
-    q: "Can I use vinyl stickers outdoors?",
-    a: "Yes! They're weather-resistant, UV protected, and can withstand rain, sun, and temperature changes.",
-  },
-  {
-    q: "What sizes are available?",
-    a: 'Sizes from 2"×2" up to custom sizes. Popular: 2", 3", 4", and 5". Use the calculator for pricing.',
+    q: "Can I order in bulk?",
+    a: "Absolutely. Quantity discounts kick in automatically — for very large runs (500+) reach out and we'll quote a custom rate.",
   },
 ];
 

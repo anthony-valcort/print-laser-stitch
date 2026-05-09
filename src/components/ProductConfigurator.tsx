@@ -286,10 +286,7 @@ export default function ProductConfigurator() {
 
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         {/* HERO BANNER */}
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-          <HeroBanner />
-          <HeroInfoCarousel />
-        </div>
+        <HeroBanner />
 
         {/* CONFIGURATOR — 4 columns */}
         <div className="mt-4 grid gap-4 lg:grid-cols-[260px_220px_minmax(0,1fr)_320px]">
@@ -500,17 +497,8 @@ export default function ProductConfigurator() {
               </div>
             </div>
 
-            {/* Store credit alert */}
-            <div className="mt-3 flex items-start gap-2 rounded-lg bg-highlight px-3 py-2 text-[12px] font-medium text-yellow-950">
-              <span>💰</span>
-              <span>
-                You&apos;ll earn ${price.storeCredit.toFixed(2)} in store credit
-                on this order!
-              </span>
-            </div>
-
             {/* Shipping info */}
-            <div className="mt-2 flex items-center gap-2 rounded-lg border border-border-soft bg-white/3 px-3 py-2 text-[12px] text-foreground-muted">
+            <div className="mt-3 flex items-center gap-2 rounded-lg border border-border-soft bg-white/3 px-3 py-2 text-[12px] text-foreground-muted">
               <span>🕒</span>
               <span>Printed and shipped next business day</span>
             </div>
@@ -719,101 +707,6 @@ function HeroBanner() {
             outdoors — waterproof, scratch-resistant, and dishwasher safe.
           </p>
         </div>
-      </div>
-    </div>
-  );
-}
-
-const HERO_CAROUSEL: { q: string; a: string }[] = [
-  {
-    q: "What's the best size for laptop stickers?",
-    a: '3" (Medium) is our most popular size for laptops — visible but not overwhelming.',
-  },
-  {
-    q: "Best size for water bottles?",
-    a: '3" or 4" wraps cleanly on curved bottles. Round and oval shapes look especially nice.',
-  },
-  {
-    q: "What works for helmets and phone cases?",
-    a: '2" (Small) is the sweet spot — clean fit on hard hats, bike helmets, and phone cases.',
-  },
-  {
-    q: "Best size for cars and coolers?",
-    a: '5" (X-Large) gets the most visibility on vehicles, fridges, and toolboxes.',
-  },
-  {
-    q: "What's the minimum order quantity?",
-    a: "Just 50 stickers — great for testing designs or short small-business runs.",
-  },
-  {
-    q: "How long do they last outdoors?",
-    a: "3–5 years outside, longer indoors. Waterproof, scratch-resistant, and UV-protected.",
-  },
-];
-
-function HeroInfoCarousel() {
-  const [idx, setIdx] = useState(0);
-
-  useEffect(() => {
-    const t = setInterval(
-      () => setIdx((v) => (v + 1) % HERO_CAROUSEL.length),
-      5000,
-    );
-    return () => clearInterval(t);
-  }, []);
-
-  const item = HERO_CAROUSEL[idx];
-
-  return (
-    <div className="flex items-center gap-2 sm:gap-3">
-      {/* Chat-bubble card */}
-      <div className="relative flex-1">
-        <button
-          type="button"
-          onClick={() => setIdx((v) => (v + 1) % HERO_CAROUSEL.length)}
-          aria-label="Next size tip"
-          className="flex min-h-44 w-full flex-col rounded-2xl border border-border-soft bg-surface p-5 text-left transition hover:bg-surface-elevated"
-        >
-          <div className="text-sm font-semibold leading-snug text-white">
-            {item.q}
-          </div>
-          <p className="mt-2 text-xs leading-relaxed text-foreground-muted">
-            {item.a}
-          </p>
-          <div className="mt-auto flex items-center justify-center gap-1.5 pt-4">
-            {HERO_CAROUSEL.map((_, i) => (
-              <span
-                key={i}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIdx(i);
-                }}
-                className={`h-1 cursor-pointer rounded-full transition-all ${
-                  i === idx
-                    ? "w-6 bg-blue-400"
-                    : "w-1.5 bg-white/20 hover:bg-white/40"
-                }`}
-              />
-            ))}
-          </div>
-        </button>
-
-        {/* Chat-bubble tail pointing toward alien */}
-        <span
-          aria-hidden
-          className="pointer-events-none absolute right-[-6px] top-1/2 h-3 w-3 -translate-y-1/2 rotate-45 border-r border-t border-border-soft bg-surface"
-        />
-      </div>
-
-      {/* Floating alien */}
-      <div className="shrink-0 animate-float">
-        <Image
-          src="/StickerShuttle_Alien_xfwvvh.svg"
-          alt=""
-          width={104}
-          height={104}
-          className="drop-shadow-xl"
-        />
       </div>
     </div>
   );

@@ -163,8 +163,8 @@ async function callGraphQL(
   query: string,
   variables: object,
 ): Promise<
-  | { ok: true; data: unknown; errorResponse: never }
-  | { ok: false; data: never; errorResponse: NextResponse }
+  | { ok: true; data: unknown }
+  | { ok: false; errorResponse: NextResponse }
 > {
   const resp = await fetch(
     `https://${store}/admin/api/${SHOPIFY_API_VERSION}/graphql.json`,

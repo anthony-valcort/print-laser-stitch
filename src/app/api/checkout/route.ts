@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { requireCustomerOr401 } from "@/lib/customer-session";
 import {
   QUANTITY_OPTIONS,
   calcPrice,
@@ -84,6 +85,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const customerOr401 = await requireCustomerOr401();
+  if (customerOr401 instanceof NextResponse) return customerOr401;
+  const customer = customerOr401;
+
   let body: CheckoutRequest;
   try {
     body = (await req.json()) as CheckoutRequest;
@@ -168,6 +173,7 @@ export async function POST(req: NextRequest) {
 
   const draftOrder = {
     draft_order: {
+      email: customer.email,
       line_items: [
         {
           title: `Custom Vinyl Stickers · ${sizeLabel} · ${SHAPE_LABELS[body.shape]}`,

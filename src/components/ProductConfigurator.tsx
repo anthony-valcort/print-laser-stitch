@@ -239,6 +239,11 @@ export default function ProductConfigurator() {
         }),
       });
 
+      if (response.status === 401) {
+        window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+        return;
+      }
+
       const data = (await response.json()) as {
         invoiceUrl?: string;
         error?: string;

@@ -1,17 +1,25 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { gidToNumericId, shopifyAdminFetch } from "@/lib/shopify";
+import { requireCustomerOr401 } from "@/lib/customer-session";
 import {
   PRINT_LOCATIONS,
   TSHIRT_MIN_QUANTITY,
   type PrintLocationKey,
-  calcTShirtPrice,
 } from "@/lib/tshirt-pricing";
 
-type CheckoutRequest = {
+type SizeVariant = {
   variantId: string;
-  selectedOptions: Record<string, string>;
-  printLocation: PrintLocationKey;
+  size: string;
   quantity: number;
+};
+
+type CheckoutRequest = {
+  sizeVariants: SizeVariant[];
+  selectedOptions: Record<string, string>;
+  /** Optional — only relevant for products that expose a print location. */
+  printLocation?: PrintLocationKey;
+  /** When printLocation is missing, label the single upload (e.g. "Embroidery Artwork"). */
+  uploadLabel?: string;
   instructions?: string;
   phone?: string;
   shirtColor?: string;
@@ -25,26 +33,28 @@ const VALID_PRINT_LOCATIONS = new Set<PrintLocationKey>(
   PRINT_LOCATIONS.map((p) => p.key),
 );
 
-const VARIANT_PRICE_QUERY = `
-  query GetVariantPrice($id: ID!) {
-    node(id: $id) {
+const VARIANT_LOOKUP_QUERY = `
+  query GetVariantPrices($ids: [ID!]!) {
+    nodes(ids: $ids) {
       ... on ProductVariant {
         id
         price
         availableForSale
+        title
         product { title }
       }
     }
   }
 `;
 
-type VariantPriceResp = {
-  node: {
+type VariantLookupResp = {
+  nodes: Array<{
     id: string;
     price: string;
     availableForSale: boolean;
+    title: string;
     product: { title: string };
-  } | null;
+  } | null>;
 };
 
 export async function POST(req: NextRequest) {
@@ -61,6 +71,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const customerOr401 = await requireCustomerOr401();
+  if (customerOr401 instanceof NextResponse) return customerOr401;
+  const customer = customerOr401;
+
   let body: CheckoutRequest;
   try {
     body = (await req.json()) as CheckoutRequest;
@@ -68,30 +82,59 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  if (!body.variantId || !body.variantId.startsWith("gid://shopify/")) {
-    return NextResponse.json({ error: "Invalid variantId" }, { status: 400 });
+  // Validate the size matrix.
+  if (!Array.isArray(body.sizeVariants) || body.sizeVariants.length === 0) {
+    return NextResponse.json(
+      { error: "At least one size with a quantity is required" },
+      { status: 400 },
+    );
   }
-  if (!VALID_PRINT_LOCATIONS.has(body.printLocation)) {
-    return NextResponse.json({ error: "Invalid printLocation" }, { status: 400 });
+  for (const sv of body.sizeVariants) {
+    if (!sv.variantId || !sv.variantId.startsWith("gid://shopify/")) {
+      return NextResponse.json(
+        { error: "Invalid variantId in sizeVariants" },
+        { status: 400 },
+      );
+    }
+    const q = Number(sv.quantity);
+    if (!Number.isFinite(q) || q < 1) {
+      return NextResponse.json(
+        { error: "Each size quantity must be at least 1" },
+        { status: 400 },
+      );
+    }
   }
-  const qty = Number(body.quantity);
-  if (!Number.isFinite(qty) || qty < TSHIRT_MIN_QUANTITY) {
+
+  const totalQty = body.sizeVariants.reduce(
+    (a, b) => a + Number(b.quantity),
+    0,
+  );
+  if (totalQty < TSHIRT_MIN_QUANTITY) {
     return NextResponse.json(
       { error: `Minimum order quantity is ${TSHIRT_MIN_QUANTITY}` },
       { status: 400 },
     );
   }
-  const phone = body.phone?.trim() ?? "";
 
-  // Each enabled print side must have a Shopify CDN URL — never trust unverified
-  // file URLs.
-  const needsFront =
-    body.printLocation === "front" || body.printLocation === "both";
-  const needsBack =
-    body.printLocation === "back" || body.printLocation === "both";
+  // Print location only required when explicitly provided (T-shirt). For
+  // embroidered apparel (polo) we skip the location entirely.
+  const hasPrintLocation = !!body.printLocation;
+  if (hasPrintLocation && !VALID_PRINT_LOCATIONS.has(body.printLocation!)) {
+    return NextResponse.json({ error: "Invalid printLocation" }, { status: 400 });
+  }
+
+  // Validate file requirements:
+  //   - With print location: front/back uploads keyed by the chosen side
+  //   - Without print location: a single front upload represents the artwork
+  const needsFront = hasPrintLocation
+    ? body.printLocation === "front" || body.printLocation === "both"
+    : true;
+  const needsBack = hasPrintLocation
+    ? body.printLocation === "back" || body.printLocation === "both"
+    : false;
   if (needsFront && !body.frontFileUrl) {
     return NextResponse.json(
-      { error: "Front design file is required for the chosen print location" },
+      { error: "Design file is required" },
       { status: 400 },
     );
   }
@@ -110,109 +153,142 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Look up the variant on Shopify so we never trust the browser's claimed
-  // price.
-  let variantPrice: number;
-  let productTitle: string;
+  // Look up every variant in one round-trip — server-side price source of
+  // truth, never trust whatever the browser sent.
+  const ids = body.sizeVariants.map((sv) => sv.variantId);
+  let priced: Array<{
+    sv: SizeVariant;
+    price: number;
+    title: string;
+  }>;
+  let productTitle = "T-Shirts";
   try {
-    const variantResp = await shopifyAdminFetch<VariantPriceResp>(
-      VARIANT_PRICE_QUERY,
-      { id: body.variantId },
+    const resp = await shopifyAdminFetch<VariantLookupResp>(
+      VARIANT_LOOKUP_QUERY,
+      { ids },
       { revalidate: 0 },
     );
-    if (!variantResp.node) {
-      return NextResponse.json(
-        { error: "Variant not found in Shopify" },
-        { status: 404 },
-      );
-    }
-    if (!variantResp.node.availableForSale) {
-      return NextResponse.json(
-        { error: "Variant is not available for sale" },
-        { status: 400 },
-      );
-    }
-    variantPrice = Number(variantResp.node.price);
-    productTitle = variantResp.node.product.title;
+
+    priced = body.sizeVariants.map((sv, i) => {
+      const node = resp.nodes[i];
+      if (!node) {
+        throw new Error(`Variant not found: ${sv.size}`);
+      }
+      if (!node.availableForSale) {
+        throw new Error(`Sold out: ${sv.size}`);
+      }
+      productTitle = node.product.title;
+      return {
+        sv,
+        price: Number(node.price),
+        title: node.title,
+      };
+    });
   } catch (err) {
-    console.error("[checkout-tshirt] variant fetch failed:", err);
+    console.error("[checkout-tshirt] variant lookup failed:", err);
     return NextResponse.json(
-      { error: "Could not look up variant on Shopify" },
+      {
+        error:
+          err instanceof Error ? err.message : "Variant lookup on Shopify failed",
+      },
       { status: 502 },
     );
   }
 
-  const price = calcTShirtPrice({
-    variantPrice,
-    printLocation: body.printLocation,
-    quantity: qty,
-  });
+  const printLocationLabel = hasPrintLocation
+    ? PRINT_LOCATIONS.find((p) => p.key === body.printLocation)?.label ??
+      body.printLocation!
+    : null;
+  const uploadLabel = body.uploadLabel?.trim() || "Design";
 
-  const printLocationLabel =
-    PRINT_LOCATIONS.find((p) => p.key === body.printLocation)?.label ??
-    body.printLocation;
-
-  const properties: { name: string; value: string }[] = [];
+  // These properties get attached to every line item so Anthony can see the
+  // full order context when looking at any size.
+  const sharedProperties: { name: string; value: string }[] = [];
   if (body.selectedOptions) {
     for (const [name, value] of Object.entries(body.selectedOptions)) {
-      properties.push({ name, value });
+      sharedProperties.push({ name, value });
     }
   }
   if (body.shirtColor?.trim()) {
-    properties.push({ name: "Shirt Color", value: body.shirtColor.trim() });
+    sharedProperties.push({
+      name: "Shirt Color",
+      value: body.shirtColor.trim(),
+    });
   }
-  properties.push({ name: "Print Location", value: printLocationLabel });
-  if (phone) {
-    properties.push({ name: "Phone Number", value: phone });
+  if (printLocationLabel) {
+    sharedProperties.push({
+      name: "Print Location",
+      value: printLocationLabel,
+    });
   }
-
   if (body.frontFileUrl) {
-    properties.push({ name: "Front Design", value: body.frontFileUrl });
+    // When there's no print location, the file is the single design.
+    const frontKey = hasPrintLocation ? "Front Design" : `${uploadLabel} File`;
+    const frontNameKey = hasPrintLocation
+      ? "Front Design Filename"
+      : `${uploadLabel} Filename`;
+    sharedProperties.push({ name: frontKey, value: body.frontFileUrl });
     if (body.frontFileName) {
-      properties.push({
-        name: "Front Design Filename",
+      sharedProperties.push({
+        name: frontNameKey,
         value: body.frontFileName,
       });
     }
   }
   if (body.backFileUrl) {
-    properties.push({ name: "Back Design", value: body.backFileUrl });
+    sharedProperties.push({ name: "Back Design", value: body.backFileUrl });
     if (body.backFileName) {
-      properties.push({
+      sharedProperties.push({
         name: "Back Design Filename",
         value: body.backFileName,
       });
     }
   }
-
+  const phone = body.phone?.trim() ?? "";
+  if (phone) {
+    sharedProperties.push({ name: "Phone Number", value: phone });
+  }
   if (body.instructions?.trim()) {
-    properties.push({
+    sharedProperties.push({
       name: "Instructions",
       value: body.instructions.trim().slice(0, 2000),
     });
   }
 
-  const numericVariantId = gidToNumericId(body.variantId);
+  // Build one line item per size. variant_id keeps Anthony's inventory
+  // tracking accurate; price defaults to the Shopify variant price (no
+  // separate print fee).
+  const lineItems = priced.map(({ sv, price }) => ({
+    variant_id: Number(gidToNumericId(sv.variantId)),
+    quantity: Number(sv.quantity),
+    price: price.toFixed(2),
+    properties: sharedProperties,
+  }));
+
+  const totalAmount = priced.reduce(
+    (sum, { sv, price }) => sum + price * Number(sv.quantity),
+    0,
+  );
+
   const optsSummary = body.selectedOptions
     ? Object.entries(body.selectedOptions)
         .map(([k, v]) => `${k}: ${v}`)
         .join(" · ")
     : "";
+  const sizeBreakdown = priced
+    .map(({ sv }) => `${sv.quantity} × ${sv.size}`)
+    .join(", ");
 
   const draftOrder = {
     draft_order: {
-      line_items: [
-        {
-          variant_id: Number(numericVariantId),
-          quantity: qty,
-          price: price.perUnit.toFixed(2),
-          properties,
-        },
-      ],
+      email: customer.email,
+      line_items: lineItems,
       tags: "tshirts,custom-configurator",
-      note: `${productTitle} · ${optsSummary}${
-      body.shirtColor ? ` · Color: ${body.shirtColor}` : ""
-    } · ${printLocationLabel}${phone ? ` · Phone: ${phone}` : ""} · Per-unit: $${price.perUnit.toFixed(2)}`,
+      note: `${productTitle}${optsSummary ? ` · ${optsSummary}` : ""}${
+        body.shirtColor ? ` · Color: ${body.shirtColor}` : ""
+      }${printLocationLabel ? ` · ${printLocationLabel}` : ""} · Sizes: ${sizeBreakdown}${
+        phone ? ` · Phone: ${phone}` : ""
+      } · Total: $${totalAmount.toFixed(2)} (${totalQty} shirts)`,
     },
   };
 
@@ -251,8 +327,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     invoiceUrl: data.draft_order.invoice_url,
     draftOrderId: data.draft_order.id,
-    quantity: qty,
-    perUnit: price.perUnit,
-    total: price.total,
+    totalQuantity: totalQty,
+    totalAmount,
   });
 }

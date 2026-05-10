@@ -3,7 +3,10 @@ export type Category = {
   name: string;
   tagline: string;
   description: string;
-  emoji: string;
+  /** Used when the category came from the hardcoded fallback list. */
+  emoji?: string;
+  /** Used when the category was built from a live Shopify product. */
+  imageUrl?: string;
   href: string;
 };
 
@@ -54,15 +57,6 @@ export const categories: Category[] = [
     href: "/products/posters",
   },
   {
-    slug: "brochures",
-    name: "Brochures",
-    tagline: "Bi-fold and tri-fold",
-    description:
-      "Professional brochures that tell your brand's full story.",
-    emoji: "📑",
-    href: "/products/brochures",
-  },
-  {
     slug: "banners",
     name: "Banners",
     tagline: "Indoor & outdoor banners",
@@ -72,38 +66,20 @@ export const categories: Category[] = [
     href: "/products/banners",
   },
   {
-    slug: "car-magnets",
-    name: "Car Magnets",
-    tagline: "Custom car magnets",
-    description:
-      "Removable, weather-proof magnets for vehicles and metal surfaces.",
-    emoji: "🚗",
-    href: "/products/car-magnets",
-  },
-  {
-    slug: "embroidery-patches",
-    name: "Embroidery Patches",
-    tagline: "Stitched custom patches",
-    description:
-      "Iron-on, sew-on, or velcro-back patches with detailed stitching.",
-    emoji: "🪡",
-    href: "/products/embroidery-patches",
-  },
-  {
-    slug: "embroidery-polo",
-    name: "Embroidery Polos",
+    slug: "embroidered-polos",
+    name: "Embroidered Polos",
     tagline: "Stitched logo polos",
     description:
-      "Premium polo shirts with embroidered logos for teams and uniforms.",
+      "Performance and cotton polos with custom-embroidered logos. Min 6 pcs.",
     emoji: "🎽",
-    href: "/products/embroidery-polo",
+    href: "/products/embroidered-polos",
   },
   {
     slug: "engraved-cups",
     name: "Engraved Cups",
     tagline: "Laser-etched drinkware",
     description:
-      "Stainless steel and glass cups with permanent laser engraving.",
+      "Ship us your tumblers — we'll laser-engrave your design and send them back.",
     emoji: "🥤",
     href: "/products/engraved-cups",
   },
@@ -117,12 +93,21 @@ export const categories: Category[] = [
     href: "/products/engraved-wallets",
   },
   {
-    slug: "custom-canvas",
-    name: "Custom Canvas",
-    tagline: "Gallery-grade canvas prints",
+    slug: "engraved-bottle-openers",
+    name: "Engraved Bottle Openers",
+    tagline: "Stainless steel · laser engraved",
     description:
-      "Stretched canvas prints made for walls that need a story.",
-    emoji: "🎨",
-    href: "/products/custom-canvas",
+      "Personalized speed bottle openers — perfect for bars, weddings, corporate gifts.",
+    emoji: "🍾",
+    href: "/products/engraved-bottle-openers",
+  },
+  {
+    slug: "signage-quotes",
+    name: "Custom Signage Quote",
+    tagline: "Banners · yard signs · aluminum",
+    description:
+      "Instant pricing for standard sizes, quote on request for custom dimensions.",
+    emoji: "🪧",
+    href: "/signage-quotes",
   },
 ];

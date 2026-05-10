@@ -2,12 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 
 const HOURS: { day: string; time: string }[] = [
-  { day: "Monday", time: "7am–6pm" },
-  { day: "Tuesday", time: "7am–6pm" },
-  { day: "Wednesday", time: "7am–6pm" },
-  { day: "Thursday", time: "7am–6pm" },
-  { day: "Friday", time: "7am–6pm" },
-  { day: "Saturday", time: "Closed" },
+  { day: "Monday", time: "9am–5pm" },
+  { day: "Tuesday", time: "9am–5pm" },
+  { day: "Wednesday", time: "9am–5pm" },
+  { day: "Thursday", time: "9am–5pm" },
+  { day: "Friday", time: "9am–5pm" },
+  { day: "Saturday", time: "9am–5pm" },
   { day: "Sunday", time: "Closed" },
 ];
 
@@ -51,18 +51,15 @@ export default function Footer() {
               { label: "T-Shirts", href: "/products/tshirts" },
               { label: "Business Cards", href: "/products/business-cards" },
               { label: "Banners", href: "/products/banners" },
-              { label: "Embroidery", href: "/products/embroidery-patches" },
               { label: "Engraved Cups", href: "/products/engraved-cups" },
+              { label: "Signage Calculator", href: "/signage-quotes" },
             ]}
           />
 
           {/* Company */}
           <FooterColumn
             title="Company"
-            items={[
-              { label: "Shipping Process", href: "#" },
-              { label: "Blog Posts", href: "#" },
-            ]}
+            items={[{ label: "About Us", href: "/about" }]}
           />
 
           {/* Support with hours */}
@@ -87,7 +84,7 @@ export default function Footer() {
             </ul>
             <div className="mt-5">
               <div className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
-                Hours <span className="text-foreground-muted">(Mountain Time)</span>
+                Hours <span className="text-foreground-muted">(Eastern Time)</span>
               </div>
               <ul className="mt-2 space-y-1 text-xs text-foreground-muted">
                 {HOURS.map((h) => (

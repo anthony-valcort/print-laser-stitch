@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "WebFetch(domain:printlaserstitch.com)",
+      "Bash(head -608 src/components/TShirtConfigurator.tsx)",
+      "Bash(mv /tmp/tshirt_trimmed.tsx src/components/TShirtConfigurator.tsx)",
+      "WebFetch(domain:printlaserstitch.info)",
+      "Bash(curl -sL -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120 Safari/537.36\" \"https://printlaserstitch.info/home/about-us\")",
+      "Bash(curl -sL -A \"Mozilla/5.0\" \"https://printlaserstitch.info/home/about-us\")",
+      "Bash(grep -oE '\"[^\"]{50,500}\"')",
+      "Bash(grep -oE '\"[^\"]{80,1500}\"')"
+    ]
+  }
+}

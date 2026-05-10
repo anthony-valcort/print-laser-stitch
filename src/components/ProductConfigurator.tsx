@@ -15,6 +15,9 @@ import {
   type ShapeKey,
   type SizeKey,
 } from "@/lib/pricing";
+import { useCart } from "@/lib/cart-store";
+import { useRouter } from "next/navigation";
+import type { VinylStickerCartItem } from "@/lib/cart-types";
 
 type SizeChoice = SizeKey | "custom";
 
@@ -60,6 +63,8 @@ const POPULAR_SIZES: { label: string; w: number; h: number }[] = [
 ];
 
 export default function ProductConfigurator() {
+  const router = useRouter();
+  const { addItem } = useCart();
   const [shape, setShape] = useState<ShapeKey>("custom");
   const [roundedCorners, setRoundedCorners] = useState<boolean>(true);
   const [material, setMaterial] = useState<MaterialKey>("matte");
@@ -213,52 +218,46 @@ export default function ProductConfigurator() {
     }
   }
 
-  async function handleAddToCart() {
+  function handleAddToCart() {
     if (!file || isCheckingOut || isUploading) return;
     setIsCheckingOut(true);
     setToast(null);
 
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          shape,
-          roundedCorners:
-            shape === "square" || shape === "rectangle"
-              ? roundedCorners
-              : null,
-          material,
-          size,
-          customWidth: size === "custom" ? customWidth : undefined,
-          customHeight: size === "custom" ? customHeight : undefined,
-          quantity: quantity === "custom" ? customQty : quantity,
-          instructions,
-          fileUrl: fileUrl ?? undefined,
-          fileName: file.name,
-        }),
-      });
+    const tierQty: QuantityKey = effectiveQty;
+    const sizeLabel =
+      size === "custom"
+        ? `${customWidth}″ × ${customHeight}″`
+        : SIZE_OPTIONS.find((s) => s.key === size)?.label ?? size;
+    const shapeLabel =
+      SHAPE_OPTIONS.find((s) => s.key === shape)?.label ?? shape;
+    const materialLabel =
+      MATERIAL_OPTIONS.find((m) => m.key === material)?.label ?? material;
 
-      if (response.status === 401) {
-        window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
-        return;
-      }
+    const cartItem: Omit<VinylStickerCartItem, "id" | "addedAt"> = {
+      kind: "vinyl-sticker",
+      title: "Custom Vinyl Stickers",
+      subtitle: `${sizeLabel} · ${shapeLabel} · ${materialLabel}`,
+      thumbnail: "🌟",
+      unitLabel: `$${price.perUnit.toFixed(2)} / sticker`,
+      totalPrice: price.total,
+      quantity: tierQty,
+      shape,
+      material,
+      size,
+      customWidth: size === "custom" ? customWidth : undefined,
+      customHeight: size === "custom" ? customHeight : undefined,
+      roundedCorners:
+        shape === "square" || shape === "rectangle" ? roundedCorners : null,
+      tierQty,
+      perUnit: price.perUnit,
+      fileUrl: fileUrl ?? undefined,
+      fileName: file.name,
+      instructions: instructions || undefined,
+      editHref: "/products/vinyl-stickers",
+    };
 
-      const data = (await response.json()) as {
-        invoiceUrl?: string;
-        error?: string;
-      };
-
-      if (!response.ok || !data.invoiceUrl) {
-        throw new Error(data.error ?? "Checkout failed");
-      }
-
-      window.location.href = data.invoiceUrl;
-    } catch (err) {
-      setIsCheckingOut(false);
-      const msg = err instanceof Error ? err.message : "Checkout failed";
-      setToast(`Error: ${msg}`);
-    }
+    addItem(cartItem);
+    router.push("/cart");
   }
 
   function applyPopularSize(w: number, h: number) {

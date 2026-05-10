@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { ShopifyImage, ShopifyProduct } from "@/lib/shopify-products";
+import { useCart } from "@/lib/cart-store";
+import type { ProductCartItem } from "@/lib/cart-types";
 import { colorHex, isColorOption } from "@/components/configurator/colors";
 import { Section } from "@/components/configurator/Section";
 import { ColorSwatch } from "@/components/configurator/ColorSwatch";
@@ -63,6 +66,8 @@ export default function GenericProductConfigurator({
   fallbackEmoji = "📦",
   notice,
 }: GenericProductConfiguratorProps) {
+  const router = useRouter();
+  const { addItem } = useCart();
   const firstAvailable =
     product.variants.find((v) => v.availableForSale) ?? product.variants[0];
 
@@ -180,7 +185,7 @@ export default function GenericProductConfigurator({
     !anyUploading &&
     !isCheckingOut;
 
-  async function handleAddToCart() {
+  function handleAddToCart() {
     if (!canCheckout || !currentVariant) return;
     setIsCheckingOut(true);
     setToast(null);
@@ -208,33 +213,31 @@ export default function GenericProductConfigurator({
     if (phone.trim()) extraProperties["Phone Number"] = phone.trim();
     if (instructions.trim()) extraProperties["Instructions"] = instructions.trim();
 
-    try {
-      const response = await fetch("/api/checkout-product", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          variantId: currentVariant.id,
-          quantity: effectiveQty,
-          selectedOptions,
-          extraProperties,
-        }),
-      });
-      if (response.status === 401) {
-        window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
-        return;
-      }
-      const data = (await response.json()) as {
-        invoiceUrl?: string;
-        error?: string;
-      };
-      if (!response.ok || !data.invoiceUrl) {
-        throw new Error(data.error ?? "Checkout failed");
-      }
-      window.location.href = data.invoiceUrl;
-    } catch (err) {
-      setIsCheckingOut(false);
-      setToast(`Error: ${err instanceof Error ? err.message : "Checkout failed"}`);
-    }
+    const optsSummary = Object.entries(selectedOptions)
+      .map(([, v]) => v)
+      .join(" · ");
+    const unitPrice = Number(currentVariant.price);
+
+    const cartItem: Omit<ProductCartItem, "id" | "addedAt"> = {
+      kind: "product",
+      title: product.title,
+      subtitle: optsSummary || "Standard",
+      thumbnail:
+        product.images[0]?.url ?? product.featuredImage?.url ?? fallbackEmoji,
+      unitLabel: `$${unitPrice.toFixed(2)} each`,
+      totalPrice: unitPrice * effectiveQty,
+      quantity: effectiveQty,
+      variantId: currentVariant.id,
+      productTitle: product.title,
+      selectedOptions,
+      qty: effectiveQty,
+      unitPrice,
+      extraProperties,
+      editHref: `/products/${product.handle}`,
+    };
+
+    addItem(cartItem);
+    router.push("/cart");
   }
 
   return (

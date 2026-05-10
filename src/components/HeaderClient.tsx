@@ -7,6 +7,7 @@ import {
   categories as fallbackCategories,
   type Category,
 } from "@/lib/categories";
+import CartIcon from "./CartIcon";
 
 export type HeaderCustomer = {
   firstName: string | null;
@@ -221,14 +222,18 @@ export default function HeaderClient({
               </Link>
             </>
           )}
+          <CartIcon />
         </nav>
 
-        <button
-          type="button"
-          aria-label="Open menu"
-          className="rounded-full border border-border-soft bg-white/5 p-2 text-foreground hover:bg-white/10 md:hidden"
-          onClick={() => setMobileOpen((v) => !v)}
-        >
+        {/* Mobile-only: cart icon + hamburger sit on the right */}
+        <div className="flex items-center gap-2 md:hidden">
+          <CartIcon />
+          <button
+            type="button"
+            aria-label="Open menu"
+            className="rounded-full border border-border-soft bg-white/5 p-2 text-foreground hover:bg-white/10"
+            onClick={() => setMobileOpen((v) => !v)}
+          >
           <svg
             width="20"
             height="20"
@@ -252,7 +257,8 @@ export default function HeaderClient({
               </>
             )}
           </svg>
-        </button>
+          </button>
+        </div>
       </div>
 
       {mobileOpen && (

@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   ADD_ONS,
@@ -19,10 +20,14 @@ import {
   uploadDesign,
   type UploadSlot,
 } from "@/components/configurator/UploadBox";
+import { useCart } from "@/lib/cart-store";
+import type { SignageCartItem } from "@/lib/cart-types";
 
 type SizeMode = "preset" | "custom";
 
 export default function SignageCalculator() {
+  const router = useRouter();
+  const { addItem } = useCart();
   const [type, setType] = useState<string>(SIGNAGE_TYPES[0].key);
   const materials = SIGNAGE_MATERIALS[type] ?? [];
   const [material, setMaterial] = useState<string>(materials[0]?.key);
@@ -110,11 +115,61 @@ export default function SignageCalculator() {
   }
 
   async function handleSubmit(kind: "order" | "quote") {
-    if (kind === "quote" && !email.trim()) {
+    if (submitting) return;
+
+    // Instant order — add to cart and head to /cart. Multiple signs can be
+    // bundled with stickers, t-shirts, etc. in the same checkout.
+    if (kind === "order") {
+      const validType = SIGNAGE_TYPES.find((t) => t.key === type);
+      const validMaterial = (SIGNAGE_MATERIALS[type] ?? []).find(
+        (m) => m.key === material,
+      );
+      if (!validType || !validMaterial) {
+        setToast("Invalid type or material selection.");
+        return;
+      }
+
+      const sizeLabel = `${dims.w}″ × ${dims.h}″`;
+      const cartItem: Omit<SignageCartItem, "id" | "addedAt"> = {
+        kind: "signage",
+        title: validType.label,
+        subtitle: `${sizeLabel} · ${validMaterial.label} · ${
+          sides === "single" ? "Single-sided" : "Double-sided"
+        }`,
+        thumbnail: validType.icon,
+        unitLabel: `$${price.perUnit.toFixed(2)} each`,
+        totalPrice: price.total,
+        quantity,
+        signageType: type,
+        signageTypeLabel: validType.label,
+        material,
+        materialLabel: validMaterial.label,
+        width: dims.w,
+        height: dims.h,
+        sides,
+        addOns,
+        qty: quantity,
+        perUnit: price.perUnit,
+        fileUrl: upload.fileUrl ?? undefined,
+        fileName: upload.file?.name,
+        email: email.trim() || undefined,
+        phone: phone.trim() || undefined,
+        notes: notes.trim() || undefined,
+        editHref: "/signage-quotes",
+      };
+
+      addItem(cartItem);
+      router.push("/cart");
+      return;
+    }
+
+    // Quote path — still creates a separate quote-pending draft order via
+    // /api/checkout-signage. Quotes need Anthony to manually adjust pricing
+    // before the customer pays, so they don't fit the cart flow.
+    if (!email.trim()) {
       setToast("Please enter your email so we can send you a quote.");
       return;
     }
-    if (submitting) return;
     setSubmitting(true);
     setToast(null);
 
@@ -123,7 +178,7 @@ export default function SignageCalculator() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          kind,
+          kind: "quote",
           type,
           material,
           width: dims.w,
@@ -143,18 +198,12 @@ export default function SignageCalculator() {
         return;
       }
       const data = (await response.json()) as {
-        invoiceUrl?: string;
         quoteAccepted?: boolean;
         error?: string;
       };
       if (!response.ok) {
         throw new Error(data.error ?? "Submission failed");
       }
-      if (kind === "order" && data.invoiceUrl) {
-        window.location.href = data.invoiceUrl;
-        return;
-      }
-      // Quote path — show confirmation
       setSubmittedKind("quote");
     } catch (err) {
       setToast(`Error: ${err instanceof Error ? err.message : "Submission failed"}`);

@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   PRINT_LOCATIONS,
@@ -9,6 +10,8 @@ import {
   type PrintLocationKey,
 } from "@/lib/tshirt-pricing";
 import type { ShopifyImage, ShopifyProduct } from "@/lib/shopify-products";
+import { useCart } from "@/lib/cart-store";
+import type { TShirtCartItem, TShirtSizeLine } from "@/lib/cart-types";
 import {
   colorHex,
   isColorOption,
@@ -58,6 +61,8 @@ export default function TShirtConfigurator({
   singleUploadLabel = "Design",
   fallbackColors = DEFAULT_FALLBACK_COLORS,
 }: ApparelConfiguratorProps) {
+  const router = useRouter();
+  const { addItem } = useCart();
   const minQuantity = minQuantityProp ?? TSHIRT_MIN_QUANTITY;
   // Separate "Size" out from the other options — Size becomes a per-size
   // quantity matrix instead of a single picker.
@@ -216,15 +221,13 @@ export default function TShirtConfigurator({
     !anyUploading &&
     !isCheckingOut;
 
-  async function handleAddToCart() {
+  function handleAddToCart() {
     if (!canCheckout) return;
 
-    // Build per-size line items from the qty matrix.
-    const sizeVariants: Array<{
-      variantId: string;
-      size: string;
-      quantity: number;
-    }> = [];
+    // Build per-size lines from the qty matrix, with the variant price snapshot
+    // we'll display in cart. The server re-fetches live prices at checkout —
+    // these client values are display-only.
+    const sizeVariants: TShirtSizeLine[] = [];
     for (const [size, qty] of Object.entries(sizeQuantities)) {
       if (qty <= 0) continue;
       const v = variantForSize(size);
@@ -234,7 +237,12 @@ export default function TShirtConfigurator({
         );
         return;
       }
-      sizeVariants.push({ variantId: v.id, size, quantity: qty });
+      sizeVariants.push({
+        variantId: v.id,
+        size,
+        quantity: qty,
+        unitPrice: Number(v.price),
+      });
     }
     if (sizeVariants.length === 0) {
       setToast("Please enter quantities for at least one size.");
@@ -244,42 +252,44 @@ export default function TShirtConfigurator({
     setIsCheckingOut(true);
     setToast(null);
 
-    try {
-      const response = await fetch("/api/checkout-tshirt", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sizeVariants,
-          selectedOptions,
-          // Only send print location for products that expose it (T-shirts).
-          // For embroidered apparel (polos) we skip it.
-          printLocation: showPrintLocations ? printLocation : undefined,
-          uploadLabel: showPrintLocations ? undefined : singleUploadLabel,
-          instructions,
-          phone: phone.trim() || undefined,
-          shirtColor: hasShopifyColor ? undefined : shirtColor,
-          frontFileUrl: frontUpload.fileUrl ?? undefined,
-          frontFileName: frontUpload.file?.name,
-          backFileUrl: backUpload.fileUrl ?? undefined,
-          backFileName: backUpload.file?.name,
-        }),
-      });
-      if (response.status === 401) {
-        window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
-        return;
-      }
-      const data = (await response.json()) as {
-        invoiceUrl?: string;
-        error?: string;
-      };
-      if (!response.ok || !data.invoiceUrl) {
-        throw new Error(data.error ?? "Checkout failed");
-      }
-      window.location.href = data.invoiceUrl;
-    } catch (err) {
-      setIsCheckingOut(false);
-      setToast(`Error: ${err instanceof Error ? err.message : "Checkout failed"}`);
-    }
+    const sizeBreakdown = sizeVariants
+      .map((sv) => `${sv.quantity} × ${sv.size}`)
+      .join(", ");
+    const optsSummary = Object.values(selectedOptions).join(" · ");
+    const subtitleParts: string[] = [];
+    if (optsSummary) subtitleParts.push(optsSummary);
+    if (!hasShopifyColor && shirtColor) subtitleParts.push(shirtColor);
+    subtitleParts.push(sizeBreakdown);
+
+    const cartItem: Omit<TShirtCartItem, "id" | "addedAt"> = {
+      kind: "tshirt",
+      title: product.title,
+      subtitle: subtitleParts.join(" · "),
+      thumbnail:
+        referenceVariant?.image?.url ??
+        product.featuredImage?.url ??
+        product.images[0]?.url ??
+        "👕",
+      unitLabel: `${totalQuantity} pcs · ${sizeVariants.length} ${sizeVariants.length === 1 ? "size" : "sizes"}`,
+      totalPrice,
+      quantity: totalQuantity,
+      productTitle: product.title,
+      selectedOptions,
+      printLocation: showPrintLocations ? printLocation : undefined,
+      uploadLabel: showPrintLocations ? undefined : singleUploadLabel,
+      shirtColor: hasShopifyColor ? undefined : shirtColor,
+      sizeVariants,
+      frontFileUrl: frontUpload.fileUrl ?? undefined,
+      frontFileName: frontUpload.file?.name,
+      backFileUrl: backUpload.fileUrl ?? undefined,
+      backFileName: backUpload.file?.name,
+      phone: phone.trim() || undefined,
+      instructions: instructions || undefined,
+      editHref: `/products/${product.handle}`,
+    };
+
+    addItem(cartItem);
+    router.push("/cart");
   }
 
   return (

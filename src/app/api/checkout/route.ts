@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { requireCustomerOr401 } from "@/lib/customer-session";
+import { waitForInvoiceReady } from "@/lib/shopify-checkout";
 import {
   QUANTITY_OPTIONS,
   calcPrice,
@@ -220,6 +221,8 @@ export async function POST(req: NextRequest) {
   const data = (await shopifyResp.json()) as {
     draft_order: { id: number; invoice_url: string };
   };
+
+  await waitForInvoiceReady(data.draft_order.invoice_url);
 
   return NextResponse.json({
     invoiceUrl: data.draft_order.invoice_url,

@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { requireCustomerOr401 } from "@/lib/customer-session";
+import { waitForInvoiceReady } from "@/lib/shopify-checkout";
 import {
   ADD_ONS,
   SIGNAGE_MATERIALS,
@@ -206,6 +207,8 @@ export async function POST(req: NextRequest) {
       draftOrderId: data.draft_order.id,
     });
   }
+
+  await waitForInvoiceReady(data.draft_order.invoice_url);
 
   // Instant order — return the invoice URL so the customer can pay now.
   return NextResponse.json({

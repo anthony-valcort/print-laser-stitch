@@ -98,6 +98,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
                 onChange={(e) => setFirstName(e.target.value)}
                 className="input"
                 autoComplete="given-name"
+                suppressHydrationWarning
               />
             </Field>
             <Field label="Last name">
@@ -107,6 +108,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
                 onChange={(e) => setLastName(e.target.value)}
                 className="input"
                 autoComplete="family-name"
+                suppressHydrationWarning
               />
             </Field>
           </div>
@@ -120,6 +122,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
             required
             className="input"
             autoComplete={isLogin ? "username" : "email"}
+            suppressHydrationWarning
           />
         </Field>
 
@@ -137,6 +140,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
               minLength={isLogin ? 1 : 8}
               className="input pr-11"
               autoComplete={isLogin ? "current-password" : "new-password"}
+              suppressHydrationWarning
             />
             <button
               type="button"

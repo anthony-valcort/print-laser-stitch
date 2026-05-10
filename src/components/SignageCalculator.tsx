@@ -262,7 +262,7 @@ export default function SignageCalculator() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-3 py-6 sm:px-6 lg:px-8">
         <div className="mb-6">
           <div className="inline-flex items-center gap-2 rounded-full border border-border-soft bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-foreground-muted">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
@@ -277,9 +277,9 @@ export default function SignageCalculator() {
           </p>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10">
+        <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10">
           {/* LEFT: Configurator */}
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             {/* Type */}
             <Section title="Sign type">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -316,14 +316,16 @@ export default function SignageCalculator() {
                     key={m.key}
                     type="button"
                     onClick={() => setMaterial(m.key)}
-                    className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left transition ${
+                    className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-3 text-left transition sm:px-4 ${
                       material === m.key
                         ? "border-highlight bg-highlight-soft"
                         : "border-border-soft bg-white/3 hover:bg-white/6"
                     }`}
                   >
-                    <span className="text-sm font-medium">{m.label}</span>
-                    <span className="text-xs font-semibold text-foreground-muted">
+                    <span className="min-w-0 flex-1 text-sm font-medium">
+                      {m.label}
+                    </span>
+                    <span className="shrink-0 text-xs font-semibold text-foreground-muted">
                       ${m.pricePerSqFt.toFixed(2)}/sqft
                     </span>
                   </button>
@@ -443,13 +445,13 @@ export default function SignageCalculator() {
                         key={a.key}
                         type="button"
                         onClick={() => toggleAddOn(a.key)}
-                        className={`flex items-start justify-between gap-3 rounded-xl border px-4 py-3 text-left transition ${
+                        className={`flex items-start justify-between gap-3 rounded-xl border px-3 py-3 text-left transition sm:px-4 ${
                           checked
                             ? "border-highlight bg-highlight-soft"
                             : "border-border-soft bg-white/3 hover:bg-white/6"
                         }`}
                       >
-                        <div className="flex items-start gap-2">
+                        <div className="flex min-w-0 flex-1 items-start gap-2">
                           <span
                             className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded border ${
                               checked
@@ -472,7 +474,7 @@ export default function SignageCalculator() {
                               </svg>
                             )}
                           </span>
-                          <div>
+                          <div className="min-w-0 flex-1">
                             <div className="text-sm font-medium">{a.label}</div>
                             <div className="text-[11px] text-foreground-muted">
                               {a.description}
@@ -541,8 +543,8 @@ export default function SignageCalculator() {
           </div>
 
           {/* RIGHT: Sticky preview + total + CTAs */}
-          <aside className="lg:sticky lg:top-20 lg:self-start">
-            <div className="space-y-4 rounded-2xl border border-border-soft bg-surface p-5">
+          <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start">
+            <div className="space-y-4 rounded-2xl border border-border-soft bg-surface p-4 sm:p-5">
               <div>
                 <div className="text-[11px] font-semibold uppercase tracking-wider text-foreground-muted">
                   Your sign
@@ -597,7 +599,7 @@ export default function SignageCalculator() {
                     key={i}
                     className="flex items-baseline justify-between gap-3 py-0.5 text-foreground-muted"
                   >
-                    <span className="truncate">{b.label}</span>
+                    <span className="min-w-0 flex-1 truncate">{b.label}</span>
                     <span className="shrink-0 font-mono text-foreground">
                       {b.amount >= 0 ? "+" : ""}${Math.abs(b.amount).toFixed(2)}
                     </span>
@@ -727,18 +729,20 @@ function SignPreview({
   sides: "single" | "double";
   fileUrl: string | null;
 }) {
-  // Scale rectangle to fit a 280×180 preview area, preserving aspect ratio.
-  const maxW = 280;
-  const maxH = 180;
-  const scale = Math.min(maxW / w, maxH / h, 1);
-  const previewW = Math.max(40, w * scale);
-  const previewH = Math.max(30, h * scale);
+  // Preserve real aspect ratio while letting CSS size the box to its parent.
+  // Aspect-ratio + max-w/h handles every viewport from narrow mobiles to
+  // sticky desktop sidebars without ever overflowing.
+  const aspect = w / h;
 
   return (
-    <div className="grid h-48 place-items-center rounded-xl bg-white/5">
+    <div className="grid h-44 w-full place-items-center overflow-hidden rounded-xl bg-white/5 px-3 sm:h-48">
       <div
-        className="relative grid place-items-center rounded border-2 border-dashed border-border-strong bg-gradient-to-br from-blue-500/10 to-purple-500/10"
-        style={{ width: previewW, height: previewH }}
+        className="relative grid max-h-full max-w-full place-items-center rounded border-2 border-dashed border-border-strong bg-gradient-to-br from-blue-500/10 to-purple-500/10"
+        style={{
+          aspectRatio: aspect,
+          width: aspect >= 1 ? "100%" : "auto",
+          height: aspect < 1 ? "100%" : "auto",
+        }}
       >
         {fileUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -753,7 +757,7 @@ function SignPreview({
           </span>
         )}
         {sides === "double" && (
-          <span className="absolute -top-2 -right-2 rounded-full bg-blue-500/90 px-2 py-0.5 text-[9px] font-bold text-white">
+          <span className="absolute -right-2 -top-2 rounded-full bg-blue-500/90 px-2 py-0.5 text-[9px] font-bold text-white">
             2-sided
           </span>
         )}

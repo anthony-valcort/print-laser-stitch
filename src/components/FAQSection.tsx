@@ -35,7 +35,7 @@ export default function FAQSection() {
             {/* User question */}
             <div className="flex items-start gap-3">
               <Avatar label="U" tone="muted" />
-              <div className="max-w-[80%] rounded-2xl rounded-tl-sm border border-border-soft bg-white/[0.04] px-4 py-3 text-sm">
+              <div className="max-w-[80%] rounded-2xl rounded-tl-sm border border-border-soft bg-white/4 px-4 py-3 text-sm">
                 {item.q}
               </div>
             </div>

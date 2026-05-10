@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/preserve-manual-memoization */
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
@@ -737,7 +738,7 @@ function SignPreview({
   return (
     <div className="grid h-44 w-full place-items-center overflow-hidden rounded-xl bg-white/5 px-3 sm:h-48">
       <div
-        className="relative grid max-h-full max-w-full place-items-center rounded border-2 border-dashed border-border-strong bg-gradient-to-br from-blue-500/10 to-purple-500/10"
+        className="relative grid max-h-full max-w-full place-items-center rounded border-2 border-dashed border-border-strong bg-linear-to-br from-blue-500/10 to-purple-500/10"
         style={{
           aspectRatio: aspect,
           width: aspect >= 1 ? "100%" : "auto",

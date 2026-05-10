@@ -80,7 +80,7 @@ export default function HeaderClient({
             </button>
             {productsOpen && (
               <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2">
-                <div className="grid w-[28rem] grid-cols-2 gap-1 rounded-2xl border border-border-soft bg-background-soft p-2 shadow-2xl shadow-black/40">
+                <div className="grid w-md grid-cols-2 gap-1 rounded-2xl border border-border-soft bg-background-soft p-2 shadow-2xl shadow-black/40">
                   {productCategories.map((c) => (
                     <Link
                       key={c.slug}

@@ -174,34 +174,65 @@ export default function DecalCalculator() {
         </div>
 
         <div className="space-y-6">
+          {/* Material & Pricing */}
+          <section className="rounded-2xl border border-border-soft bg-surface p-4 sm:p-5">
+            <h2 className="mb-1 flex items-center gap-2 text-base font-bold text-highlight">
+              <span>♦♦</span>
+              <span>Material &amp; Pricing</span>
+            </h2>
+            <p className="mb-4 flex items-center gap-1.5 text-xs text-emerald-300">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              All quotes include installation
+            </p>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              {DECAL_MATERIALS.map((m) => {
+                const active = material === m.key;
+                return (
+                  <button
+                    key={m.key}
+                    type="button"
+                    onClick={() => setMaterial(m.key)}
+                    className={`flex flex-col gap-1 rounded-xl border p-3 text-left transition ${
+                      active
+                        ? "border-highlight bg-highlight-soft"
+                        : "border-border-soft bg-white/3 hover:bg-white/6"
+                    }`}
+                  >
+                    <div className="text-sm font-bold">{m.label}</div>
+                    {m.quoteOnly ? (
+                      <div className="text-sm font-bold text-rose-300">
+                        Custom Pricing
+                      </div>
+                    ) : (
+                      <div className="text-sm font-bold text-cyan-300">
+                        ${m.pricePerSqFt.toFixed(2)}/sq ft
+                      </div>
+                    )}
+                    <div className="text-[11px] text-foreground-muted">
+                      {m.blurb}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
           {/* Add Panel */}
           <section className="rounded-2xl border border-border-soft bg-surface p-4 sm:p-5">
             <h2 className="mb-4 text-base font-bold text-highlight">
               Add Panel
             </h2>
-
-            <div className="mb-4">
-              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-foreground-muted">
-                Panel Type <span className="text-red-400">*</span>
-              </label>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-                {PANEL_TYPES.map((t) => (
-                  <button
-                    key={t.key}
-                    type="button"
-                    onClick={() => setForm((f) => ({ ...f, type: t.key }))}
-                    className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-3 text-center transition ${
-                      form.type === t.key
-                        ? "border-cyan-400 bg-cyan-500/15"
-                        : "border-border-soft bg-white/3 hover:bg-white/6"
-                    }`}
-                  >
-                    <span className="text-xl">{t.icon}</span>
-                    <span className="text-[11px] font-medium">{t.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <NumberField
@@ -272,10 +303,6 @@ export default function DecalCalculator() {
                   const sqft = (w * h) / 144;
                   const panelPrice =
                     sqft * currentMaterial.pricePerSqFt;
-                  const typeLabel =
-                    PANEL_TYPES.find((t) => t.key === p.type)?.label ?? p.type;
-                  const typeIcon =
-                    PANEL_TYPES.find((t) => t.key === p.type)?.icon ?? "📐";
                   return (
                     <li
                       key={p.id}
@@ -283,10 +310,10 @@ export default function DecalCalculator() {
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex min-w-0 flex-1 items-center gap-2">
-                          <span className="text-xl">{typeIcon}</span>
+                          <span className="text-xl">📐</span>
                           <div className="min-w-0">
                             <div className="text-sm font-semibold">
-                              {typeLabel} {idx + 1}
+                              Panel {idx + 1}
                             </div>
                             {p.description && (
                               <div className="text-[11px] text-foreground-muted">
@@ -338,45 +365,6 @@ export default function DecalCalculator() {
                 })}
               </ul>
             )}
-          </section>
-
-          {/* Material & Pricing */}
-          <section className="rounded-2xl border border-border-soft bg-surface p-4 sm:p-5">
-            <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-highlight">
-              <span>♦♦</span>
-              <span>Material &amp; Pricing</span>
-            </h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              {DECAL_MATERIALS.map((m) => {
-                const active = material === m.key;
-                return (
-                  <button
-                    key={m.key}
-                    type="button"
-                    onClick={() => setMaterial(m.key)}
-                    className={`flex flex-col gap-1 rounded-xl border p-3 text-left transition ${
-                      active
-                        ? "border-highlight bg-highlight-soft"
-                        : "border-border-soft bg-white/3 hover:bg-white/6"
-                    }`}
-                  >
-                    <div className="text-sm font-bold">{m.label}</div>
-                    {m.quoteOnly ? (
-                      <div className="text-sm font-bold text-rose-300">
-                        Custom Pricing
-                      </div>
-                    ) : (
-                      <div className="text-sm font-bold text-cyan-300">
-                        ${m.pricePerSqFt.toFixed(2)}/sq ft
-                      </div>
-                    )}
-                    <div className="text-[11px] text-foreground-muted">
-                      {m.blurb}
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
           </section>
 
           {/* Live Quote Summary */}

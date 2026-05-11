@@ -114,29 +114,15 @@ export default function HeaderClient({
           </div>
           <Link
             href="/signage-quotes"
-            className="flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
+            className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="4" y="2" width="16" height="20" rx="2" />
-              <line x1="8" y1="6" x2="16" y2="6" />
-              <line x1="8" y1="10" x2="10" y2="10" />
-              <line x1="12" y1="10" x2="14" y2="10" />
-              <line x1="15" y1="10" x2="16" y2="10" />
-              <line x1="8" y1="14" x2="10" y2="14" />
-              <line x1="12" y1="14" x2="14" y2="14" />
-              <line x1="15" y1="14" x2="16" y2="14" />
-              <line x1="8" y1="18" x2="16" y2="18" />
-            </svg>
-            Calculator
+            Signage
+          </Link>
+          <Link
+            href="/decal-quote"
+            className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
+          >
+            Decals
           </Link>
           <Link
             href="/about"
@@ -276,7 +262,14 @@ export default function HeaderClient({
               onClick={() => setMobileOpen(false)}
               className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
             >
-              📐 Custom Signage Calculator
+              📐 Signage Calculator
+            </Link>
+            <Link
+              href="/decal-quote"
+              onClick={() => setMobileOpen(false)}
+              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
+            >
+              🪟 Decal Quote
             </Link>
             <Link
               href="/about"

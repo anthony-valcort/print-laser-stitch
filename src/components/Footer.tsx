@@ -121,7 +121,26 @@ export default function Footer() {
             </p>
             <div className="mt-4 flex gap-3">
               <a
-                href="#"
+                href="https://www.facebook.com/share/1D34YQAGuE/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                className="grid h-9 w-9 place-items-center rounded-full border border-border-soft text-foreground hover:bg-white/5"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden
+                >
+                  <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15h-2.5v-3H10V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z" />
+                </svg>
+              </a>
+              <a
+                href="https://www.instagram.com/print_laser_stitch"
+                target="_blank"
+                rel="noopener noreferrer"
                 aria-label="Instagram"
                 className="grid h-9 w-9 place-items-center rounded-full border border-border-soft text-foreground hover:bg-white/5"
               >
@@ -141,22 +160,20 @@ export default function Footer() {
                 </svg>
               </a>
               <a
-                href="#"
-                aria-label="YouTube"
+                href="https://yelp.to/v94oy-jn5w"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Yelp"
                 className="grid h-9 w-9 place-items-center rounded-full border border-border-soft text-foreground hover:bg-white/5"
               >
                 <svg
                   width="16"
                   height="16"
                   viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  fill="currentColor"
+                  aria-hidden
                 >
-                  <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" />
-                  <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
+                  <path d="M20.16 12.59L15.91 14c-.79.27-1.61-.34-1.61-1.17V3.06c0-.59.43-1.09 1.01-1.18C17.39 1.55 19.81 3.5 20.6 6.16c.27 1.4.27 4.55-.44 6.43zM12.5 14.78v6.95c0 .81-.82 1.39-1.59 1.13l-3.55-1.18c-.66-.22-.92-1.06-.49-1.6l4.21-5.78c.46-.6 1.42-.27 1.42.48zm-6.85-3.42l3.74 1.27c.69.23.83 1.13.24 1.59l-3.7 2.89c-.5.39-1.24.15-1.42-.46-.59-2.01-.59-3.95.18-5.04.2-.28.59-.36.96-.25zm14.94 6.18l-3.42-2.18c-.61-.39-.41-1.36.29-1.5l3.9-.78c.6-.12 1.14.32 1.14.92.04 1.4-.5 2.85-1.18 3.84-.25.36-.81.04-.73-.3zm-7.59-9.05V2.62c0-.59-.46-1.04-1.04-1.07-2.46-.04-4.95.79-5.6 2.29-.21.49.04 1.05.55 1.27l5.07 2.06c.61.25 1.02-.15 1.02-.68z" />
                 </svg>
               </a>
             </div>

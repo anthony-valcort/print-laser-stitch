@@ -32,6 +32,13 @@ import {
   SIGNAGE_TYPES,
   calcSignagePrice,
 } from "@/lib/signage-pricing";
+import {
+  DECAL_MATERIALS,
+  PANEL_TYPES,
+  SERVICE_PLANS,
+  calcDecalPrice,
+  type PanelType,
+} from "@/lib/decal-pricing";
 import type { CartItem } from "@/lib/cart-types";
 
 const SHAPES = new Set<StickerShape>(["custom", "circle", "oval", "square", "rectangle"]);
@@ -359,6 +366,106 @@ export async function POST(req: NextRequest) {
         properties,
       });
       noteParts.push(`${validType.label} ${sizeLabel} × ${qty}`);
+    } else if (item.kind === "decal") {
+      const plan = SERVICE_PLANS.find((p) => p.key === item.servicePlan);
+      if (!plan) {
+        return NextResponse.json({ error: "Invalid service plan" }, { status: 400 });
+      }
+      const mat = DECAL_MATERIALS.find((m) => m.key === item.material);
+      if (!mat) {
+        return NextResponse.json({ error: "Invalid decal material" }, { status: 400 });
+      }
+      if (mat.quoteOnly) {
+        return NextResponse.json(
+          {
+            error:
+              "Special Vinyl requires a custom quote — please call (772) 985-2854.",
+          },
+          { status: 400 },
+        );
+      }
+      if (!Array.isArray(item.panels) || item.panels.length === 0) {
+        return NextResponse.json(
+          { error: "Decal quote needs at least one panel" },
+          { status: 400 },
+        );
+      }
+      for (const panel of item.panels) {
+        const w = Number(panel.width);
+        const h = Number(panel.height);
+        if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
+          return NextResponse.json(
+            { error: "Each panel needs valid width and height" },
+            { status: 400 },
+          );
+        }
+      }
+
+      // Recompute server-side — never trust the client's totals.
+      const recomputed = calcDecalPrice({
+        panels: item.panels.map((p) => ({
+          type: (PANEL_TYPES.find((t) => t.key === p.type)?.key ??
+            "other") as PanelType,
+          width: Number(p.width),
+          height: Number(p.height),
+          description: p.description,
+        })),
+        servicePlan: plan.key,
+        material: mat.key,
+        discountPercent: Number(item.discountPercent) || 0,
+      });
+
+      const panelLines = item.panels.map((p) => {
+        const sqft = (Number(p.width) * Number(p.height)) / 144;
+        return `${p.typeLabel} ${p.width}″×${p.height}″ (${sqft.toFixed(2)} sqft)${
+          p.description ? ` — ${p.description}` : ""
+        }`;
+      });
+
+      const properties: { name: string; value: string }[] = [
+        { name: "Service Plan", value: plan.label },
+        { name: "Material", value: mat.label },
+        {
+          name: "Total Area",
+          value: `${recomputed.totalAreaSqFt.toFixed(2)} sq ft`,
+        },
+        {
+          name: "Rate",
+          value: `$${recomputed.pricePerSqFt.toFixed(2)} / sq ft`,
+        },
+        { name: "Panels", value: panelLines.join("\n") },
+      ];
+      if (recomputed.discountAmount > 0) {
+        properties.push({
+          name: "Discount",
+          value: `${item.discountPercent}% (−$${recomputed.discountAmount.toFixed(2)})`,
+        });
+      }
+      properties.push({
+        name: "Tax (7% Martin County)",
+        value: `$${recomputed.taxAmount.toFixed(2)}`,
+      });
+      if (item.notes?.trim()) {
+        properties.push({
+          name: "Project Notes",
+          value: item.notes.trim().slice(0, 2000),
+        });
+      }
+
+      // Single line item — the total already includes tax + discount, so we
+      // pass it as the line price with quantity 1. Shopify still handles
+      // shipping at checkout.
+      lineItems.push({
+        title: `${mat.label} · ${plan.label} · ${recomputed.totalAreaSqFt.toFixed(2)} sq ft`,
+        price: recomputed.total.toFixed(2),
+        quantity: 1,
+        requires_shipping: true,
+        taxable: false, // tax is already baked into our price
+        properties,
+      });
+      noteParts.push(
+        `Decal ${mat.label} ${recomputed.totalAreaSqFt.toFixed(2)} sqft`,
+      );
     }
   }
 

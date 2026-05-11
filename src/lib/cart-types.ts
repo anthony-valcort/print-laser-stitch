@@ -4,7 +4,12 @@
  * which expands each item into one or more Shopify draft-order line items.
  */
 
-export type CartItemKind = "vinyl-sticker" | "tshirt" | "product" | "signage";
+export type CartItemKind =
+  | "vinyl-sticker"
+  | "tshirt"
+  | "product"
+  | "signage"
+  | "decal";
 
 export interface CartItemBase {
   /** Unique cart-line id — used for remove/edit. */
@@ -99,8 +104,34 @@ export interface SignageCartItem extends CartItemBase {
   notes?: string;
 }
 
+export interface DecalPanelLine {
+  type: string;
+  typeLabel: string;
+  width: number;
+  height: number;
+  description?: string;
+}
+
+export interface DecalCartItem extends CartItemBase {
+  kind: "decal";
+  panels: DecalPanelLine[];
+  servicePlan: string;
+  servicePlanLabel: string;
+  material: string;
+  materialLabel: string;
+  discountPercent: number;
+  pricePerSqFt: number;
+  totalAreaSqFt: number;
+  /** Subtotal before discount + tax. */
+  subtotal: number;
+  /** Tax amount (already included in totalPrice). */
+  taxAmount: number;
+  notes?: string;
+}
+
 export type CartItem =
   | VinylStickerCartItem
   | TShirtCartItem
   | ProductCartItem
-  | SignageCartItem;
+  | SignageCartItem
+  | DecalCartItem;

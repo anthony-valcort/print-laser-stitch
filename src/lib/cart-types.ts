@@ -85,38 +85,46 @@ export interface ProductCartItem extends CartItemBase {
   extraProperties?: Record<string, string>;
 }
 
+/**
+ * Decal Signage Calculator (service-plan-based). Single rectangle × qty, one
+ * of three service tiers, optional discount. No tax, no material.
+ */
 export interface SignageCartItem extends CartItemBase {
   kind: "signage";
-  signageType: string;
-  signageTypeLabel: string;
-  material: string;
-  materialLabel: string;
+  /** Width in the chosen unit. */
   width: number;
-  height: number;
-  sides: "single" | "double";
-  addOns: string[];
+  /** Length in the chosen unit. */
+  length: number;
+  /** Whether width/length are feet or inches. */
+  unit: "ft" | "in";
   qty: number;
-  perUnit: number;
-  fileUrl?: string;
-  fileName?: string;
-  email?: string;
-  phone?: string;
+  servicePlan: string;
+  servicePlanLabel: string;
+  pricePerSqFt: number;
+  unitAreaSqFt: number;
+  totalAreaSqFt: number;
+  discountPercent: number;
+  subtotal: number;
   notes?: string;
 }
 
 export interface DecalPanelLine {
   type: string;
   typeLabel: string;
+  /** Width in inches. */
   width: number;
+  /** Height in inches. */
   height: number;
   description?: string;
 }
 
+/**
+ * Quick Quote calculator (multi-panel + material). Material's $/sqft × total
+ * area, optional discount, 7% Martin County tax always on top.
+ */
 export interface DecalCartItem extends CartItemBase {
   kind: "decal";
   panels: DecalPanelLine[];
-  servicePlan: string;
-  servicePlanLabel: string;
   material: string;
   materialLabel: string;
   discountPercent: number;
@@ -124,7 +132,7 @@ export interface DecalCartItem extends CartItemBase {
   totalAreaSqFt: number;
   /** Subtotal before discount + tax. */
   subtotal: number;
-  /** Tax amount (already included in totalPrice). */
+  /** Tax amount (7% Martin County, already baked into totalPrice). */
   taxAmount: number;
   notes?: string;
 }

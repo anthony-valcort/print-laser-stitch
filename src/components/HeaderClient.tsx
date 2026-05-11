@@ -113,16 +113,16 @@ export default function HeaderClient({
             )}
           </div>
           <Link
-            href="/signage-quotes"
-            className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
-          >
-            Signage
-          </Link>
-          <Link
             href="/decal-quote"
             className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
           >
-            Decals
+            Quick Quote
+          </Link>
+          <Link
+            href="/signage-quotes"
+            className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
+          >
+            Decal Signage
           </Link>
           <Link
             href="/about"
@@ -258,18 +258,18 @@ export default function HeaderClient({
               Home
             </Link>
             <Link
-              href="/signage-quotes"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-            >
-              📐 Signage Calculator
-            </Link>
-            <Link
               href="/decal-quote"
               onClick={() => setMobileOpen(false)}
               className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
             >
-              🪟 Decal Quote
+              🪟 Quick Quote
+            </Link>
+            <Link
+              href="/signage-quotes"
+              onClick={() => setMobileOpen(false)}
+              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
+            >
+              🪧 Decal Signage Calculator
             </Link>
             <Link
               href="/about"

@@ -27,16 +27,16 @@ import {
   type SizeKey as StickerSize,
 } from "@/lib/pricing";
 import {
-  ADD_ONS as SIGNAGE_ADD_ONS,
-  SIGNAGE_MATERIALS,
-  SIGNAGE_TYPES,
-  calcSignagePrice,
+  SERVICE_PLANS,
+  calcSignageQuotePrice,
+  type MeasurementUnit,
+  type ServicePlanKey,
 } from "@/lib/signage-pricing";
 import {
   DECAL_MATERIALS,
   PANEL_TYPES,
-  SERVICE_PLANS,
   calcDecalPrice,
+  type MaterialKey as DecalMaterialKey,
   type PanelType,
 } from "@/lib/decal-pricing";
 import type { CartItem } from "@/lib/cart-types";
@@ -300,80 +300,87 @@ export async function POST(req: NextRequest) {
       });
       noteParts.push(`${lookup.productTitle} × ${qty}`);
     } else if (item.kind === "signage") {
-      const validType = SIGNAGE_TYPES.find((t) => t.key === item.signageType);
-      if (!validType) {
-        return NextResponse.json({ error: "Invalid sign type" }, { status: 400 });
-      }
-      const materials = SIGNAGE_MATERIALS[item.signageType] ?? [];
-      const validMaterial = materials.find((m) => m.key === item.material);
-      if (!validMaterial) {
-        return NextResponse.json({ error: "Invalid material" }, { status: 400 });
+      // Decal Signage Calculator — service plan × area × quantity, with
+      // optional discount, no tax.
+      const plan = SERVICE_PLANS.find(
+        (p) => p.key === (item.servicePlan as ServicePlanKey),
+      );
+      if (!plan) {
+        return NextResponse.json(
+          { error: "Invalid service plan" },
+          { status: 400 },
+        );
       }
       const w = Number(item.width);
-      const h = Number(item.height);
-      if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
-        return NextResponse.json({ error: "Invalid dimensions" }, { status: 400 });
+      const l = Number(item.length);
+      if (!Number.isFinite(w) || !Number.isFinite(l) || w <= 0 || l <= 0) {
+        return NextResponse.json(
+          { error: "Invalid signage dimensions" },
+          { status: 400 },
+        );
       }
+      const unit: MeasurementUnit = item.unit === "in" ? "in" : "ft";
       const qty = Math.max(1, Math.floor(Number(item.qty) || 1));
-      const cleanAddOns = (item.addOns ?? []).filter((k) =>
-        SIGNAGE_ADD_ONS.find((a) => a.key === k && a.applicableTo.includes(item.signageType)),
-      );
-      const price = calcSignagePrice({
-        type: item.signageType,
-        material: item.material,
+
+      const recomputed = calcSignageQuotePrice({
         width: w,
-        height: h,
-        sides: item.sides,
-        addOns: cleanAddOns,
+        length: l,
+        unit,
         quantity: qty,
+        servicePlan: plan.key,
+        discountPercent: Number(item.discountPercent) || 0,
       });
 
-      const sizeLabel = `${w}″ × ${h}″`;
-      const addOnLabels = cleanAddOns
-        .map((k) => SIGNAGE_ADD_ONS.find((a) => a.key === k)?.label)
-        .filter(Boolean)
-        .join(", ");
-
+      const dimLabel = `${w}${unit} × ${l}${unit}`;
       const properties: { name: string; value: string }[] = [
-        { name: "Sign Type", value: validType.label },
-        { name: "Material", value: validMaterial.label },
-        { name: "Size", value: sizeLabel },
+        { name: "Service Plan", value: plan.label },
+        { name: "Dimensions", value: dimLabel },
         {
-          name: "Sides",
-          value: item.sides === "single" ? "Single-sided" : "Double-sided",
+          name: "Total Area",
+          value: `${recomputed.totalAreaSqFt.toFixed(2)} sq ft`,
+        },
+        { name: "Quantity", value: `${qty}` },
+        {
+          name: "Rate",
+          value: `$${recomputed.pricePerSqFt.toFixed(2)} / sq ft`,
         },
       ];
-      if (addOnLabels) properties.push({ name: "Add-ons", value: addOnLabels });
-      if (item.fileUrl) {
-        properties.push({ name: "Design File", value: item.fileUrl });
-        if (item.fileName) {
-          properties.push({ name: "Design Filename", value: item.fileName });
-        }
+      if (recomputed.discountAmount > 0) {
+        properties.push({
+          name: "Discount",
+          value: `${item.discountPercent}% (−$${recomputed.discountAmount.toFixed(2)})`,
+        });
       }
       if (item.notes?.trim()) {
         properties.push({
-          name: "Notes",
+          name: "Project Notes",
           value: item.notes.trim().slice(0, 2000),
         });
       }
 
+      // Single line item — total already reflects discount. No tax line
+      // because Decal Signage Calculator in the old site didn't add tax.
       lineItems.push({
-        title: `${validType.label} · ${sizeLabel} · ${validMaterial.label}`,
-        price: price.perUnit.toFixed(2),
-        quantity: qty,
+        title: `Decal Signage · ${plan.label} · ${dimLabel}`,
+        price: recomputed.total.toFixed(2),
+        quantity: 1,
         requires_shipping: true,
-        taxable: true,
+        taxable: false,
         properties,
       });
-      noteParts.push(`${validType.label} ${sizeLabel} × ${qty}`);
+      noteParts.push(
+        `Decal Signage ${plan.label} ${recomputed.totalAreaSqFt.toFixed(2)} sqft`,
+      );
     } else if (item.kind === "decal") {
-      const plan = SERVICE_PLANS.find((p) => p.key === item.servicePlan);
-      if (!plan) {
-        return NextResponse.json({ error: "Invalid service plan" }, { status: 400 });
-      }
-      const mat = DECAL_MATERIALS.find((m) => m.key === item.material);
+      // Quick Quote — multi-panel + material, 7% Martin County tax on top.
+      const mat = DECAL_MATERIALS.find(
+        (m) => m.key === (item.material as DecalMaterialKey),
+      );
       if (!mat) {
-        return NextResponse.json({ error: "Invalid decal material" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Invalid decal material" },
+          { status: 400 },
+        );
       }
       if (mat.quoteOnly) {
         return NextResponse.json(
@@ -386,7 +393,7 @@ export async function POST(req: NextRequest) {
       }
       if (!Array.isArray(item.panels) || item.panels.length === 0) {
         return NextResponse.json(
-          { error: "Decal quote needs at least one panel" },
+          { error: "Quick Quote needs at least one panel" },
           { status: 400 },
         );
       }
@@ -401,7 +408,6 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Recompute server-side — never trust the client's totals.
       const recomputed = calcDecalPrice({
         panels: item.panels.map((p) => ({
           type: (PANEL_TYPES.find((t) => t.key === p.type)?.key ??
@@ -410,7 +416,6 @@ export async function POST(req: NextRequest) {
           height: Number(p.height),
           description: p.description,
         })),
-        servicePlan: plan.key,
         material: mat.key,
         discountPercent: Number(item.discountPercent) || 0,
       });
@@ -423,7 +428,6 @@ export async function POST(req: NextRequest) {
       });
 
       const properties: { name: string; value: string }[] = [
-        { name: "Service Plan", value: plan.label },
         { name: "Material", value: mat.label },
         {
           name: "Total Area",
@@ -452,19 +456,16 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Single line item — the total already includes tax + discount, so we
-      // pass it as the line price with quantity 1. Shopify still handles
-      // shipping at checkout.
       lineItems.push({
-        title: `${mat.label} · ${plan.label} · ${recomputed.totalAreaSqFt.toFixed(2)} sq ft`,
+        title: `Quick Quote · ${mat.label} · ${recomputed.totalAreaSqFt.toFixed(2)} sq ft`,
         price: recomputed.total.toFixed(2),
         quantity: 1,
         requires_shipping: true,
-        taxable: false, // tax is already baked into our price
+        taxable: false, // tax already baked into our price
         properties,
       });
       noteParts.push(
-        `Decal ${mat.label} ${recomputed.totalAreaSqFt.toFixed(2)} sqft`,
+        `Quick Quote ${mat.label} ${recomputed.totalAreaSqFt.toFixed(2)} sqft`,
       );
     }
   }

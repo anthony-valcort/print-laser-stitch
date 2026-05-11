@@ -145,7 +145,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Custom Signage Calculator CTA */}
+        {/* Quick Quote (multi-panel + material) CTA */}
         <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="relative overflow-hidden rounded-3xl border border-border-soft bg-gradient-to-br from-cyan-500/15 via-blue-500/10 to-indigo-500/15 p-8 sm:p-12">
             <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-cyan-400/20 blur-3xl" />
@@ -155,103 +155,18 @@ export default function Home() {
               <div>
                 <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-cyan-200">
                   <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
-                  Instant pricing
-                </span>
-                <h3 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-                  Custom Signage{" "}
-                  <span className="bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent">
-                    Quote Calculator
-                  </span>
-                </h3>
-                <p className="mt-4 text-base text-foreground-muted">
-                  Banners, yard signs, aluminum, acrylic, and foam board —
-                  pick your dimensions, material, and finishing options to get
-                  pricing in seconds. Oversized or non-standard? We&apos;ll
-                  send you a quote within 24 hours.
-                </p>
-
-                <ul className="mt-6 space-y-2 text-sm text-foreground/85">
-                  <li className="flex items-center gap-2">
-                    <CheckIcon /> Standard sizes priced instantly
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckIcon /> Custom dimensions quoted within 24h
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckIcon /> 5 materials · grommets, lamination, stakes
-                  </li>
-                </ul>
-
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <Link
-                    href="/signage-quotes"
-                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 hover:opacity-95"
-                  >
-                    Open Calculator
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M5 12h14" />
-                      <path d="m12 5 7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Decorative calculator visual */}
-              <div className="relative">
-                <div className="mx-auto max-w-sm rounded-2xl border border-border-soft bg-background/80 p-5 shadow-2xl shadow-black/40 backdrop-blur">
-                  <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-wider text-foreground-muted">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                    Sample Calculation
-                  </div>
-                  <div className="space-y-2.5 text-sm">
-                    <CalcRow label="Vinyl Banner" value="3′ × 6′" />
-                    <CalcRow label="13 oz Vinyl" value="$4.00 / sq ft" />
-                    <CalcRow label="Sides" value="Single" />
-                    <CalcRow label="Add-ons" value="Grommets" />
-                    <div className="my-3 border-t border-border-soft" />
-                    <div className="flex items-center justify-between text-base">
-                      <span className="font-semibold">Estimated Total</span>
-                      <span className="font-bold text-cyan-300">$76.00</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Decal Quote Calculator CTA */}
-        <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl border border-border-soft bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-cyan-500/15 p-8 sm:p-12">
-            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-400/20 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-teal-400/20 blur-3xl" />
-
-            <div className="relative grid items-center gap-10 lg:grid-cols-2">
-              <div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-emerald-200">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
                   Window film · Wall vinyl
                 </span>
                 <h3 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
-                  Decal Quote{" "}
-                  <span className="bg-gradient-to-r from-emerald-300 to-teal-400 bg-clip-text text-transparent">
+                  Quick Quote{" "}
+                  <span className="bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent">
                     Calculator
                   </span>
                 </h3>
                 <p className="mt-4 text-base text-foreground-muted">
-                  Measure your windows, walls, doors, or any flat surface —
-                  pick a vinyl material and service plan (print only, design
-                  + print, or full install) to get instant pricing with tax
-                  included.
+                  Add panels for doors, windows, walls, wood, or metal — pick
+                  a vinyl material and get instant pricing with 7% Martin
+                  County tax included.
                 </p>
 
                 <ul className="mt-6 space-y-2 text-sm text-foreground/85">
@@ -262,14 +177,97 @@ export default function Home() {
                     <CheckIcon /> 5 vinyl materials + special order
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckIcon /> Compare all 3 service tiers side by side
+                    <CheckIcon /> Discount + 7% tax handled automatically
                   </li>
                 </ul>
 
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link
                     href="/decal-quote"
-                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/30 hover:opacity-95"
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 hover:opacity-95"
+                  >
+                    Open Quick Quote
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M5 12h14" />
+                      <path d="m12 5 7 7-7 7" />
+                    </svg>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Sample quote */}
+              <div className="relative">
+                <div className="mx-auto max-w-sm rounded-2xl border border-border-soft bg-background/80 p-5 shadow-2xl shadow-black/40 backdrop-blur">
+                  <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-wider text-foreground-muted">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                    Sample Quote
+                  </div>
+                  <div className="space-y-2.5 text-sm">
+                    <CalcRow label="🚪 Door" value="12″ × 12″" />
+                    <CalcRow label="Material" value="Full Vinyl" />
+                    <CalcRow label="Subtotal" value="$16.00" />
+                    <CalcRow label="Tax (7%)" value="$1.12" />
+                    <div className="my-3 border-t border-border-soft" />
+                    <div className="flex items-center justify-between text-base">
+                      <span className="font-semibold">Total</span>
+                      <span className="font-bold text-cyan-300">$17.12</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Decal Signage Calculator (service plan) CTA */}
+        <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+          <div className="relative overflow-hidden rounded-3xl border border-border-soft bg-gradient-to-br from-emerald-500/15 via-lime-500/10 to-yellow-500/15 p-8 sm:p-12">
+            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-400/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-yellow-400/20 blur-3xl" />
+
+            <div className="relative grid items-center gap-10 lg:grid-cols-2">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-emerald-200">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                  Print &amp; install quote generator
+                </span>
+                <h3 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+                  Decal Signage{" "}
+                  <span className="bg-gradient-to-r from-emerald-300 to-yellow-400 bg-clip-text text-transparent">
+                    Calculator
+                  </span>
+                </h3>
+                <p className="mt-4 text-base text-foreground-muted">
+                  Enter width and length, pick a service tier (Print Only,
+                  Design &amp; Print, or Full Install), and get an instant
+                  quote.
+                </p>
+
+                <ul className="mt-6 space-y-2 text-sm text-foreground/85">
+                  <li className="flex items-center gap-2">
+                    <CheckIcon /> Toggle between feet and inches
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckIcon /> 3 service tiers: $10 / $12 / $18 per sq ft
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckIcon /> Custom discount support
+                  </li>
+                </ul>
+
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <Link
+                    href="/signage-quotes"
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-lime-500 px-6 py-3 text-sm font-semibold text-emerald-950 shadow-lg shadow-emerald-500/30 hover:opacity-95"
                   >
                     Open Calculator
                     <svg
@@ -289,7 +287,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Decorative panel preview */}
+              {/* Sample quote */}
               <div className="relative">
                 <div className="mx-auto max-w-sm rounded-2xl border border-border-soft bg-background/80 p-5 shadow-2xl shadow-black/40 backdrop-blur">
                   <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-wider text-foreground-muted">
@@ -297,14 +295,14 @@ export default function Home() {
                     Sample Quote
                   </div>
                   <div className="space-y-2.5 text-sm">
-                    <CalcRow label="🪟 Window" value="36″ × 72″" />
-                    <CalcRow label="Material" value="Window Tint" />
+                    <CalcRow label="Width × Length" value="1′ × 1.7′" />
                     <CalcRow label="Service" value="Full Install" />
-                    <CalcRow label="Tax (7%)" value="$22.68" />
+                    <CalcRow label="Rate" value="$18.00 / sq ft" />
+                    <CalcRow label="Quantity" value="1" />
                     <div className="my-3 border-t border-border-soft" />
                     <div className="flex items-center justify-between text-base">
-                      <span className="font-semibold">Total</span>
-                      <span className="font-bold text-emerald-300">$346.68</span>
+                      <span className="font-semibold">Grand Total</span>
+                      <span className="font-bold text-emerald-300">$30.60</span>
                     </div>
                   </div>
                 </div>

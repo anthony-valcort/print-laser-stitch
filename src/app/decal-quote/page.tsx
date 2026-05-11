@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import TrustBadges from "@/components/TrustBadges";
 import DecalCalculator from "@/components/DecalCalculator";
 
 export const metadata: Metadata = {
-  title: "Decal Quote Calculator · Print Laser Stitch",
+  title: "Quick Quote · Print Laser Stitch",
   description:
-    "Instant pricing for window film, wall vinyl, and decal jobs. Add multiple panels, pick your material and service plan, and check out.",
+    "Quick Quote — Manual Entry. Add panels manually by entering dimensions and descriptions, pick your material, and get an instant quote with 7% Martin County tax.",
 };
 
 export default function DecalQuotePage() {
@@ -16,7 +15,6 @@ export default function DecalQuotePage() {
       <Header />
       <main className="flex-1">
         <DecalCalculator />
-        <TrustBadges />
       </main>
       <Footer />
     </>

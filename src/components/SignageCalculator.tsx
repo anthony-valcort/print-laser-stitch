@@ -1,767 +1,634 @@
-/* eslint-disable react-hooks/preserve-manual-memoization */
-/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
-  ADD_ONS,
-  COMMON_SIZES,
-  SIGNAGE_MATERIALS,
-  SIGNAGE_TYPES,
-  calcSignagePrice,
-  requiresManualQuote,
+  SERVICE_PLANS,
+  calcSignageQuotePrice,
+  type MeasurementUnit,
+  type ServicePlanKey,
 } from "@/lib/signage-pricing";
-import { Section } from "@/components/configurator/Section";
-import { QuantityStepper } from "@/components/configurator/QuantityStepper";
-import {
-  EMPTY_UPLOAD_SLOT,
-  UploadBox,
-  uploadDesign,
-  type UploadSlot,
-} from "@/components/configurator/UploadBox";
 import { useCart } from "@/lib/cart-store";
 import type { SignageCartItem } from "@/lib/cart-types";
 
-type SizeMode = "preset" | "custom";
+const PLAN_VISUALS: Record<
+  ServicePlanKey,
+  {
+    icon: string;
+    accent: string;
+    selectedRing: string;
+    glow: string;
+    perks: string[];
+  }
+> = {
+  "print-only": {
+    icon: "🖨️",
+    accent: "from-sky-400 to-cyan-500",
+    selectedRing: "ring-sky-400/60 border-sky-400/60",
+    glow: "shadow-sky-500/30",
+    perks: ["High-resolution print", "You handle install"],
+  },
+  "design-print": {
+    icon: "✏️",
+    accent: "from-fuchsia-400 to-purple-500",
+    selectedRing: "ring-fuchsia-400/60 border-fuchsia-400/60",
+    glow: "shadow-fuchsia-500/30",
+    perks: ["Custom artwork", "Free proof", "Print included"],
+  },
+  "full-install": {
+    icon: "🚀",
+    accent: "from-amber-400 to-orange-500",
+    selectedRing: "ring-amber-400/60 border-amber-400/60",
+    glow: "shadow-amber-500/30",
+    perks: ["Design + print", "Pro installation", "Hands-off"],
+  },
+};
 
 export default function SignageCalculator() {
   const router = useRouter();
   const { addItem } = useCart();
-  const [type, setType] = useState<string>(SIGNAGE_TYPES[0].key);
-  const materials = SIGNAGE_MATERIALS[type] ?? [];
-  const [material, setMaterial] = useState<string>(materials[0]?.key);
 
-  const [sizeMode, setSizeMode] = useState<SizeMode>("preset");
-  const [presetIdx, setPresetIdx] = useState<number>(0);
-  const [customW, setCustomW] = useState<number>(36);
-  const [customH, setCustomH] = useState<number>(72);
-
-  const [sides, setSides] = useState<"single" | "double">("single");
-  const [addOns, setAddOns] = useState<string[]>([]);
+  const [unit, setUnit] = useState<MeasurementUnit>("ft");
+  const [width, setWidth] = useState<string>("");
+  const [length, setLength] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
-
-  const [upload, setUpload] = useState<UploadSlot>(EMPTY_UPLOAD_SLOT);
-
-  const [phone, setPhone] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
+  const [discountPercent, setDiscountPercent] = useState<string>("0");
+  const [servicePlan, setServicePlan] =
+    useState<ServicePlanKey>("full-install");
   const [notes, setNotes] = useState<string>("");
-
-  const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [submittedKind, setSubmittedKind] = useState<"order" | "quote" | null>(
-    null,
-  );
 
-  // Reset material when type changes (so we don't keep an invalid material).
-  useEffect(() => {
-    const nextMats = SIGNAGE_MATERIALS[type] ?? [];
-    if (!nextMats.find((m) => m.key === material)) {
-      setMaterial(nextMats[0]?.key);
-    }
-    // Reset sides if new material doesn't allow double.
-    const next = nextMats.find((m) => m.key === material) ?? nextMats[0];
-    if (next && !next.doubleSidedAllowed && sides === "double") {
-      setSides("single");
-    }
-    // Reset out-of-range add-ons
-    setAddOns((prev) =>
-      prev.filter((k) => {
-        const a = ADD_ONS.find((x) => x.key === k);
-        return a?.applicableTo.includes(type);
-      }),
-    );
-    setPresetIdx(0);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [type]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 4000);
-    return () => clearTimeout(t);
-  }, [toast]);
-
-  const presets = COMMON_SIZES[type] ?? [];
-  const currentMaterial = materials.find((m) => m.key === material);
-  const applicableAddOns = ADD_ONS.filter((a) => a.applicableTo.includes(type));
-
-  // Resolve dimensions in inches.
-  const dims =
-    sizeMode === "preset"
-      ? presets[presetIdx] ?? { w: 36, h: 72, label: "" }
-      : { w: customW, h: customH, label: `${customW}″ × ${customH}″` };
-
-  const isManualQuote =
-    sizeMode === "custom" && requiresManualQuote(dims.w, dims.h);
-
-  const price = useMemo(
+  const result = useMemo(
     () =>
-      calcSignagePrice({
-        type,
-        material,
-        width: dims.w,
-        height: dims.h,
-        sides,
-        addOns,
+      calcSignageQuotePrice({
+        width: Number(width) || 0,
+        length: Number(length) || 0,
+        unit,
         quantity,
+        servicePlan,
+        discountPercent: Number(discountPercent) || 0,
       }),
-    [type, material, dims.w, dims.h, sides, addOns, quantity],
+    [width, length, unit, quantity, servicePlan, discountPercent],
   );
 
-  function toggleAddOn(key: string) {
-    setAddOns((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
-    );
-  }
+  const w = Number(width) || 0;
+  const l = Number(length) || 0;
+  const dimsEntered = w > 0 && l > 0;
+  const currentPlan =
+    SERVICE_PLANS.find((p) => p.key === servicePlan) ?? SERVICE_PLANS[0];
 
-  async function handleSubmit(kind: "order" | "quote") {
-    if (submitting) return;
-
-    // Instant order — add to cart and head to /cart. Multiple signs can be
-    // bundled with stickers, t-shirts, etc. in the same checkout.
-    if (kind === "order") {
-      const validType = SIGNAGE_TYPES.find((t) => t.key === type);
-      const validMaterial = (SIGNAGE_MATERIALS[type] ?? []).find(
-        (m) => m.key === material,
-      );
-      if (!validType || !validMaterial) {
-        setToast("Invalid type or material selection.");
-        return;
-      }
-
-      const sizeLabel = `${dims.w}″ × ${dims.h}″`;
-      const cartItem: Omit<SignageCartItem, "id" | "addedAt"> = {
-        kind: "signage",
-        title: validType.label,
-        subtitle: `${sizeLabel} · ${validMaterial.label} · ${
-          sides === "single" ? "Single-sided" : "Double-sided"
-        }`,
-        thumbnail: validType.icon,
-        unitLabel: `$${price.perUnit.toFixed(2)} each`,
-        totalPrice: price.total,
-        quantity,
-        signageType: type,
-        signageTypeLabel: validType.label,
-        material,
-        materialLabel: validMaterial.label,
-        width: dims.w,
-        height: dims.h,
-        sides,
-        addOns,
-        qty: quantity,
-        perUnit: price.perUnit,
-        fileUrl: upload.fileUrl ?? undefined,
-        fileName: upload.file?.name,
-        email: email.trim() || undefined,
-        phone: phone.trim() || undefined,
-        notes: notes.trim() || undefined,
-        editHref: "/signage-quotes",
-      };
-
-      addItem(cartItem);
-      router.push("/cart");
+  function handleAddToCart() {
+    if (!dimsEntered) {
+      setToast("Enter both width and length first.");
       return;
     }
-
-    // Quote path — still creates a separate quote-pending draft order via
-    // /api/checkout-signage. Quotes need Anthony to manually adjust pricing
-    // before the customer pays, so they don't fit the cart flow.
-    if (!email.trim()) {
-      setToast("Please enter your email so we can send you a quote.");
-      return;
-    }
-    setSubmitting(true);
     setToast(null);
 
-    try {
-      const response = await fetch("/api/checkout-signage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          kind: "quote",
-          type,
-          material,
-          width: dims.w,
-          height: dims.h,
-          sides,
-          addOns,
-          quantity,
-          fileUrl: upload.fileUrl ?? undefined,
-          fileName: upload.file?.name,
-          email: email.trim() || undefined,
-          phone: phone.trim() || undefined,
-          notes: notes.trim() || undefined,
-        }),
-      });
-      if (response.status === 401) {
-        window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
-        return;
-      }
-      const data = (await response.json()) as {
-        quoteAccepted?: boolean;
-        error?: string;
-      };
-      if (!response.ok) {
-        throw new Error(data.error ?? "Submission failed");
-      }
-      setSubmittedKind("quote");
-    } catch (err) {
-      setToast(`Error: ${err instanceof Error ? err.message : "Submission failed"}`);
-    } finally {
-      setSubmitting(false);
-    }
-  }
+    const cartItem: Omit<SignageCartItem, "id" | "addedAt"> = {
+      kind: "signage",
+      title: `Decal Signage · ${currentPlan.label}`,
+      subtitle: `${w}${unit} × ${l}${unit} · qty ${quantity}`,
+      thumbnail: "🪧",
+      unitLabel: `$${result.pricePerSqFt.toFixed(2)} / sq ft`,
+      totalPrice: result.total,
+      quantity,
+      width: w,
+      length: l,
+      unit,
+      qty: quantity,
+      servicePlan: currentPlan.key,
+      servicePlanLabel: currentPlan.label,
+      pricePerSqFt: result.pricePerSqFt,
+      unitAreaSqFt: result.unitAreaSqFt,
+      totalAreaSqFt: result.totalAreaSqFt,
+      discountPercent: Number(discountPercent) || 0,
+      subtotal: result.subtotal,
+      notes: notes.trim() || undefined,
+      editHref: "/signage-quotes",
+    };
 
-  if (submittedKind === "quote") {
-    return (
-      <section className="mx-auto max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
-        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-10 text-center">
-          <div className="text-5xl">✓</div>
-          <h1 className="mt-4 text-2xl font-bold">Quote request received</h1>
-          <p className="mt-3 text-sm text-foreground-muted">
-            Our team will review your custom signage request and reply at{" "}
-            <span className="font-mono text-foreground">{email}</span> within
-            24 business hours.
-          </p>
-          <Link
-            href="/"
-            className="mt-6 inline-flex rounded-full border border-border-strong bg-white/5 px-5 py-2 text-sm font-medium hover:bg-white/10"
-          >
-            ← Back to home
-          </Link>
-        </div>
-      </section>
-    );
+    addItem(cartItem);
+    router.push("/cart");
   }
 
   return (
     <section className="relative">
-      {/* Breadcrumb */}
-      <div className="border-b border-border-soft bg-background-soft/60">
-        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 text-xs sm:px-6 lg:px-8">
-          <Link
-            href="/"
-            className="flex items-center gap-1 text-foreground-muted hover:text-foreground"
+      {/* Ambient glow background */}
+      <div className="pointer-events-none absolute -top-32 left-1/2 -z-10 h-[40rem] w-[60rem] -translate-x-1/2 rounded-full bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-amber-500/10 blur-3xl" />
+
+      {/* Hero */}
+      <div className="mx-auto max-w-7xl px-4 pb-6 pt-12 sm:px-6 lg:px-8 lg:pt-16">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1 text-xs text-foreground-muted hover:text-foreground"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            All Products
-          </Link>
-          <span className="text-foreground-muted/40">/</span>
-          <span className="font-medium">Custom Signage Quote</span>
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          Back to home
+        </Link>
+
+        <div className="mt-6 text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-cyan-200">
+            <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
+            Print &amp; install quote generator
+          </span>
+          <h1 className="mt-5 text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
+            Decal{" "}
+            <span className="bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 bg-clip-text text-transparent">
+              Signage
+            </span>{" "}
+            Calculator
+          </h1>
+          <p className="mx-auto mt-4 max-w-xl text-sm text-foreground-muted sm:text-base">
+            Tell us the size, pick a service tier, get your price instantly.
+          </p>
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-3 py-6 sm:px-6 lg:px-8">
-        <div className="mb-6">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border-soft bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-foreground-muted">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            Instant calculator + custom quotes
-          </div>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-            Custom Signage Calculator
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm text-foreground-muted">
-            Banners, yard signs, aluminum, acrylic, foam board — pick standard
-            sizes for instant pricing or request a quote for custom dimensions.
-          </p>
-        </div>
+      {/* Calculator body */}
+      <div className="mx-auto max-w-7xl px-3 pb-16 sm:px-6 lg:px-8">
+        <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-8">
+          {/* LEFT — Inputs */}
+          <div className="min-w-0 space-y-5">
+            {/* Dimensions card */}
+            <section className="group relative overflow-hidden rounded-3xl border border-border-soft bg-gradient-to-br from-surface to-surface-elevated p-6 sm:p-8">
+              <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-cyan-500/10 blur-3xl" />
 
-        <div className="grid min-w-0 gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10">
-          {/* LEFT: Configurator */}
-          <div className="min-w-0 space-y-6">
-            {/* Type */}
-            <Section title="Sign type">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                {SIGNAGE_TYPES.map((t) => (
+              <div className="mb-5 flex items-start justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-300">
+                    <span className="grid h-6 w-6 place-items-center rounded-md bg-cyan-500/15">
+                      1
+                    </span>
+                    Dimensions
+                  </div>
+                  <h2 className="mt-2 text-xl font-bold">Size your sign</h2>
+                </div>
+
+                {/* Unit toggle */}
+                <div className="relative inline-flex rounded-full border border-border-soft bg-background/60 p-1 text-xs font-semibold backdrop-blur">
                   <button
-                    key={t.key}
                     type="button"
-                    onClick={() => setType(t.key)}
-                    className={`flex flex-col items-center gap-1 rounded-2xl border p-4 text-center transition ${
-                      type === t.key
-                        ? "border-highlight bg-highlight-soft"
-                        : "border-border-soft bg-white/3 hover:bg-white/6"
+                    onClick={() => setUnit("ft")}
+                    className={`relative z-10 rounded-full px-4 py-1.5 transition ${
+                      unit === "ft"
+                        ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-md shadow-cyan-500/30"
+                        : "text-foreground-muted hover:text-foreground"
                     }`}
                   >
-                    <span className="text-3xl">{t.icon}</span>
-                    <span className="mt-1 text-xs font-semibold">
-                      {t.label}
-                    </span>
+                    Feet
                   </button>
-                ))}
-              </div>
-              {currentMaterial && (
-                <p className="mt-2 text-[11px] text-foreground-muted">
-                  {SIGNAGE_TYPES.find((t) => t.key === type)?.blurb}
-                </p>
-              )}
-            </Section>
-
-            {/* Material */}
-            <Section title="Material" value={currentMaterial?.label}>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {materials.map((m) => (
                   <button
-                    key={m.key}
                     type="button"
-                    onClick={() => setMaterial(m.key)}
-                    className={`flex items-center justify-between gap-2 rounded-xl border px-3 py-3 text-left transition sm:px-4 ${
-                      material === m.key
-                        ? "border-highlight bg-highlight-soft"
-                        : "border-border-soft bg-white/3 hover:bg-white/6"
+                    onClick={() => setUnit("in")}
+                    className={`relative z-10 rounded-full px-4 py-1.5 transition ${
+                      unit === "in"
+                        ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-md shadow-cyan-500/30"
+                        : "text-foreground-muted hover:text-foreground"
                     }`}
                   >
-                    <span className="min-w-0 flex-1 text-sm font-medium">
-                      {m.label}
-                    </span>
-                    <span className="shrink-0 text-xs font-semibold text-foreground-muted">
-                      ${m.pricePerSqFt.toFixed(2)}/sqft
-                    </span>
+                    Inches
                   </button>
-                ))}
+                </div>
               </div>
-            </Section>
 
-            {/* Size — preset OR custom */}
-            <Section
-              title="Size"
-              value={
-                sizeMode === "preset"
-                  ? presets[presetIdx]?.label
-                  : `${customW}″ × ${customH}″`
-              }
-            >
-              <div className="mb-3 inline-flex rounded-full border border-border-soft bg-white/3 p-0.5 text-xs font-semibold">
-                <button
-                  type="button"
-                  onClick={() => setSizeMode("preset")}
-                  className={`rounded-full px-4 py-1.5 transition ${
-                    sizeMode === "preset"
-                      ? "bg-highlight text-yellow-950"
-                      : "text-foreground-muted hover:text-foreground"
-                  }`}
-                >
-                  Standard sizes
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSizeMode("custom")}
-                  className={`rounded-full px-4 py-1.5 transition ${
-                    sizeMode === "custom"
-                      ? "bg-highlight text-yellow-950"
-                      : "text-foreground-muted hover:text-foreground"
-                  }`}
-                >
-                  Custom size
-                </button>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <BigInput
+                  label="Width"
+                  value={width}
+                  onChange={setWidth}
+                  unitSuffix={unit}
+                  placeholder="0"
+                />
+                <BigInput
+                  label="Length"
+                  value={length}
+                  onChange={setLength}
+                  unitSuffix={unit}
+                  placeholder="0"
+                />
               </div>
-              {sizeMode === "preset" ? (
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {presets.map((s, i) => (
+
+              {/* Quantity + Discount */}
+              <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-foreground-muted">
+                    Quantity
+                  </label>
+                  <div className="flex items-center gap-1 rounded-2xl border border-border-soft bg-background/60 p-1">
                     <button
-                      key={s.label}
                       type="button"
-                      onClick={() => setPresetIdx(i)}
-                      className={`rounded-xl border px-4 py-3 text-sm font-medium transition ${
-                        presetIdx === i
-                          ? "border-highlight bg-highlight-soft"
-                          : "border-border-soft bg-white/3 hover:bg-white/6"
-                      }`}
+                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                      className="grid h-10 w-10 place-items-center rounded-xl text-lg font-bold text-foreground-muted hover:bg-white/10"
                     >
-                      {s.label}
+                      −
                     </button>
-                  ))}
+                    <span className="flex-1 text-center text-lg font-bold tabular-nums">
+                      {quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity((q) => q + 1)}
+                      className="grid h-10 w-10 place-items-center rounded-xl text-lg font-bold text-foreground-muted hover:bg-white/10"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  <DimField label="Width (in)" value={customW} onChange={setCustomW} />
-                  <DimField label="Height (in)" value={customH} onChange={setCustomH} />
+                <div>
+                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-foreground-muted">
+                    Discount (%)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={discountPercent}
+                      onChange={(e) => setDiscountPercent(e.target.value)}
+                      min={0}
+                      max={100}
+                      step={1}
+                      placeholder="0"
+                      className="w-full rounded-2xl border border-border-soft bg-background/60 px-4 py-3 text-center text-lg font-bold tabular-nums outline-none ring-cyan-400/40 focus:ring-2"
+                      suppressHydrationWarning
+                    />
+                    <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-foreground-muted">
+                      %
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sign preview */}
+              {dimsEntered && (
+                <div className="mt-6 rounded-2xl border border-border-soft bg-background/40 p-4">
+                  <div className="mb-3 flex items-center justify-between text-[11px] uppercase tracking-wider text-foreground-muted">
+                    <span>Visual preview</span>
+                    <span className="font-mono text-foreground">
+                      {result.unitAreaSqFt.toFixed(2)} sq ft each
+                    </span>
+                  </div>
+                  <SignPreview w={w} l={l} unit={unit} />
                 </div>
               )}
-              <p className="mt-2 text-[11px] text-foreground-muted">
-                Area: <span className="font-mono text-foreground">{price.area} sq ft</span>
-                {isManualQuote && (
-                  <span className="ml-2 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
-                    Oversize — quote required
-                  </span>
-                )}
-              </p>
-            </Section>
+            </section>
 
-            {/* Sides */}
-            <Section title="Print sides" value={sides === "single" ? "Single-sided" : "Double-sided"}>
-              <div className="grid grid-cols-2 gap-2">
-                {(["single", "double"] as const).map((s) => {
-                  const disabled =
-                    s === "double" && !currentMaterial?.doubleSidedAllowed;
+            {/* Service tier card */}
+            <section className="relative overflow-hidden rounded-3xl border border-border-soft bg-gradient-to-br from-surface to-surface-elevated p-6 sm:p-8">
+              <div className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-fuchsia-500/10 blur-3xl" />
+
+              <div className="mb-5">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-fuchsia-300">
+                  <span className="grid h-6 w-6 place-items-center rounded-md bg-fuchsia-500/15">
+                    2
+                  </span>
+                  Service tier
+                </div>
+                <h2 className="mt-2 text-xl font-bold">
+                  How much help do you need?
+                </h2>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                {SERVICE_PLANS.map((plan) => {
+                  const active = servicePlan === plan.key;
+                  const v = PLAN_VISUALS[plan.key];
                   return (
                     <button
-                      key={s}
+                      key={plan.key}
                       type="button"
-                      disabled={disabled}
-                      onClick={() => setSides(s)}
-                      className={`rounded-xl border px-4 py-3 text-sm font-medium transition ${
-                        sides === s
-                          ? "border-highlight bg-highlight-soft"
-                          : "border-border-soft bg-white/3 hover:bg-white/6"
-                      } ${disabled ? "cursor-not-allowed opacity-40" : ""}`}
+                      onClick={() => setServicePlan(plan.key)}
+                      className={`group/card relative overflow-hidden rounded-2xl border-2 p-5 text-left transition-all ${
+                        active
+                          ? `${v.selectedRing} bg-gradient-to-br from-white/10 to-white/0 shadow-lg ${v.glow}`
+                          : "border-border-soft bg-background/40 hover:border-border-strong hover:bg-white/5"
+                      }`}
                     >
-                      {s === "single" ? "Single-sided" : "Double-sided"}
-                      {disabled && (
-                        <span className="ml-1 text-[10px] text-foreground-muted">
-                          (n/a)
+                      {/* Selected check */}
+                      {active && (
+                        <span className="absolute right-3 top-3 grid h-6 w-6 place-items-center rounded-full bg-gradient-to-r from-cyan-400 to-fuchsia-400 text-emerald-950">
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
                         </span>
                       )}
-                    </button>
-                  );
-                })}
-              </div>
-            </Section>
 
-            {/* Add-ons */}
-            {applicableAddOns.length > 0 && (
-              <Section title="Add-ons">
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {applicableAddOns.map((a) => {
-                    const checked = addOns.includes(a.key);
-                    const feeText = a.flatFee
-                      ? `+$${a.flatFee.toFixed(2)}`
-                      : a.percentMarkup
-                        ? `+${(a.percentMarkup * 100).toFixed(0)}%`
-                        : "";
-                    return (
-                      <button
-                        key={a.key}
-                        type="button"
-                        onClick={() => toggleAddOn(a.key)}
-                        className={`flex items-start justify-between gap-3 rounded-xl border px-3 py-3 text-left transition sm:px-4 ${
-                          checked
-                            ? "border-highlight bg-highlight-soft"
-                            : "border-border-soft bg-white/3 hover:bg-white/6"
-                        }`}
+                      <div
+                        className={`grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br ${v.accent} text-2xl shadow-lg ${v.glow}`}
                       >
-                        <div className="flex min-w-0 flex-1 items-start gap-2">
-                          <span
-                            className={`mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded border ${
-                              checked
-                                ? "border-highlight bg-highlight text-yellow-950"
-                                : "border-border-strong bg-transparent"
-                            }`}
+                        {v.icon}
+                      </div>
+                      <div className="mt-4 text-sm font-bold">{plan.label}</div>
+                      <div className="mt-1 flex items-baseline gap-1">
+                        <span className="text-2xl font-black tabular-nums">
+                          ${plan.pricePerSqFt}
+                        </span>
+                        <span className="text-[11px] text-foreground-muted">
+                          / sq ft
+                        </span>
+                      </div>
+                      <ul className="mt-3 space-y-1">
+                        {v.perks.map((perk) => (
+                          <li
+                            key={perk}
+                            className="flex items-center gap-1.5 text-[11px] text-foreground/80"
                           >
-                            {checked && (
+                            <span className="grid h-3 w-3 shrink-0 place-items-center rounded-full bg-white/10">
                               <svg
-                                width="10"
-                                height="10"
+                                width="7"
+                                height="7"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
-                                strokeWidth="3"
+                                strokeWidth="3.5"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                               >
                                 <polyline points="20 6 9 17 4 12" />
                               </svg>
-                            )}
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <div className="text-sm font-medium">{a.label}</div>
-                            <div className="text-[11px] text-foreground-muted">
-                              {a.description}
-                            </div>
-                          </div>
-                        </div>
-                        <span className="shrink-0 text-xs font-semibold text-emerald-300">
-                          {feeText}
-                        </span>
-                      </button>
-                    );
-                  })}
+                            </span>
+                            {perk}
+                          </li>
+                        ))}
+                      </ul>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* Notes card */}
+            <section className="rounded-3xl border border-border-soft bg-gradient-to-br from-surface to-surface-elevated p-6 sm:p-8">
+              <div className="mb-3">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-300">
+                  <span className="grid h-6 w-6 place-items-center rounded-md bg-emerald-500/15">
+                    3
+                  </span>
+                  Optional notes
                 </div>
-              </Section>
-            )}
-
-            {/* Quantity */}
-            <Section title="Quantity">
-              <QuantityStepper value={quantity} min={1} onChange={setQuantity} />
-            </Section>
-
-            {/* Design upload (optional now) */}
-            <Section title="Upload your design (optional now — required before printing)">
-              <UploadBox
-                slot={upload}
-                onSelect={(f) => uploadDesign(f, setUpload)}
-                onClear={() => setUpload(EMPTY_UPLOAD_SLOT)}
-              />
-            </Section>
-
-            {/* Customer info — required for quote, optional for instant order */}
-            <Section
-              title={
-                isManualQuote
-                  ? "Your contact info (required for quote)"
-                  : "Your contact info (optional)"
-              }
-            >
-              <div className="grid gap-3 sm:grid-cols-2">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  className="rounded-xl border border-border-soft bg-white/4 px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/60 outline-none ring-highlight/40 focus:ring-2"
-                  suppressHydrationWarning
-                />
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+1 (555) 123-4567"
-                  className="rounded-xl border border-border-soft bg-white/4 px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/60 outline-none ring-highlight/40 focus:ring-2"
-                  suppressHydrationWarning
-                />
+                <h2 className="mt-2 text-lg font-bold">
+                  Anything we should know?
+                </h2>
               </div>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
-                placeholder="Anything else we should know? (install location, deadline, special finishing, etc.)"
-                className="mt-3 w-full resize-none rounded-xl border border-border-soft bg-white/4 px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/60 outline-none ring-highlight/40 focus:ring-2"
+                placeholder="Install location, deadline, special instructions…"
+                className="w-full resize-none rounded-2xl border border-border-soft bg-background/60 px-4 py-3 text-sm placeholder:text-foreground-muted/60 outline-none ring-emerald-400/40 focus:ring-2"
                 suppressHydrationWarning
               />
-            </Section>
+            </section>
           </div>
 
-          {/* RIGHT: Sticky preview + total + CTAs */}
+          {/* RIGHT — Sticky quote summary */}
           <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start">
-            <div className="space-y-4 rounded-2xl border border-border-soft bg-surface p-4 sm:p-5">
-              <div>
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-foreground-muted">
-                  Your sign
-                </div>
-                <div className="mt-1 text-base font-bold">
-                  {SIGNAGE_TYPES.find((t) => t.key === type)?.label}
-                </div>
-                <div className="text-xs text-foreground-muted">
-                  {currentMaterial?.label}
-                </div>
-              </div>
-
-              <SignPreview
-                w={dims.w}
-                h={dims.h}
-                sides={sides}
-                fileUrl={upload.fileUrl}
+            <div
+              className={`relative overflow-hidden rounded-3xl border bg-gradient-to-br p-6 transition-all ${
+                dimsEntered
+                  ? `${PLAN_VISUALS[servicePlan].selectedRing} from-background to-surface-elevated shadow-2xl ${PLAN_VISUALS[servicePlan].glow}`
+                  : "border-border-soft from-surface to-surface-elevated"
+              }`}
+            >
+              {/* Ambient gradient */}
+              <div
+                className={`pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br opacity-30 blur-3xl ${
+                  dimsEntered
+                    ? PLAN_VISUALS[servicePlan].accent
+                    : "from-transparent to-transparent"
+                }`}
               />
 
-              <div className="rounded-xl bg-white/5 px-3 py-2 text-xs">
-                <div className="flex items-center justify-between text-foreground-muted">
-                  <span>Dimensions</span>
-                  <span className="font-mono text-foreground">
-                    {dims.w}″ × {dims.h}″
+              <div className="relative">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground-muted">
+                    Your quote
                   </span>
-                </div>
-                <div className="mt-1 flex items-center justify-between text-foreground-muted">
-                  <span>Area</span>
-                  <span className="font-mono text-foreground">
-                    {price.area} sq ft
-                  </span>
-                </div>
-                <div className="mt-1 flex items-center justify-between text-foreground-muted">
-                  <span>Sides</span>
-                  <span className="text-foreground">
-                    {sides === "single" ? "Single-sided" : "Double-sided"}
-                  </span>
-                </div>
-                <div className="mt-1 flex items-center justify-between text-foreground-muted">
-                  <span>Quantity</span>
-                  <span className="font-mono text-foreground">{quantity}</span>
-                </div>
-              </div>
-
-              {/* Price breakdown */}
-              <div className="rounded-xl border border-border-soft px-3 py-3 text-xs">
-                <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-foreground-muted">
-                  Price breakdown (per unit)
-                </div>
-                {price.breakdown.map((b, i) => (
-                  <div
-                    key={i}
-                    className="flex items-baseline justify-between gap-3 py-0.5 text-foreground-muted"
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r ${PLAN_VISUALS[servicePlan].accent} px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white`}
                   >
-                    <span className="min-w-0 flex-1 truncate">{b.label}</span>
-                    <span className="shrink-0 font-mono text-foreground">
-                      {b.amount >= 0 ? "+" : ""}${Math.abs(b.amount).toFixed(2)}
-                    </span>
+                    {PLAN_VISUALS[servicePlan].icon} {currentPlan.label}
+                  </span>
+                </div>
+
+                {!dimsEntered ? (
+                  <div className="mt-6 grid place-items-center rounded-2xl border border-dashed border-border-soft bg-white/3 px-4 py-12 text-center">
+                    <div className="text-5xl opacity-50">📐</div>
+                    <p className="mt-4 text-sm text-foreground-muted">
+                      Enter width and length to see your quote
+                    </p>
                   </div>
-                ))}
+                ) : (
+                  <>
+                    {/* Big total */}
+                    <div className="mt-6">
+                      <div className="text-xs font-semibold uppercase tracking-wider text-foreground-muted">
+                        Grand total
+                      </div>
+                      <div className="mt-1 flex items-baseline gap-2">
+                        <span className="text-5xl font-black tabular-nums tracking-tight">
+                          ${result.total.toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-[11px] text-foreground-muted">
+                        {result.totalAreaSqFt.toFixed(2)} sq ft total ·{" "}
+                        ${result.pricePerSqFt.toFixed(2)}/sq ft
+                      </div>
+                    </div>
+
+                    {/* Breakdown */}
+                    <div className="mt-5 space-y-2 rounded-2xl bg-background/40 p-4 text-sm">
+                      <Row
+                        label="Each panel"
+                        value={`${result.unitAreaSqFt.toFixed(2)} sq ft`}
+                      />
+                      <Row label="Quantity" value={`× ${quantity}`} />
+                      <Row
+                        label="Subtotal"
+                        value={`$${result.subtotal.toFixed(2)}`}
+                      />
+                      {result.discountAmount > 0 && (
+                        <Row
+                          label={`Discount (${discountPercent}%)`}
+                          value={`−$${result.discountAmount.toFixed(2)}`}
+                          accent
+                        />
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleAddToCart}
+                      className={`mt-5 group/cta flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r ${PLAN_VISUALS[servicePlan].accent} px-5 py-3.5 text-sm font-bold text-white shadow-xl ${PLAN_VISUALS[servicePlan].glow} transition-all hover:scale-[1.02] hover:brightness-110`}
+                    >
+                      Add to Cart · ${result.total.toFixed(2)}
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="transition-transform group-hover/cta:translate-x-1"
+                      >
+                        <path d="M5 12h14" />
+                        <path d="m12 5 7 7-7 7" />
+                      </svg>
+                    </button>
+
+                    {toast && (
+                      <div className="mt-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+                        {toast}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
-
-              {/* Total */}
-              <div className="overflow-hidden rounded-2xl total-gradient p-4">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-xs font-medium text-white/85">
-                    {quantity > 1
-                      ? `${quantity} × $${price.perUnit.toFixed(2)}`
-                      : "Estimated total"}
-                  </span>
-                  <span className="text-2xl font-bold text-white">
-                    ${price.total.toFixed(2)}
-                  </span>
-                </div>
-                <div className="mt-1 text-right text-[10px] font-medium text-white/80">
-                  {isManualQuote
-                    ? "Estimate only — final quote sent by email"
-                    : "Free online proof · 24–48h production"}
-                </div>
-              </div>
-
-              {/* CTA */}
-              {isManualQuote ? (
-                <button
-                  type="button"
-                  onClick={() => handleSubmit("quote")}
-                  disabled={submitting || !email.trim()}
-                  className={`w-full rounded-2xl px-5 py-3 text-sm font-semibold transition ${
-                    email.trim() && !submitting
-                      ? "bg-highlight text-yellow-950 shadow-lg shadow-highlight/20 hover:brightness-105"
-                      : "cursor-not-allowed border border-border-soft bg-white/4 text-foreground-muted"
-                  }`}
-                >
-                  {submitting ? "Sending…" : "Request Quote →"}
-                </button>
-              ) : (
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => handleSubmit("order")}
-                    disabled={submitting}
-                    className="w-full rounded-2xl bg-highlight px-5 py-3 text-sm font-semibold text-yellow-950 shadow-lg shadow-highlight/20 transition hover:brightness-105 disabled:cursor-wait disabled:opacity-60"
-                  >
-                    {submitting ? "Creating order…" : `Add to Cart · $${price.total.toFixed(2)}`}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSubmit("quote")}
-                    disabled={submitting || !email.trim()}
-                    className={`w-full rounded-2xl border px-5 py-3 text-xs font-semibold transition ${
-                      email.trim() && !submitting
-                        ? "border-border-strong bg-white/5 text-foreground hover:bg-white/10"
-                        : "cursor-not-allowed border-border-soft bg-white/3 text-foreground-muted"
-                    }`}
-                  >
-                    Or request a custom quote instead
-                  </button>
-                </div>
-              )}
-
-              <p className="text-center text-[10px] text-foreground-muted">
-                By placing this order you agree to our{" "}
-                <Link href="#" className="underline">
-                  terms
-                </Link>
-                .
-              </p>
             </div>
           </aside>
         </div>
       </div>
-
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full border border-border-strong bg-surface-elevated px-5 py-3 text-sm shadow-2xl shadow-black/40">
-          {toast}
-        </div>
-      )}
     </section>
   );
 }
 
-/* --- subcomponents --- */
-
-function DimField({
+function BigInput({
   label,
   value,
   onChange,
+  unitSuffix,
+  placeholder,
 }: {
   label: string;
-  value: number;
-  onChange: (n: number) => void;
+  value: string;
+  onChange: (v: string) => void;
+  unitSuffix: string;
+  placeholder?: string;
 }) {
   return (
-    <label className="block">
-      <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-foreground-muted">
+    <div>
+      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-foreground-muted">
         {label}
+      </label>
+      <div className="relative">
+        <input
+          type="number"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          min={0}
+          step={0.1}
+          className="w-full rounded-2xl border border-border-soft bg-background/60 px-4 py-4 pr-14 text-2xl font-black tabular-nums outline-none ring-cyan-400/40 transition focus:border-cyan-400/40 focus:ring-2"
+          suppressHydrationWarning
+        />
+        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 rounded-md bg-white/5 px-2 py-1 text-xs font-bold uppercase tracking-wider text-foreground-muted">
+          {unitSuffix}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function Row({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between text-xs">
+      <span className="text-foreground-muted">{label}</span>
+      <span
+        className={`font-mono font-semibold ${
+          accent ? "text-emerald-300" : "text-foreground"
+        }`}
+      >
+        {value}
       </span>
-      <input
-        type="number"
-        min={1}
-        step={1}
-        value={value}
-        onChange={(e) => {
-          const n = Number(e.target.value);
-          onChange(Number.isFinite(n) && n > 0 ? Math.round(n) : 1);
-        }}
-        className="w-full rounded-xl border border-border-soft bg-white/4 px-4 py-3 text-sm text-foreground outline-none ring-highlight/40 focus:ring-2"
-        suppressHydrationWarning
-      />
-    </label>
+    </div>
   );
 }
 
 function SignPreview({
   w,
-  h,
-  sides,
-  fileUrl,
+  l,
+  unit,
 }: {
   w: number;
-  h: number;
-  sides: "single" | "double";
-  fileUrl: string | null;
+  l: number;
+  unit: MeasurementUnit;
 }) {
-  // Preserve real aspect ratio while letting CSS size the box to its parent.
-  // Aspect-ratio + max-w/h handles every viewport from narrow mobiles to
-  // sticky desktop sidebars without ever overflowing.
-  const aspect = w / h;
+  // Scale rectangle to fit a 240×140 container, preserving aspect ratio.
+  const maxW = 240;
+  const maxH = 140;
+  const aspect = w / l;
+  let previewW = maxW;
+  let previewH = maxW / aspect;
+  if (previewH > maxH) {
+    previewH = maxH;
+    previewW = maxH * aspect;
+  }
 
   return (
-    <div className="grid h-44 w-full place-items-center overflow-hidden rounded-xl bg-white/5 px-3 sm:h-48">
-      <div
-        className="relative grid max-h-full max-w-full place-items-center rounded border-2 border-dashed border-border-strong bg-linear-to-br from-blue-500/10 to-purple-500/10"
-        style={{
-          aspectRatio: aspect,
-          width: aspect >= 1 ? "100%" : "auto",
-          height: aspect < 1 ? "100%" : "auto",
-        }}
-      >
-        {fileUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={fileUrl}
-            alt="Design"
-            className="absolute inset-1 rounded object-contain"
-          />
-        ) : (
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground-muted">
-            {w}″ × {h}″
+    <div className="grid h-44 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-white/3 to-white/0 px-3">
+      <div className="relative">
+        <div
+          className="relative overflow-hidden rounded-md border-2 border-dashed border-cyan-400/40 bg-gradient-to-br from-cyan-500/15 via-fuchsia-500/10 to-amber-500/15"
+          style={{ width: previewW, height: previewH }}
+        >
+          <div className="absolute inset-0 grid place-items-center">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/60">
+              Your sign
+            </span>
+          </div>
+        </div>
+
+        {/* Width label below */}
+        <div className="mt-2 flex items-center justify-center gap-1 text-[10px] font-bold text-cyan-300">
+          <span className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+          <span className="font-mono">
+            {w}
+            {unit}
           </span>
-        )}
-        {sides === "double" && (
-          <span className="absolute -right-2 -top-2 rounded-full bg-blue-500/90 px-2 py-0.5 text-[9px] font-bold text-white">
-            2-sided
+          <span className="h-px flex-1 bg-gradient-to-l from-transparent via-cyan-400/40 to-transparent" />
+        </div>
+
+        {/* Height label on right */}
+        <div
+          className="absolute top-0 -right-9 flex flex-col items-center gap-1 text-[10px] font-bold text-fuchsia-300"
+          style={{ height: previewH }}
+        >
+          <span className="w-px flex-1 bg-gradient-to-b from-transparent via-fuchsia-400/40 to-transparent" />
+          <span className="font-mono [writing-mode:vertical-rl]">
+            {l}
+            {unit}
           </span>
-        )}
+          <span className="w-px flex-1 bg-gradient-to-t from-transparent via-fuchsia-400/40 to-transparent" />
+        </div>
       </div>
     </div>
   );

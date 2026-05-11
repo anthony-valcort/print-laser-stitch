@@ -109,16 +109,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
           return next;
         }
         if (i.kind === "signage") {
+          // Decal Signage Calculator — total scales linearly with qty.
+          // We have pricePerSqFt × unitAreaSqFt × qty (with discount already
+          // applied to subtotal). Easiest: recompute from unitAreaSqFt.
+          const newTotalArea = i.unitAreaSqFt * newQty;
+          const subtotal = i.pricePerSqFt * newTotalArea;
+          const afterDiscount =
+            subtotal * (1 - (i.discountPercent || 0) / 100);
+          const total = Math.round(afterDiscount * 100) / 100;
           const next: CartItem = {
             ...i,
             qty: newQty,
             quantity: newQty,
-            totalPrice: i.perUnit * newQty,
+            totalAreaSqFt: Math.round(newTotalArea * 100) / 100,
+            subtotal: Math.round(subtotal * 100) / 100,
+            totalPrice: total,
           };
           return next;
         }
-        // T-shirts and vinyl-stickers are not directly qty-editable from cart
-        // (they have shape/size matrices). Fall through unchanged.
+        // T-shirts, vinyl-stickers, and decal (multi-panel Quick Quote) are
+        // not directly qty-editable from cart. Fall through unchanged.
         return i;
       }),
     );

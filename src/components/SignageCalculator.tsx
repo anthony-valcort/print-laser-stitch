@@ -113,7 +113,7 @@ export default function SignageCalculator() {
   }
 
   return (
-    <section className="relative">
+    <section className="relative overflow-x-clip">
       {/* Ambient glow background */}
       <div className="pointer-events-none absolute -top-32 left-1/2 -z-10 h-[40rem] w-[60rem] -translate-x-1/2 rounded-full bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-amber-500/10 blur-3xl" />
 

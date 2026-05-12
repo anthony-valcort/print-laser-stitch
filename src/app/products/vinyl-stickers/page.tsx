@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductConfigurator from "@/components/ProductConfigurator";
-import TrustBadges from "@/components/TrustBadges";
 import FAQSection from "@/components/FAQSection";
 import AlreadyCustomerCTA from "@/components/AlreadyCustomerCTA";
 
@@ -18,7 +17,6 @@ export default function VinylStickersPage() {
       <Header />
       <main className="flex-1">
         <ProductConfigurator />
-        <TrustBadges />
         <FAQSection />
         <AlreadyCustomerCTA />
       </main>

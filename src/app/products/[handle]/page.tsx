@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import TrustBadges from "@/components/TrustBadges";
 import FAQSection from "@/components/FAQSection";
 import GenericProductConfigurator from "@/components/GenericProductConfigurator";
 import TShirtConfigurator from "@/components/TShirtConfigurator";
@@ -110,7 +109,6 @@ export default async function DynamicProductPage({
         ) : (
           <GenericProductConfigurator product={product} />
         )}
-        <TrustBadges />
         <FAQSection />
       </main>
       <Footer />

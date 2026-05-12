@@ -130,6 +130,14 @@ export default function HeaderClient({
           >
             About
           </Link>
+          <a
+            href="https://printlaserstitch.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
+          >
+            Portal
+          </a>
           {customer ? (
             <div
               className="relative"
@@ -278,6 +286,15 @@ export default function HeaderClient({
             >
               About Us
             </Link>
+            <a
+              href="https://printlaserstitch.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMobileOpen(false)}
+              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
+            >
+              🔐 Portal
+            </a>
             <div className="px-4 py-2 text-xs uppercase tracking-wider text-foreground-muted">
               Products
             </div>

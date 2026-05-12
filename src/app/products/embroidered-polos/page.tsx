@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import TrustBadges from "@/components/TrustBadges";
 import FAQSection from "@/components/FAQSection";
 import TShirtConfigurator from "@/components/TShirtConfigurator";
 import { getProductByHandle } from "@/lib/shopify-products";
@@ -49,7 +48,6 @@ export default async function EmbroideredPolosPage() {
         ) : (
           <ProductMissingNotice handle={PRODUCT_HANDLE} error={fetchError} />
         )}
-        <TrustBadges />
         <FAQSection />
       </main>
       <Footer />

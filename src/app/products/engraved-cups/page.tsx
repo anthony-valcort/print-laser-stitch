@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import TrustBadges from "@/components/TrustBadges";
 import FAQSection from "@/components/FAQSection";
 import ProductPageShell from "@/components/ProductPageShell";
 
@@ -34,7 +33,6 @@ export default function EngravedCupsPage() {
             </>
           }
         />
-        <TrustBadges />
         <FAQSection />
       </main>
       <Footer />

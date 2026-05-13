@@ -20,13 +20,13 @@ export default function AlreadyCustomerCTA() {
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/login"
-            className="rounded-xl bg-highlight px-6 py-2.5 text-sm font-semibold text-yellow-950 shadow-lg shadow-highlight/20 transition hover:brightness-105"
+            className="rounded-md cyan-gradient px-6 py-2.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#18d3e8]/30 transition hover:brightness-110"
           >
             Login
           </Link>
           <Link
             href="/signup"
-            className="rounded-xl accent-gradient px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-accent-strong/30 transition hover:opacity-95"
+            className="rounded-md accent-gradient px-6 py-2.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 transition hover:brightness-110"
           >
             New Customer? Sign Up
           </Link>

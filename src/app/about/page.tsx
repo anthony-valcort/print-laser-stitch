@@ -14,35 +14,35 @@ const TEAM = [
     name: "Anthony",
     role: "Founder & Owner",
     initial: "A",
-    accent: "from-amber-400 via-orange-500 to-red-500",
+    accent: "from-[#d9f000] via-[#d9f000] to-[#b8cc00]",
     bio: "I started Print Laser Stitch as a passion project — me in a small space, pressing shirts and experimenting with machines just to see what I could create. Word spread, and what started as an idea grew into a business serving individuals, startups, and companies all over Florida and beyond. I still personally handle the majority of the day-to-day, from designing to printing to wrapping orders.",
   },
   {
     name: "Ann-Kristie",
     role: "Apparel Lead · Marketing",
     initial: "AK",
-    accent: "from-pink-500 via-fuchsia-500 to-purple-600",
+    accent: "from-[#d94cb3] via-[#d94cb3] to-[#b83a96]",
     bio: "Anthony's wife and partner through it all. She pours so much love into the apparel side — heat-pressing every shirt and making sure each piece is perfect before it goes out. She also handles our marketing and social media, helping us share our story and connect with more people.",
   },
   {
     name: "Ali",
     role: "Web Developer",
     initial: "AL",
-    accent: "from-sky-500 via-cyan-500 to-blue-600",
+    accent: "from-[#18d3e8] via-[#18d3e8] to-[#14b8ce]",
     bio: "More than a web developer — Anthony's right-hand man. He's the reason the website works the way it does: easy to browse, easy to order, easy to navigate. Long hours, never complains, and always willing to learn whatever new challenge gets thrown at him. His dedication and loyalty have been a blessing to this business.",
   },
   {
     name: "Jaidyn",
     role: "Production Specialist",
     initial: "J",
-    accent: "from-emerald-500 via-green-600 to-teal-700",
+    accent: "from-[#d9f000] via-[#18d3e8] to-[#14b8ce]",
     bio: "Smart, driven, and always willing to learn — Jaidyn has mastered nearly all of our machines and plays a hands-on role bringing customers' ideas to life. Her favorite is the embroidery setup, where she brings precision and creativity to every stitch. Her sharp eye for detail keeps our workflow smooth.",
   },
   {
     name: "Jerry",
     role: "Embroidery Digitizer",
     initial: "JR",
-    accent: "from-violet-500 via-purple-500 to-indigo-600",
+    accent: "from-[#d94cb3] via-[#18d3e8] to-[#14b8ce]",
     bio: "Jerry has been with us for over a year and quickly became a key part of what we do. He handles all our embroidery digitizing with care and precision, redrawing every logo by hand — no shortcuts, no auto-digitizing. Fast turnaround, clean stitches, sharp results every time.",
   },
 ];
@@ -90,7 +90,7 @@ export default function AboutPage() {
           <div className="pointer-events-none absolute -top-40 left-1/2 z-0 h-120 w-225 -translate-x-1/2 rounded-full opacity-30 blur-3xl accent-gradient" />
           <div className="relative mx-auto max-w-4xl px-4 pb-12 pt-20 text-center sm:px-6 lg:px-8 lg:pt-28">
             <span className="inline-flex items-center gap-2 rounded-full border border-border-soft bg-white/5 px-4 py-1 text-xs font-medium text-foreground-muted">
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              <span className="h-2 w-2 rounded-full bg-[#18d3e8]" />
               Stuart, Florida · Family-owned
             </span>
             <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
@@ -106,16 +106,16 @@ export default function AboutPage() {
 
         {/* Founder story */}
         <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl border border-border-soft bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-red-500/10 p-8 sm:p-12">
-            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-orange-400/15 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-red-400/15 blur-3xl" />
+          <div className="relative overflow-hidden rounded-3xl border border-[#d9f000]/30 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#18d3e8]/10 p-8 sm:p-12">
+            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#d9f000]/15 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#18d3e8]/10 blur-3xl" />
 
             <div className="relative grid items-start gap-10 lg:grid-cols-[auto_1fr]">
-              <div className="grid h-32 w-32 place-items-center rounded-3xl bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 text-5xl font-black text-white shadow-2xl shadow-orange-500/30">
+              <div className="grid h-32 w-32 place-items-center rounded-3xl accent-gradient text-5xl font-black text-black shadow-2xl shadow-[#d9f000]/30">
                 A
               </div>
               <div>
-                <span className="inline-block rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-amber-200">
+                <span className="inline-block rounded-full border border-[#d9f000]/40 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
                   From the founder
                 </span>
                 <h2 className="mt-3 text-2xl font-bold sm:text-3xl">
@@ -171,7 +171,7 @@ export default function AboutPage() {
                 className="group relative overflow-hidden rounded-3xl border border-border-soft bg-surface p-6 transition hover:-translate-y-1 hover:border-accent/40 hover:shadow-2xl hover:shadow-accent-strong/10"
               >
                 <div
-                  className={`mb-5 grid h-20 w-20 place-items-center rounded-2xl bg-gradient-to-br ${member.accent} text-2xl font-black text-white shadow-lg`}
+                  className={`mb-5 grid h-20 w-20 place-items-center rounded-2xl bg-linear-to-br ${member.accent} text-2xl font-black text-black shadow-lg`}
                 >
                   {member.initial}
                 </div>
@@ -215,7 +215,7 @@ export default function AboutPage() {
                     {step.text}
                   </p>
                   {idx < PROCESS_STEPS.length - 1 && (
-                    <div className="pointer-events-none absolute right-0 top-1/2 hidden h-px w-6 -translate-y-1/2 translate-x-3 bg-gradient-to-r from-border-strong to-transparent lg:block" />
+                    <div className="pointer-events-none absolute right-0 top-1/2 hidden h-px w-6 -translate-y-1/2 translate-x-3 bg-linear-to-r from-border-strong to-transparent lg:block" />
                   )}
                 </div>
               ))}
@@ -299,7 +299,7 @@ export default function AboutPage() {
             <div className="mt-10">
               <Link
                 href="/products/vinyl-stickers"
-                className="inline-flex items-center gap-2 rounded-full accent-gradient px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-accent-strong/30 hover:opacity-95"
+                className="inline-flex items-center gap-2 rounded-md accent-gradient px-7 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 hover:brightness-110"
               >
                 Start your order
                 <svg

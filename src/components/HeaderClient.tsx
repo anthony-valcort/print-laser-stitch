@@ -149,7 +149,7 @@ export default function HeaderClient({
                 className="flex items-center gap-2 rounded-full border border-border-soft bg-white/5 px-3 py-1.5 text-sm font-medium hover:bg-white/10"
                 onClick={() => setAccountOpen((v) => !v)}
               >
-                <span className="grid h-7 w-7 place-items-center rounded-full accent-gradient text-xs font-bold text-white">
+                <span className="grid h-7 w-7 place-items-center rounded-full accent-gradient text-xs font-bold text-black">
                   {(customer.firstName || customer.displayName || customer.email)
                     .charAt(0)
                     .toUpperCase()}
@@ -210,7 +210,7 @@ export default function HeaderClient({
               </Link>
               <Link
                 href="/signup"
-                className="rounded-full accent-gradient px-4 py-2 text-sm font-semibold text-white shadow-md shadow-accent-strong/20 hover:opacity-95"
+                className="rounded-md accent-gradient px-4 py-2 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-md shadow-[#d9f000]/30 hover:brightness-110"
               >
                 Sign up
               </Link>

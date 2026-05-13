@@ -75,7 +75,7 @@ export default async function AccountPage() {
               </p>
               <a
                 href="/"
-                className="mt-4 inline-flex rounded-full accent-gradient px-5 py-2.5 text-sm font-semibold text-white"
+                className="mt-4 inline-flex rounded-md accent-gradient px-5 py-2.5 font-headline text-sm font-bold uppercase tracking-wider text-black"
               >
                 Browse products
               </a>

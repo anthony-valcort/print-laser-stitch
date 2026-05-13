@@ -24,23 +24,23 @@ const PLAN_VISUALS: Record<
 > = {
   "print-only": {
     icon: "🖨️",
-    accent: "from-sky-400 to-cyan-500",
-    selectedRing: "ring-sky-400/60 border-sky-400/60",
-    glow: "shadow-sky-500/30",
+    accent: "from-[#18d3e8] to-[#14b8ce]",
+    selectedRing: "ring-[#18d3e8]/60 border-[#18d3e8]/60",
+    glow: "shadow-[0_0_40px_rgba(24,211,232,0.35)]",
     perks: ["High-resolution print", "You handle install"],
   },
   "design-print": {
     icon: "✏️",
-    accent: "from-fuchsia-400 to-purple-500",
-    selectedRing: "ring-fuchsia-400/60 border-fuchsia-400/60",
-    glow: "shadow-fuchsia-500/30",
+    accent: "from-[#d94cb3] to-[#b83a96]",
+    selectedRing: "ring-[#d94cb3]/60 border-[#d94cb3]/60",
+    glow: "shadow-[0_0_40px_rgba(217,76,179,0.35)]",
     perks: ["Custom artwork", "Free proof", "Print included"],
   },
   "full-install": {
     icon: "🚀",
-    accent: "from-amber-400 to-orange-500",
-    selectedRing: "ring-amber-400/60 border-amber-400/60",
-    glow: "shadow-amber-500/30",
+    accent: "from-[#d9f000] to-[#b8cc00]",
+    selectedRing: "ring-[#d9f000]/60 border-[#d9f000]/60",
+    glow: "shadow-[0_0_40px_rgba(217,240,0,0.35)]",
     perks: ["Design + print", "Pro installation", "Hands-off"],
   },
 };
@@ -115,7 +115,7 @@ export default function SignageCalculator() {
   return (
     <section className="relative overflow-x-clip">
       {/* Ambient glow background */}
-      <div className="pointer-events-none absolute -top-32 left-1/2 -z-10 h-[40rem] w-[60rem] -translate-x-1/2 rounded-full bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-amber-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute -top-32 left-1/2 -z-10 h-160 w-240 -translate-x-1/2 rounded-full bg-linear-to-r from-[#d9f000]/10 via-[#18d3e8]/10 to-[#d94cb3]/10 blur-3xl" />
 
       {/* Hero */}
       <div className="mx-auto max-w-7xl px-4 pb-6 pt-12 sm:px-6 lg:px-8 lg:pt-16">
@@ -139,13 +139,13 @@ export default function SignageCalculator() {
         </Link>
 
         <div className="mt-6 text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-cyan-200">
-            <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
+          <span className="inline-flex items-center gap-2 rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />
             Print &amp; install quote generator
           </span>
-          <h1 className="mt-5 text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
+          <h1 className="mt-5 font-display text-4xl font-black uppercase tracking-tight sm:text-5xl lg:text-6xl">
             Decal{" "}
-            <span className="bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-[#d9f000] via-[#18d3e8] to-[#d94cb3] bg-clip-text text-transparent">
               Signage
             </span>{" "}
             Calculator
@@ -162,13 +162,13 @@ export default function SignageCalculator() {
           {/* LEFT — Inputs */}
           <div className="min-w-0 space-y-5">
             {/* Dimensions card */}
-            <section className="group relative overflow-hidden rounded-3xl border border-border-soft bg-gradient-to-br from-surface to-surface-elevated p-6 sm:p-8">
-              <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-cyan-500/10 blur-3xl" />
+            <section className="group relative overflow-hidden rounded-3xl border border-border-soft bg-linear-to-br from-surface to-surface-elevated p-6 sm:p-8">
+              <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[#18d3e8]/10 blur-3xl" />
 
               <div className="mb-5 flex items-start justify-between gap-3">
                 <div>
-                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-cyan-300">
-                    <span className="grid h-6 w-6 place-items-center rounded-md bg-cyan-500/15">
+                  <div className="flex items-center gap-2 font-headline text-xs font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
+                    <span className="grid h-6 w-6 place-items-center rounded-md bg-[#18d3e8]/15">
                       1
                     </span>
                     Dimensions
@@ -183,7 +183,7 @@ export default function SignageCalculator() {
                     onClick={() => setUnit("ft")}
                     className={`relative z-10 rounded-full px-4 py-1.5 transition ${
                       unit === "ft"
-                        ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-md shadow-cyan-500/30"
+                        ? "bg-linear-to-r from-[#18d3e8] to-[#14b8ce] text-black shadow-md shadow-[#18d3e8]/30"
                         : "text-foreground-muted hover:text-foreground"
                     }`}
                   >
@@ -194,7 +194,7 @@ export default function SignageCalculator() {
                     onClick={() => setUnit("in")}
                     className={`relative z-10 rounded-full px-4 py-1.5 transition ${
                       unit === "in"
-                        ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-md shadow-cyan-500/30"
+                        ? "bg-linear-to-r from-[#18d3e8] to-[#14b8ce] text-black shadow-md shadow-[#18d3e8]/30"
                         : "text-foreground-muted hover:text-foreground"
                     }`}
                   >
@@ -259,7 +259,7 @@ export default function SignageCalculator() {
                       max={100}
                       step={1}
                       placeholder="0"
-                      className="w-full rounded-2xl border border-border-soft bg-background/60 px-4 py-3 text-center text-lg font-bold tabular-nums outline-none ring-cyan-400/40 focus:ring-2"
+                      className="w-full rounded-2xl border border-border-soft bg-background/60 px-4 py-3 text-center text-lg font-bold tabular-nums outline-none ring-[#18d3e8]/40 focus:ring-2"
                       suppressHydrationWarning
                     />
                     <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-foreground-muted">
@@ -284,12 +284,12 @@ export default function SignageCalculator() {
             </section>
 
             {/* Service tier card */}
-            <section className="relative overflow-hidden rounded-3xl border border-border-soft bg-gradient-to-br from-surface to-surface-elevated p-6 sm:p-8">
-              <div className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-fuchsia-500/10 blur-3xl" />
+            <section className="relative overflow-hidden rounded-3xl border border-border-soft bg-linear-to-br from-surface to-surface-elevated p-6 sm:p-8">
+              <div className="pointer-events-none absolute -left-10 -top-10 h-40 w-40 rounded-full bg-[#d94cb3]/10 blur-3xl" />
 
               <div className="mb-5">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-fuchsia-300">
-                  <span className="grid h-6 w-6 place-items-center rounded-md bg-fuchsia-500/15">
+                <div className="flex items-center gap-2 font-headline text-xs font-semibold uppercase tracking-[0.2em] text-[#d94cb3]">
+                  <span className="grid h-6 w-6 place-items-center rounded-md bg-[#d94cb3]/15">
                     2
                   </span>
                   Service tier
@@ -310,13 +310,13 @@ export default function SignageCalculator() {
                       onClick={() => setServicePlan(plan.key)}
                       className={`group/card relative overflow-hidden rounded-2xl border-2 p-5 text-left transition-all ${
                         active
-                          ? `${v.selectedRing} bg-gradient-to-br from-white/10 to-white/0 shadow-lg ${v.glow}`
+                          ? `${v.selectedRing} bg-linear-to-br from-white/10 to-white/0 shadow-lg ${v.glow}`
                           : "border-border-soft bg-background/40 hover:border-border-strong hover:bg-white/5"
                       }`}
                     >
                       {/* Selected check */}
                       {active && (
-                        <span className="absolute right-3 top-3 grid h-6 w-6 place-items-center rounded-full bg-gradient-to-r from-cyan-400 to-fuchsia-400 text-emerald-950">
+                        <span className="absolute right-3 top-3 grid h-6 w-6 place-items-center rounded-full bg-linear-to-r from-[#d9f000] to-[#18d3e8] text-black">
                           <svg
                             width="12"
                             height="12"
@@ -333,7 +333,7 @@ export default function SignageCalculator() {
                       )}
 
                       <div
-                        className={`grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br ${v.accent} text-2xl shadow-lg ${v.glow}`}
+                        className={`grid h-12 w-12 place-items-center rounded-2xl bg-linear-to-br ${v.accent} text-2xl shadow-lg ${v.glow}`}
                       >
                         {v.icon}
                       </div>
@@ -377,10 +377,10 @@ export default function SignageCalculator() {
             </section>
 
             {/* Notes card */}
-            <section className="rounded-3xl border border-border-soft bg-gradient-to-br from-surface to-surface-elevated p-6 sm:p-8">
+            <section className="rounded-3xl border border-border-soft bg-linear-to-br from-surface to-surface-elevated p-6 sm:p-8">
               <div className="mb-3">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-300">
-                  <span className="grid h-6 w-6 place-items-center rounded-md bg-emerald-500/15">
+                <div className="flex items-center gap-2 font-headline text-xs font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
+                  <span className="grid h-6 w-6 place-items-center rounded-md bg-[#d9f000]/15">
                     3
                   </span>
                   Optional notes
@@ -394,7 +394,7 @@ export default function SignageCalculator() {
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
                 placeholder="Install location, deadline, special instructions…"
-                className="w-full resize-none rounded-2xl border border-border-soft bg-background/60 px-4 py-3 text-sm placeholder:text-foreground-muted/60 outline-none ring-emerald-400/40 focus:ring-2"
+                className="w-full resize-none rounded-2xl border border-border-soft bg-background/60 px-4 py-3 text-sm placeholder:text-foreground-muted/60 outline-none ring-[#d9f000]/40 focus:ring-2"
                 suppressHydrationWarning
               />
             </section>
@@ -403,7 +403,7 @@ export default function SignageCalculator() {
           {/* RIGHT — Sticky quote summary */}
           <aside className="min-w-0 lg:sticky lg:top-20 lg:self-start">
             <div
-              className={`relative overflow-hidden rounded-3xl border bg-gradient-to-br p-6 transition-all ${
+              className={`relative overflow-hidden rounded-3xl border bg-linear-to-br p-6 transition-all ${
                 dimsEntered
                   ? `${PLAN_VISUALS[servicePlan].selectedRing} from-background to-surface-elevated shadow-2xl ${PLAN_VISUALS[servicePlan].glow}`
                   : "border-border-soft from-surface to-surface-elevated"
@@ -411,7 +411,7 @@ export default function SignageCalculator() {
             >
               {/* Ambient gradient */}
               <div
-                className={`pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br opacity-30 blur-3xl ${
+                className={`pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-linear-to-br opacity-30 blur-3xl ${
                   dimsEntered
                     ? PLAN_VISUALS[servicePlan].accent
                     : "from-transparent to-transparent"
@@ -424,7 +424,7 @@ export default function SignageCalculator() {
                     Your quote
                   </span>
                   <span
-                    className={`inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r ${PLAN_VISUALS[servicePlan].accent} px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white`}
+                    className={`inline-flex items-center gap-1.5 rounded-full bg-linear-to-r ${PLAN_VISUALS[servicePlan].accent} px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-black`}
                   >
                     {PLAN_VISUALS[servicePlan].icon} {currentPlan.label}
                   </span>
@@ -478,7 +478,7 @@ export default function SignageCalculator() {
                     <button
                       type="button"
                       onClick={handleAddToCart}
-                      className={`mt-5 group/cta flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r ${PLAN_VISUALS[servicePlan].accent} px-5 py-3.5 text-sm font-bold text-white shadow-xl ${PLAN_VISUALS[servicePlan].glow} transition-all hover:scale-[1.02] hover:brightness-110`}
+                      className={`mt-5 group/cta flex w-full items-center justify-center gap-2 rounded-md bg-linear-to-r ${PLAN_VISUALS[servicePlan].accent} px-5 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-xl ${PLAN_VISUALS[servicePlan].glow} transition-all hover:scale-[1.02] hover:brightness-110`}
                     >
                       Add to Cart · ${result.total.toFixed(2)}
                       <svg
@@ -539,7 +539,7 @@ function BigInput({
           placeholder={placeholder}
           min={0}
           step={0.1}
-          className="w-full rounded-2xl border border-border-soft bg-background/60 px-4 py-4 pr-14 text-2xl font-black tabular-nums outline-none ring-cyan-400/40 transition focus:border-cyan-400/40 focus:ring-2"
+          className="w-full rounded-2xl border border-border-soft bg-background/60 px-4 py-4 pr-14 text-2xl font-black tabular-nums outline-none ring-[#d9f000]/40 transition focus:border-[#d9f000]/40 focus:ring-2"
           suppressHydrationWarning
         />
         <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 rounded-md bg-white/5 px-2 py-1 text-xs font-bold uppercase tracking-wider text-foreground-muted">
@@ -564,7 +564,7 @@ function Row({
       <span className="text-foreground-muted">{label}</span>
       <span
         className={`font-mono font-semibold ${
-          accent ? "text-emerald-300" : "text-foreground"
+          accent ? "text-[#d9f000]" : "text-foreground"
         }`}
       >
         {value}
@@ -594,10 +594,10 @@ function SignPreview({
   }
 
   return (
-    <div className="grid h-44 place-items-center overflow-hidden rounded-xl bg-gradient-to-br from-white/3 to-white/0 px-3">
+    <div className="grid h-44 place-items-center overflow-hidden rounded-xl bg-linear-to-br from-white/3 to-white/0 px-3">
       <div className="relative">
         <div
-          className="relative overflow-hidden rounded-md border-2 border-dashed border-cyan-400/40 bg-gradient-to-br from-cyan-500/15 via-fuchsia-500/10 to-amber-500/15"
+          className="relative overflow-hidden rounded-md border-2 border-dashed border-[#d9f000]/40 bg-linear-to-br from-[#d9f000]/15 via-[#18d3e8]/10 to-[#d94cb3]/15"
           style={{ width: previewW, height: previewH }}
         >
           <div className="absolute inset-0 grid place-items-center">
@@ -608,26 +608,26 @@ function SignPreview({
         </div>
 
         {/* Width label below */}
-        <div className="mt-2 flex items-center justify-center gap-1 text-[10px] font-bold text-cyan-300">
-          <span className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+        <div className="mt-2 flex items-center justify-center gap-1 text-[10px] font-bold text-[#d9f000]">
+          <span className="h-px flex-1 bg-linear-to-r from-transparent via-[#d9f000]/40 to-transparent" />
           <span className="font-mono">
             {w}
             {unit}
           </span>
-          <span className="h-px flex-1 bg-gradient-to-l from-transparent via-cyan-400/40 to-transparent" />
+          <span className="h-px flex-1 bg-linear-to-l from-transparent via-[#d9f000]/40 to-transparent" />
         </div>
 
         {/* Height label on right */}
         <div
-          className="absolute top-0 -right-9 flex flex-col items-center gap-1 text-[10px] font-bold text-fuchsia-300"
+          className="absolute top-0 -right-9 flex flex-col items-center gap-1 text-[10px] font-bold text-[#d94cb3]"
           style={{ height: previewH }}
         >
-          <span className="w-px flex-1 bg-gradient-to-b from-transparent via-fuchsia-400/40 to-transparent" />
+          <span className="w-px flex-1 bg-linear-to-b from-transparent via-[#d94cb3]/40 to-transparent" />
           <span className="font-mono [writing-mode:vertical-rl]">
             {l}
             {unit}
           </span>
-          <span className="w-px flex-1 bg-gradient-to-t from-transparent via-fuchsia-400/40 to-transparent" />
+          <span className="w-px flex-1 bg-linear-to-t from-transparent via-[#d94cb3]/40 to-transparent" />
         </div>
       </div>
     </div>

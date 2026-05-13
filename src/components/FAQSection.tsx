@@ -56,10 +56,10 @@ export default function FAQSection() {
 function Avatar({ label, tone }: { label: string; tone: "muted" | "accent" }) {
   return (
     <span
-      className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-bold text-white ${
+      className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-bold ${
         tone === "accent"
-          ? "accent-gradient"
-          : "bg-white/10 ring-1 ring-border-soft"
+          ? "accent-gradient text-black"
+          : "bg-white/10 ring-1 ring-border-soft text-foreground"
       }`}
     >
       {label}

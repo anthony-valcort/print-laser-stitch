@@ -286,7 +286,7 @@ export default function GenericProductConfigurator({
             <div>
               {badge && (
                 <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-border-soft bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-foreground-muted">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />
                   {badge}
                 </div>
               )}
@@ -304,7 +304,7 @@ export default function GenericProductConfigurator({
             </div>
 
             {notice && (
-              <div className="rounded-xl border border-blue-500/30 bg-blue-500/5 px-4 py-3 text-sm text-blue-100">
+              <div className="rounded-xl border border-[#18d3e8]/30 bg-[#18d3e8]/5 px-4 py-3 text-sm text-[#18d3e8]">
                 {notice}
               </div>
             )}
@@ -465,9 +465,9 @@ export default function GenericProductConfigurator({
               type="button"
               onClick={handleAddToCart}
               disabled={!canCheckout}
-              className={`group flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-semibold transition ${
+              className={`group flex w-full items-center justify-center gap-2 rounded-md px-6 py-4 font-headline text-sm font-bold uppercase tracking-wider transition ${
                 canCheckout
-                  ? "bg-highlight text-yellow-950 shadow-lg shadow-highlight/20 hover:brightness-105"
+                  ? "accent-gradient text-black shadow-lg shadow-[#d9f000]/30 hover:brightness-110"
                   : "cursor-not-allowed border border-border-soft bg-white/4 text-foreground-muted"
               }`}
             >

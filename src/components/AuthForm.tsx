@@ -224,7 +224,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-full accent-gradient px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-accent-strong/30 hover:opacity-95 disabled:opacity-60"
+          className="w-full rounded-md accent-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 hover:brightness-110 disabled:opacity-60"
         >
           {submitting
             ? isLogin

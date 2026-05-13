@@ -1,24 +1,93 @@
+import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { categories } from "@/lib/categories";
 
-const HERO_GRADIENTS: Record<string, string> = {
-  "vinyl-stickers": "from-pink-500 via-fuchsia-500 to-purple-600",
-  tshirts: "from-sky-500 via-cyan-500 to-blue-600",
-  "business-cards": "from-amber-400 via-orange-500 to-red-500",
-  flyers: "from-emerald-400 via-teal-500 to-cyan-600",
-  posters: "from-violet-500 via-purple-500 to-indigo-600",
-  brochures: "from-rose-400 via-pink-500 to-fuchsia-600",
-  banners: "from-yellow-400 via-amber-500 to-orange-500",
-  "car-magnets": "from-slate-500 via-zinc-600 to-stone-700",
-  "embroidery-patches": "from-red-500 via-rose-500 to-pink-600",
-  "embroidered-polos": "from-emerald-500 via-green-600 to-teal-700",
-  "engraved-cups": "from-orange-400 via-red-500 to-rose-600",
-  "engraved-wallets": "from-amber-700 via-yellow-700 to-orange-800",
-  "engraved-bottle-openers": "from-zinc-400 via-slate-500 to-gray-600",
-  "custom-canvas": "from-purple-400 via-violet-500 to-indigo-600",
-  "signage-quotes": "from-cyan-400 via-blue-500 to-indigo-600",
+/**
+ * Per-category accent — cycles through the three brand neons so the product
+ * grid stays on-brand without monotony. Yellow = primary, Cyan = secondary,
+ * Magenta = tertiary.
+ */
+const CATEGORY_ACCENTS: Record<
+  string,
+  { gradient: string; ring: string; glow: string }
+> = {
+  "vinyl-stickers": {
+    gradient: "from-[#d9f000] to-[#b8cc00]",
+    ring: "ring-[#d9f000]/40",
+    glow: "shadow-[0_0_40px_rgba(217,240,0,0.25)]",
+  },
+  tshirts: {
+    gradient: "from-[#18d3e8] to-[#14b8ce]",
+    ring: "ring-[#18d3e8]/40",
+    glow: "shadow-[0_0_40px_rgba(24,211,232,0.25)]",
+  },
+  "business-cards": {
+    gradient: "from-[#d9f000] to-[#18d3e8]",
+    ring: "ring-[#d9f000]/40",
+    glow: "shadow-[0_0_40px_rgba(217,240,0,0.25)]",
+  },
+  flyers: {
+    gradient: "from-[#18d3e8] to-[#d94cb3]",
+    ring: "ring-[#18d3e8]/40",
+    glow: "shadow-[0_0_40px_rgba(24,211,232,0.25)]",
+  },
+  posters: {
+    gradient: "from-[#d94cb3] to-[#b83a96]",
+    ring: "ring-[#d94cb3]/40",
+    glow: "shadow-[0_0_40px_rgba(217,76,179,0.25)]",
+  },
+  brochures: {
+    gradient: "from-[#d9f000] to-[#d94cb3]",
+    ring: "ring-[#d9f000]/40",
+    glow: "shadow-[0_0_40px_rgba(217,240,0,0.25)]",
+  },
+  banners: {
+    gradient: "from-[#d9f000] to-[#b8cc00]",
+    ring: "ring-[#d9f000]/40",
+    glow: "shadow-[0_0_40px_rgba(217,240,0,0.25)]",
+  },
+  "car-magnets": {
+    gradient: "from-[#18d3e8] to-[#14b8ce]",
+    ring: "ring-[#18d3e8]/40",
+    glow: "shadow-[0_0_40px_rgba(24,211,232,0.25)]",
+  },
+  "embroidery-patches": {
+    gradient: "from-[#d94cb3] to-[#b83a96]",
+    ring: "ring-[#d94cb3]/40",
+    glow: "shadow-[0_0_40px_rgba(217,76,179,0.25)]",
+  },
+  "embroidered-polos": {
+    gradient: "from-[#d94cb3] to-[#18d3e8]",
+    ring: "ring-[#d94cb3]/40",
+    glow: "shadow-[0_0_40px_rgba(217,76,179,0.25)]",
+  },
+  "engraved-cups": {
+    gradient: "from-[#18d3e8] to-[#d9f000]",
+    ring: "ring-[#18d3e8]/40",
+    glow: "shadow-[0_0_40px_rgba(24,211,232,0.25)]",
+  },
+  "engraved-wallets": {
+    gradient: "from-[#d9f000] to-[#b8cc00]",
+    ring: "ring-[#d9f000]/40",
+    glow: "shadow-[0_0_40px_rgba(217,240,0,0.25)]",
+  },
+  "engraved-bottle-openers": {
+    gradient: "from-[#18d3e8] to-[#14b8ce]",
+    ring: "ring-[#18d3e8]/40",
+    glow: "shadow-[0_0_40px_rgba(24,211,232,0.25)]",
+  },
+  "custom-canvas": {
+    gradient: "from-[#d94cb3] to-[#d9f000]",
+    ring: "ring-[#d94cb3]/40",
+    glow: "shadow-[0_0_40px_rgba(217,76,179,0.25)]",
+  },
+  "signage-quotes": {
+    gradient: "from-[#18d3e8] to-[#d94cb3]",
+    ring: "ring-[#18d3e8]/40",
+    glow: "shadow-[0_0_40px_rgba(24,211,232,0.25)]",
+  },
 };
 
 export default function Home() {
@@ -30,36 +99,64 @@ export default function Home() {
     <>
       <Header />
       <main className="flex-1">
-        {/* Hero */}
-        <section className="relative overflow-hidden">
-          <div className="pointer-events-none absolute -top-32 left-1/2 z-0 h-120 w-225 -translate-x-1/2 rounded-full opacity-30 blur-3xl accent-gradient" />
-          <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-20 text-center sm:px-6 lg:px-8 lg:pt-28">
-            <span className="inline-flex items-center gap-2 rounded-full border border-border-soft bg-white/5 px-4 py-1 text-xs font-medium text-foreground-muted">
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
-              Free online proofs · Printed in 24–48 hours
-            </span>
-            <h1 className="mx-auto mt-6 max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-              Custom prints, apparel & engraving for{" "}
-              <span className="accent-gradient-text">your brand</span>
-            </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base text-foreground-muted sm:text-lg">
-              From vinyl stickers to embroidered polos and laser-engraved
-              wallets — pick a category and we&apos;ll print, stitch, or etch
-              it for you.
-            </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <Link
-                href="/products/vinyl-stickers"
-                className="rounded-full accent-gradient px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-accent-strong/30 hover:opacity-95"
-              >
-                Start an order
-              </Link>
-              <a
-                href="#categories"
-                className="rounded-full border border-border-strong bg-white/5 px-6 py-3 text-sm font-semibold text-foreground hover:bg-white/10"
-              >
-                Browse products
-              </a>
+        {/* HERO — split layout: text left, Hero.jpeg right */}
+        <section className="relative overflow-x-clip">
+          {/* Ambient neon glow */}
+          <div className="pointer-events-none absolute -top-32 left-1/2 -z-10 h-[40rem] w-[60rem] -translate-x-1/2 rounded-full bg-linear-to-r from-[#d9f000]/10 via-[#18d3e8]/10 to-[#d94cb3]/10 blur-3xl" />
+
+          <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 pt-16 sm:px-6 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:pt-24">
+            {/* Left — copy */}
+            <div className="text-center lg:text-left">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />
+                We print · We engrave · We stitch
+              </span>
+
+              <h1 className="mx-auto mt-5 max-w-2xl font-display text-4xl font-black uppercase leading-[1.05] tracking-tight sm:text-5xl lg:mx-0 lg:text-6xl">
+                Bringing your{" "}
+                <span className="accent-gradient-text">vision</span>
+                <br className="hidden sm:inline" />{" "}
+                to life.
+              </h1>
+
+              <p className="mx-auto mt-5 max-w-xl text-base text-foreground-muted sm:text-lg lg:mx-0">
+                Premium custom printing, laser engraving and stitching — built
+                for businesses, creators and car enthusiasts. From vinyl
+                stickers to embroidered polos, we print, stitch or etch it for
+                you.
+              </p>
+
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+                <Link
+                  href="/products/vinyl-stickers"
+                  className="inline-flex items-center gap-2 rounded-md accent-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 transition hover:brightness-110"
+                >
+                  Get a Quote
+                  <Arrow />
+                </Link>
+                <Link
+                  href="#categories"
+                  className="inline-flex items-center gap-2 rounded-md cyan-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#18d3e8]/30 transition hover:brightness-110"
+                >
+                  Browse Products
+                  <Arrow />
+                </Link>
+              </div>
+            </div>
+
+            {/* Right — Hero image */}
+            <div className="relative">
+              <div className="pointer-events-none absolute -inset-4 -z-10 rounded-[2rem] bg-linear-to-br from-[#d9f000]/20 via-[#18d3e8]/20 to-[#d94cb3]/20 opacity-60 blur-2xl" />
+              <div className="relative overflow-hidden rounded-2xl border border-[#d9f000]/30 shadow-2xl shadow-[#d9f000]/20">
+                <Image
+                  src="/Hero.jpeg"
+                  alt="Print Laser Stitch — printing, embroidery, vehicle wraps, apparel and engraving samples"
+                  width={768}
+                  height={512}
+                  className="h-auto w-full"
+                  priority
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -70,10 +167,10 @@ export default function Home() {
           className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8"
         >
           <div className="mb-10 text-center">
-            <span className="inline-block rounded-full border border-border-soft bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-accent">
+            <span className="inline-block rounded-full border border-[#d9f000]/30 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
               Make your selection
             </span>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+            <h2 className="mt-3 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
               What can we{" "}
               <span className="accent-gradient-text">make for you?</span>
             </h2>
@@ -85,17 +182,17 @@ export default function Home() {
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {productCategories.map((c) => {
-              const gradient =
-                HERO_GRADIENTS[c.slug] ?? "from-accent to-accent-strong";
+              const accent =
+                CATEGORY_ACCENTS[c.slug] ?? CATEGORY_ACCENTS["vinyl-stickers"];
               return (
                 <Link
                   key={c.slug}
                   href={c.href}
-                  className="group relative overflow-hidden rounded-3xl border border-border-soft bg-surface transition hover:-translate-y-1 hover:border-accent/40 hover:shadow-2xl hover:shadow-accent-strong/10"
+                  className={`group relative overflow-hidden rounded-2xl border border-border-soft bg-surface transition hover:-translate-y-1 hover:border-[#d9f000]/40 hover:${accent.glow}`}
                 >
                   {/* Hero image area — large gradient with emoji centerpiece */}
                   <div
-                    className={`relative aspect-[4/3] w-full overflow-hidden bg-gradient-to-br ${gradient}`}
+                    className={`relative aspect-[4/3] w-full overflow-hidden bg-linear-to-br ${accent.gradient}`}
                   >
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.25),transparent_60%)]" />
                     <div className="absolute inset-0 grid place-items-center">
@@ -104,35 +201,22 @@ export default function Home() {
                       </span>
                     </div>
                     {/* shimmer overlay on hover */}
-                    <div className="pointer-events-none absolute -inset-full bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 transition-all duration-700 group-hover:left-full group-hover:opacity-100" />
+                    <div className="pointer-events-none absolute -inset-full bg-linear-to-r from-transparent via-white/20 to-transparent opacity-0 transition-all duration-700 group-hover:left-full group-hover:opacity-100" />
                   </div>
 
                   {/* Card body */}
                   <div className="p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <div className="text-lg font-semibold leading-tight">
+                        <div className="font-headline text-lg font-semibold leading-tight">
                           {c.name}
                         </div>
-                        <div className="mt-0.5 text-[11px] uppercase tracking-wider text-accent">
+                        <div className="mt-0.5 font-headline text-[11px] uppercase tracking-[0.2em] text-[#d9f000]">
                           {c.tagline}
                         </div>
                       </div>
-                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/5 text-foreground/70 transition group-hover:bg-accent group-hover:text-white">
-                        <svg
-                          width="14"
-                          height="14"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="transition-transform group-hover:translate-x-0.5"
-                        >
-                          <path d="M5 12h14" />
-                          <path d="m12 5 7 7-7 7" />
-                        </svg>
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/5 text-foreground/70 transition group-hover:bg-[#d9f000] group-hover:text-black">
+                        <Arrow size={14} />
                       </span>
                     </div>
                     <p className="mt-3 line-clamp-2 text-sm text-foreground-muted">
@@ -147,19 +231,19 @@ export default function Home() {
 
         {/* Quick Quote (multi-panel + material) CTA */}
         <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl border border-border-soft bg-gradient-to-br from-cyan-500/15 via-blue-500/10 to-indigo-500/15 p-8 sm:p-12">
-            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-cyan-400/20 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-indigo-400/20 blur-3xl" />
+          <div className="relative overflow-hidden rounded-3xl border border-[#18d3e8]/30 bg-linear-to-br from-[#18d3e8]/10 via-surface to-[#18d3e8]/5 p-8 sm:p-12">
+            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#18d3e8]/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#18d3e8]/10 blur-3xl" />
 
             <div className="relative grid items-center gap-10 lg:grid-cols-2">
               <div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-cyan-200">
-                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#18d3e8]/40 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />
                   Window film · Wall vinyl
                 </span>
-                <h3 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+                <h3 className="mt-4 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
                   Quick Quote{" "}
-                  <span className="bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent">
+                  <span className="bg-linear-to-r from-[#18d3e8] to-[#d9f000] bg-clip-text text-transparent">
                     Calculator
                   </span>
                 </h3>
@@ -184,22 +268,10 @@ export default function Home() {
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link
                     href="/decal-quote"
-                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/30 hover:opacity-95"
+                    className="inline-flex items-center gap-2 rounded-md cyan-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#18d3e8]/30 transition hover:brightness-110"
                   >
                     Open Quick Quote
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M5 12h14" />
-                      <path d="m12 5 7 7-7 7" />
-                    </svg>
+                    <Arrow />
                   </Link>
                 </div>
               </div>
@@ -207,8 +279,8 @@ export default function Home() {
               {/* Sample quote */}
               <div className="relative">
                 <div className="mx-auto max-w-sm rounded-2xl border border-border-soft bg-background/80 p-5 shadow-2xl shadow-black/40 backdrop-blur">
-                  <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-wider text-foreground-muted">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                  <div className="mb-3 flex items-center gap-2 font-headline text-xs uppercase tracking-[0.2em] text-foreground-muted">
+                    <span className="h-2 w-2 rounded-full bg-[#d9f000]" />
                     Sample Quote
                   </div>
                   <div className="space-y-2.5 text-sm">
@@ -219,7 +291,7 @@ export default function Home() {
                     <div className="my-3 border-t border-border-soft" />
                     <div className="flex items-center justify-between text-base">
                       <span className="font-semibold">Total</span>
-                      <span className="font-bold text-cyan-300">$17.12</span>
+                      <span className="font-bold text-[#18d3e8]">$17.12</span>
                     </div>
                   </div>
                 </div>
@@ -230,19 +302,19 @@ export default function Home() {
 
         {/* Decal Signage Calculator (service plan) CTA */}
         <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl border border-border-soft bg-gradient-to-br from-emerald-500/15 via-lime-500/10 to-yellow-500/15 p-8 sm:p-12">
-            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-400/20 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-yellow-400/20 blur-3xl" />
+          <div className="relative overflow-hidden rounded-3xl border border-[#d9f000]/30 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#d94cb3]/10 p-8 sm:p-12">
+            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#d9f000]/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#d94cb3]/15 blur-3xl" />
 
             <div className="relative grid items-center gap-10 lg:grid-cols-2">
               <div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-emerald-200">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#d9f000]/40 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#d9f000]" />
                   Print &amp; install quote generator
                 </span>
-                <h3 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
+                <h3 className="mt-4 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
                   Decal Signage{" "}
-                  <span className="bg-gradient-to-r from-emerald-300 to-yellow-400 bg-clip-text text-transparent">
+                  <span className="bg-linear-to-r from-[#d9f000] to-[#d94cb3] bg-clip-text text-transparent">
                     Calculator
                   </span>
                 </h3>
@@ -267,22 +339,10 @@ export default function Home() {
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link
                     href="/signage-quotes"
-                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-lime-500 px-6 py-3 text-sm font-semibold text-emerald-950 shadow-lg shadow-emerald-500/30 hover:opacity-95"
+                    className="inline-flex items-center gap-2 rounded-md accent-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 transition hover:brightness-110"
                   >
                     Open Calculator
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M5 12h14" />
-                      <path d="m12 5 7 7-7 7" />
-                    </svg>
+                    <Arrow />
                   </Link>
                 </div>
               </div>
@@ -290,8 +350,8 @@ export default function Home() {
               {/* Sample quote */}
               <div className="relative">
                 <div className="mx-auto max-w-sm rounded-2xl border border-border-soft bg-background/80 p-5 shadow-2xl shadow-black/40 backdrop-blur">
-                  <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-wider text-foreground-muted">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                  <div className="mb-3 flex items-center gap-2 font-headline text-xs uppercase tracking-[0.2em] text-foreground-muted">
+                    <span className="h-2 w-2 rounded-full bg-[#d9f000]" />
                     Sample Quote
                   </div>
                   <div className="space-y-2.5 text-sm">
@@ -302,7 +362,7 @@ export default function Home() {
                     <div className="my-3 border-t border-border-soft" />
                     <div className="flex items-center justify-between text-base">
                       <span className="font-semibold">Grand Total</span>
-                      <span className="font-bold text-emerald-300">$30.60</span>
+                      <span className="font-bold text-[#d9f000]">$30.60</span>
                     </div>
                   </div>
                 </div>
@@ -312,27 +372,31 @@ export default function Home() {
         </section>
 
         {/* Trust strip */}
-        <section className="border-t border-border-soft bg-background-soft/40">
+        <section className="border-t border-border-soft bg-background-soft/60">
           <div className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
             <TrustItem
               icon="🚚"
               title="Free shipping"
               text="On all U.S. orders over $75"
+              accent="yellow"
             />
             <TrustItem
               icon="✏️"
               title="Free proofs"
               text="Approve before we print"
+              accent="cyan"
             />
             <TrustItem
               icon="⚡"
               title="24–48 hr turnaround"
               text="Same-day for stickers"
+              accent="magenta"
             />
             <TrustItem
               icon="🎯"
               title="Satisfaction guarantee"
               text="Reprint or full refund"
+              accent="yellow"
             />
           </div>
         </section>
@@ -342,9 +406,27 @@ export default function Home() {
   );
 }
 
+function Arrow({ size = 16 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12h14" />
+      <path d="m12 5 7 7-7 7" />
+    </svg>
+  );
+}
+
 function CheckIcon() {
   return (
-    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-cyan-400/20 text-cyan-300">
+    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#d9f000]/20 text-[#d9f000]">
       <svg
         width="12"
         height="12"
@@ -374,18 +456,30 @@ function TrustItem({
   icon,
   title,
   text,
+  accent,
 }: {
   icon: string;
   title: string;
   text: string;
+  accent: "yellow" | "cyan" | "magenta";
 }) {
+  const tint =
+    accent === "yellow"
+      ? "bg-[#d9f000]/10 text-[#d9f000]"
+      : accent === "cyan"
+        ? "bg-[#18d3e8]/10 text-[#18d3e8]"
+        : "bg-[#d94cb3]/10 text-[#d94cb3]";
   return (
     <div className="flex items-start gap-3">
-      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/5 text-2xl">
+      <span
+        className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-2xl ${tint}`}
+      >
         {icon}
       </span>
       <div>
-        <div className="font-semibold">{title}</div>
+        <div className="font-headline font-semibold uppercase tracking-wider">
+          {title}
+        </div>
         <div className="mt-0.5 text-sm text-foreground-muted">{text}</div>
       </div>
     </div>

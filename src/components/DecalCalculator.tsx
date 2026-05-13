@@ -164,7 +164,7 @@ export default function DecalCalculator() {
         <div className="mb-6">
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Quick Quote{" "}
-            <span className="bg-gradient-to-r from-cyan-300 to-blue-400 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-[#18d3e8] to-[#d9f000] bg-clip-text text-transparent">
               — Manual Entry
             </span>
           </h1>
@@ -270,7 +270,7 @@ export default function DecalCalculator() {
             <button
               type="button"
               onClick={addPanel}
-              className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl bg-highlight px-4 py-3 text-sm font-bold text-yellow-950 transition hover:brightness-105 sm:w-auto"
+              className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-md accent-gradient px-4 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black transition hover:brightness-110 sm:w-auto"
             >
               <svg
                 width="14"
@@ -446,7 +446,7 @@ export default function DecalCalculator() {
                   <button
                     type="button"
                     onClick={handleAddToCart}
-                    className="mt-5 w-full rounded-2xl bg-highlight px-5 py-3 text-sm font-bold text-yellow-950 shadow-lg shadow-highlight/20 transition hover:brightness-105"
+                    className="mt-5 w-full rounded-md accent-gradient px-5 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 transition hover:brightness-110"
                   >
                     Add to Cart · ${result.total.toFixed(2)}
                   </button>

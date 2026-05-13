@@ -592,7 +592,7 @@ export default function ProductConfigurator() {
                     {(file.size / 1024).toFixed(1)} KB
                   </div>
                   {isUploading && (
-                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-blue-500/15 px-2 py-0.5 text-[11px] font-semibold text-blue-300">
+                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#18d3e8]/15 px-2 py-0.5 text-[11px] font-semibold text-[#18d3e8]">
                       Uploading to Shopify…
                     </div>
                   )}
@@ -645,7 +645,7 @@ export default function ProductConfigurator() {
             disabled={!file || isCheckingOut || isUploading}
             className={`group relative flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-semibold transition ${
               file && !isCheckingOut && !isUploading
-                ? "bg-highlight text-yellow-950 shadow-lg shadow-highlight/20 hover:brightness-105"
+                ? "accent-gradient text-black shadow-lg shadow-[#d9f000]/30 hover:brightness-110"
                 : "cursor-not-allowed border border-border-soft bg-white/4 text-foreground-muted"
             }`}
           >
@@ -772,7 +772,7 @@ function ShapeButton({
       }`}
     >
       {active && (
-        <span className="absolute left-2 top-2 grid h-4 w-4 place-items-center rounded-full bg-highlight text-[9px] font-bold text-yellow-950">
+        <span className="absolute left-2 top-2 grid h-4 w-4 place-items-center rounded-full bg-highlight text-[9px] font-bold text-black">
           ★
         </span>
       )}
@@ -810,7 +810,7 @@ function MaterialButton({
       }`}
     >
       {active && (
-        <span className="absolute left-2 top-2 grid h-4 w-4 place-items-center rounded-full bg-highlight text-[9px] font-bold text-yellow-950">
+        <span className="absolute left-2 top-2 grid h-4 w-4 place-items-center rounded-full bg-highlight text-[9px] font-bold text-black">
           ★
         </span>
       )}
@@ -848,7 +848,7 @@ function SizeButton({
       }`}
     >
       {active && (
-        <span className="absolute left-2 top-2 grid h-4 w-4 place-items-center rounded-full bg-highlight text-[9px] font-bold text-yellow-950">
+        <span className="absolute left-2 top-2 grid h-4 w-4 place-items-center rounded-full bg-highlight text-[9px] font-bold text-black">
           ★
         </span>
       )}

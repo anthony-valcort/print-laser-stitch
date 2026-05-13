@@ -1,19 +1,31 @@
 @import "tailwindcss";
 
 :root {
-  --background: #030140;
-  --background-soft: #0a0747;
-  --surface: #14104a;
-  --surface-elevated: #1a1660;
-  --surface-strong: #221c78;
+  /* Surfaces (pure-black neon theme) */
+  --background: #050505;
+  --background-soft: #0a0a0a;
+  --surface: #121212;
+  --surface-elevated: #1e1e1e;
+  --surface-strong: #2a2a2a;
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.16);
-  --foreground: #ffffff;
-  --foreground-muted: rgba(255, 255, 255, 0.65);
-  --accent: #a855f7;
-  --accent-strong: #7c3aed;
-  --highlight: #facc15;
-  --highlight-soft: rgba(250, 204, 21, 0.16);
+  --foreground: #f5f5f5;
+  --foreground-muted: rgba(245, 245, 245, 0.6);
+
+  /* Brand neons */
+  --brand-yellow: #d9f000;
+  --brand-yellow-strong: #b8cc00;
+  --brand-cyan: #18d3e8;
+  --brand-cyan-strong: #14b8ce;
+  --brand-magenta: #d94cb3;
+  --brand-magenta-strong: #b83a96;
+
+  /* Legacy aliases — accent/highlight tokens still used across the codebase.
+     Mapped onto the new palette so existing utilities keep working. */
+  --accent: #d9f000;
+  --accent-strong: #b8cc00;
+  --highlight: #18d3e8;
+  --highlight-soft: rgba(24, 211, 232, 0.18);
 }
 
 @theme inline {
@@ -28,9 +40,17 @@
   --color-foreground-muted: var(--foreground-muted);
   --color-accent: var(--accent);
   --color-accent-strong: var(--accent-strong);
+  --color-brand-yellow: var(--brand-yellow);
+  --color-brand-yellow-strong: var(--brand-yellow-strong);
+  --color-brand-cyan: var(--brand-cyan);
+  --color-brand-cyan-strong: var(--brand-cyan-strong);
+  --color-brand-magenta: var(--brand-magenta);
+  --color-brand-magenta-strong: var(--brand-magenta-strong);
   --color-highlight: var(--highlight);
   --color-highlight-soft: var(--highlight-soft);
   --font-sans: var(--font-inter);
+  --font-display: var(--font-orbitron);
+  --font-headline: var(--font-rajdhani);
 }
 
 html,
@@ -47,23 +67,73 @@ body {
   backdrop-filter: blur(8px);
 }
 
+/* Primary CTA — solid lime yellow with slight depth */
 @utility accent-gradient {
-  background-image: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #d946ef 100%);
+  background-image: linear-gradient(135deg, #d9f000 0%, #b8cc00 100%);
 }
 
+/* Headline highlight — yellow → cyan neon sweep */
 @utility accent-gradient-text {
-  background-image: linear-gradient(135deg, #c084fc 0%, #e9d5ff 100%);
+  background-image: linear-gradient(135deg, #d9f000 0%, #18d3e8 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-@utility hero-green {
-  background-image: linear-gradient(120deg, #4d7c0f 0%, #65a30d 35%, #84cc16 70%, #a3e635 100%);
+/* Secondary CTA — cyan */
+@utility cyan-gradient {
+  background-image: linear-gradient(135deg, #18d3e8 0%, #14b8ce 100%);
 }
 
+/* Tertiary CTA — magenta */
+@utility magenta-gradient {
+  background-image: linear-gradient(135deg, #d94cb3 0%, #b83a96 100%);
+}
+
+/* Legacy alias — kept for any leftover usages; uses cyan now (signage CTA) */
+@utility hero-green {
+  background-image: linear-gradient(120deg, #18d3e8 0%, #14b8ce 50%, #0d8f9f 100%);
+}
+
+/* Cart/total badge — cyan → magenta sweep */
 @utility total-gradient {
-  background-image: linear-gradient(135deg, #4338ca 0%, #6d28d9 60%, #7c3aed 100%);
+  background-image: linear-gradient(135deg, #18d3e8 0%, #d94cb3 100%);
+}
+
+@utility brand-glow-yellow {
+  box-shadow: 0 0 40px rgba(217, 240, 0, 0.35);
+}
+
+@utility brand-glow-cyan {
+  box-shadow: 0 0 40px rgba(24, 211, 232, 0.35);
+}
+
+@utility brand-glow-magenta {
+  box-shadow: 0 0 40px rgba(217, 76, 179, 0.35);
+}
+
+/* Display headline (Orbitron) */
+@utility font-display {
+  font-family: var(--font-orbitron), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+/* Subheadline (Rajdhani) */
+@utility font-headline {
+  font-family: var(--font-rajdhani), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.04em;
+}
+
+/* Cyberpunk-style notched corner card (top-right + bottom-left bevels) */
+@utility clip-bevel {
+  clip-path: polygon(
+    0 0,
+    calc(100% - 18px) 0,
+    100% 18px,
+    100% 100%,
+    18px 100%,
+    0 calc(100% - 18px)
+  );
 }
 
 @utility hide-scrollbar {
@@ -85,4 +155,61 @@ body {
 
 @utility animate-float {
   animation: float-y 3.5s ease-in-out infinite;
+}
+
+/* Slow drift animations for ambient background orbs */
+@keyframes drift-orb-1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(8vw, -6vh) scale(1.05);
+  }
+  50% {
+    transform: translate(-4vw, -10vh) scale(0.95);
+  }
+  75% {
+    transform: translate(-10vw, 4vh) scale(1.02);
+  }
+}
+
+@keyframes drift-orb-2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-12vw, 8vh) scale(1.08);
+  }
+  66% {
+    transform: translate(6vw, -5vh) scale(0.96);
+  }
+}
+
+@keyframes drift-orb-3 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(10vw, 10vh) scale(1.06);
+  }
+}
+
+@utility animate-drift-1 {
+  animation: drift-orb-1 80s ease-in-out infinite;
+}
+
+@utility animate-drift-2 {
+  animation: drift-orb-2 70s ease-in-out infinite;
+}
+
+@utility animate-drift-3 {
+  animation: drift-orb-3 90s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift-1,
+  .animate-drift-2,
+  .animate-drift-3 {
+    animation: none;
+  }
 }

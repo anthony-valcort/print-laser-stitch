@@ -38,7 +38,7 @@ export default function RootLayout({
       className={`${inter.variable} ${orbitron.variable} ${rajdhani.variable} h-full antialiased`}
     >
       <body
-        className="min-h-full flex flex-col overflow-x-hidden bg-background text-foreground"
+        className="min-h-full flex flex-col overflow-x-hidden bg-background text-foreground isolate"
         suppressHydrationWarning
       >
         <AmbientBackground />

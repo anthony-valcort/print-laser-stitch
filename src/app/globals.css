@@ -163,13 +163,13 @@ body {
     transform: translate(0, 0) scale(1);
   }
   25% {
-    transform: translate(8vw, -6vh) scale(1.05);
+    transform: translate(15vw, -10vh) scale(1.15);
   }
   50% {
-    transform: translate(-4vw, -10vh) scale(0.95);
+    transform: translate(-8vw, -18vh) scale(0.9);
   }
   75% {
-    transform: translate(-10vw, 4vh) scale(1.02);
+    transform: translate(-18vw, 8vh) scale(1.1);
   }
 }
 
@@ -178,10 +178,10 @@ body {
     transform: translate(0, 0) scale(1);
   }
   33% {
-    transform: translate(-12vw, 8vh) scale(1.08);
+    transform: translate(-20vw, 14vh) scale(1.18);
   }
   66% {
-    transform: translate(6vw, -5vh) scale(0.96);
+    transform: translate(12vw, -10vh) scale(0.88);
   }
 }
 
@@ -190,26 +190,108 @@ body {
     transform: translate(0, 0) scale(1);
   }
   50% {
-    transform: translate(10vw, 10vh) scale(1.06);
+    transform: translate(18vw, 16vh) scale(1.2);
   }
 }
 
 @utility animate-drift-1 {
-  animation: drift-orb-1 80s ease-in-out infinite;
+  animation: drift-orb-1 30s ease-in-out infinite;
 }
 
 @utility animate-drift-2 {
-  animation: drift-orb-2 70s ease-in-out infinite;
+  animation: drift-orb-2 26s ease-in-out infinite;
 }
 
 @utility animate-drift-3 {
-  animation: drift-orb-3 90s ease-in-out infinite;
+  animation: drift-orb-3 34s ease-in-out infinite;
+}
+
+/* Small floating-icon keyframes — gentle drift + slow rotation */
+@keyframes float-icon-a {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(24px, -28px) rotate(8deg); }
+}
+@keyframes float-icon-b {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(-20px, 22px) rotate(-10deg); }
+}
+@keyframes float-icon-c {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  33% { transform: translate(18px, 20px) rotate(6deg); }
+  66% { transform: translate(-22px, -16px) rotate(-6deg); }
+}
+@keyframes float-icon-d {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  50% { transform: translate(0, -32px) rotate(12deg); }
+}
+
+@utility animate-icon-a {
+  animation: float-icon-a 12s ease-in-out infinite;
+}
+@utility animate-icon-b {
+  animation: float-icon-b 14s ease-in-out infinite;
+}
+@utility animate-icon-c {
+  animation: float-icon-c 16s ease-in-out infinite;
+}
+@utility animate-icon-d {
+  animation: float-icon-d 10s ease-in-out infinite;
+}
+
+/* Cyberpunk dot-grid overlay — subtle, doesn't compete with orbs */
+@utility dot-grid {
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.07) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}
+
+/* Glitch text effect — runs a brief RGB-split shake every few seconds */
+@keyframes glitch {
+  0%, 88%, 100% {
+    text-shadow: none;
+    transform: translate(0);
+  }
+  89% {
+    text-shadow:
+      3px 0 0 #18d3e8,
+      -3px 0 0 #d94cb3;
+    transform: translate(-2px, 1px);
+  }
+  91% {
+    text-shadow:
+      -3px 0 0 #18d3e8,
+      3px 0 0 #d94cb3;
+    transform: translate(2px, -1px);
+  }
+  93% {
+    text-shadow:
+      2px 0 0 #d9f000,
+      -2px 0 0 #18d3e8;
+    transform: translate(-1px, 0);
+  }
+  95% {
+    text-shadow:
+      -2px 0 0 #d9f000,
+      2px 0 0 #d94cb3;
+    transform: translate(1px, 0);
+  }
+}
+
+@utility glitch-text {
+  animation: glitch 4s infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-drift-1,
   .animate-drift-2,
-  .animate-drift-3 {
+  .animate-drift-3,
+  .animate-icon-a,
+  .animate-icon-b,
+  .animate-icon-c,
+  .animate-icon-d,
+  .glitch-text {
     animation: none;
   }
 }

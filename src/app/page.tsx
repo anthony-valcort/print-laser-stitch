@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import HeroFloatingIcons from "@/components/HeroFloatingIcons";
 import { categories } from "@/lib/categories";
 
 /**
@@ -100,11 +101,10 @@ export default function Home() {
       <Header />
       <main className="flex-1">
         {/* HERO — split layout: text left, Hero.jpeg right */}
-        <section className="relative overflow-x-clip">
-          {/* Ambient neon glow */}
-          <div className="pointer-events-none absolute -top-32 left-1/2 -z-10 h-[40rem] w-[60rem] -translate-x-1/2 rounded-full bg-linear-to-r from-[#d9f000]/10 via-[#18d3e8]/10 to-[#d94cb3]/10 blur-3xl" />
+        <section className="relative overflow-x-clip isolate">
+          <HeroFloatingIcons />
 
-          <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 pt-16 sm:px-6 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:pt-24">
+          <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 pt-16 sm:px-6 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:pt-24">
             {/* Left — copy */}
             <div className="text-center lg:text-left">
               <span className="inline-flex items-center gap-2 rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
@@ -112,7 +112,7 @@ export default function Home() {
                 We print · We engrave · We stitch
               </span>
 
-              <h1 className="mx-auto mt-5 max-w-2xl font-display text-4xl font-black uppercase leading-[1.05] tracking-tight sm:text-5xl lg:mx-0 lg:text-6xl">
+              <h1 className="glitch-text mx-auto mt-5 max-w-2xl font-display text-4xl font-black uppercase leading-[1.05] tracking-tight sm:text-5xl lg:mx-0 lg:text-6xl">
                 Bringing your{" "}
                 <span className="accent-gradient-text">vision</span>
                 <br className="hidden sm:inline" />{" "}

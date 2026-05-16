@@ -3,98 +3,39 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HeroFloatingIcons from "@/components/HeroFloatingIcons";
-import { categories } from "@/lib/categories";
+import { getAllCollections } from "@/lib/shopify-collections";
+
+export const revalidate = 300;
 
 /**
- * Per-category accent — cycles through the three brand neons so the product
- * grid stays on-brand without monotony. Yellow = primary, Cyan = secondary,
- * Magenta = tertiary.
+ * Cycles through the three brand neons so the category grid stays on-brand
+ * without monotony. Yellow = primary, Cyan = secondary, Magenta = tertiary.
  */
-const CATEGORY_ACCENTS: Record<
-  string,
-  { gradient: string; ring: string; glow: string }
-> = {
-  "vinyl-stickers": {
+const ACCENTS = [
+  {
     gradient: "from-[#d9f000] to-[#b8cc00]",
-    ring: "ring-[#d9f000]/40",
     glow: "shadow-[0_0_40px_rgba(217,240,0,0.25)]",
+    text: "text-[#d9f000]",
   },
-  tshirts: {
+  {
     gradient: "from-[#18d3e8] to-[#14b8ce]",
-    ring: "ring-[#18d3e8]/40",
     glow: "shadow-[0_0_40px_rgba(24,211,232,0.25)]",
+    text: "text-[#18d3e8]",
   },
-  "business-cards": {
-    gradient: "from-[#d9f000] to-[#18d3e8]",
-    ring: "ring-[#d9f000]/40",
-    glow: "shadow-[0_0_40px_rgba(217,240,0,0.25)]",
-  },
-  flyers: {
-    gradient: "from-[#18d3e8] to-[#d94cb3]",
-    ring: "ring-[#18d3e8]/40",
-    glow: "shadow-[0_0_40px_rgba(24,211,232,0.25)]",
-  },
-  posters: {
+  {
     gradient: "from-[#d94cb3] to-[#b83a96]",
-    ring: "ring-[#d94cb3]/40",
     glow: "shadow-[0_0_40px_rgba(217,76,179,0.25)]",
+    text: "text-[#d94cb3]",
   },
-  brochures: {
-    gradient: "from-[#d9f000] to-[#d94cb3]",
-    ring: "ring-[#d9f000]/40",
-    glow: "shadow-[0_0_40px_rgba(217,240,0,0.25)]",
-  },
-  banners: {
-    gradient: "from-[#d9f000] to-[#b8cc00]",
-    ring: "ring-[#d9f000]/40",
-    glow: "shadow-[0_0_40px_rgba(217,240,0,0.25)]",
-  },
-  "car-magnets": {
-    gradient: "from-[#18d3e8] to-[#14b8ce]",
-    ring: "ring-[#18d3e8]/40",
-    glow: "shadow-[0_0_40px_rgba(24,211,232,0.25)]",
-  },
-  "embroidery-patches": {
-    gradient: "from-[#d94cb3] to-[#b83a96]",
-    ring: "ring-[#d94cb3]/40",
-    glow: "shadow-[0_0_40px_rgba(217,76,179,0.25)]",
-  },
-  "embroidered-polos": {
-    gradient: "from-[#d94cb3] to-[#18d3e8]",
-    ring: "ring-[#d94cb3]/40",
-    glow: "shadow-[0_0_40px_rgba(217,76,179,0.25)]",
-  },
-  "engraved-cups": {
-    gradient: "from-[#18d3e8] to-[#d9f000]",
-    ring: "ring-[#18d3e8]/40",
-    glow: "shadow-[0_0_40px_rgba(24,211,232,0.25)]",
-  },
-  "engraved-wallets": {
-    gradient: "from-[#d9f000] to-[#b8cc00]",
-    ring: "ring-[#d9f000]/40",
-    glow: "shadow-[0_0_40px_rgba(217,240,0,0.25)]",
-  },
-  "engraved-bottle-openers": {
-    gradient: "from-[#18d3e8] to-[#14b8ce]",
-    ring: "ring-[#18d3e8]/40",
-    glow: "shadow-[0_0_40px_rgba(24,211,232,0.25)]",
-  },
-  "custom-canvas": {
-    gradient: "from-[#d94cb3] to-[#d9f000]",
-    ring: "ring-[#d94cb3]/40",
-    glow: "shadow-[0_0_40px_rgba(217,76,179,0.25)]",
-  },
-  "signage-quotes": {
-    gradient: "from-[#18d3e8] to-[#d94cb3]",
-    ring: "ring-[#18d3e8]/40",
-    glow: "shadow-[0_0_40px_rgba(24,211,232,0.25)]",
-  },
-};
+];
 
-export default function Home() {
-  const productCategories = categories.filter(
-    (c) => c.slug !== "signage-quotes",
-  );
+export default async function Home() {
+  let productCategories: Awaited<ReturnType<typeof getAllCollections>> = [];
+  try {
+    productCategories = await getAllCollections();
+  } catch {
+    productCategories = [];
+  }
 
   return (
     <>
@@ -175,58 +116,84 @@ export default function Home() {
               <span className="accent-gradient-text">make for you?</span>
             </h2>
             <p className="mx-auto mt-3 max-w-2xl text-sm text-foreground-muted">
-              {productCategories.length} services — every category links to its
-              own configurator. Click a card to start your order.
+              {productCategories.length > 0
+                ? `${productCategories.length} categories — pick one to see every product inside.`
+                : "Browse our full range of custom print, engraving and apparel products."}
             </p>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {productCategories.map((c) => {
-              const accent =
-                CATEGORY_ACCENTS[c.slug] ?? CATEGORY_ACCENTS["vinyl-stickers"];
-              return (
-                <Link
-                  key={c.slug}
-                  href={c.href}
-                  className={`group relative overflow-hidden rounded-2xl border border-border-soft bg-surface transition hover:-translate-y-1 hover:border-[#d9f000]/40 hover:${accent.glow}`}
-                >
-                  {/* Hero image area — large gradient with emoji centerpiece */}
-                  <div
-                    className={`relative aspect-[4/3] w-full overflow-hidden bg-linear-to-br ${accent.gradient}`}
+          {productCategories.length === 0 ? (
+            <div className="mx-auto max-w-xl rounded-2xl border border-border-soft bg-surface p-8 text-center">
+              <div className="text-3xl">🗂️</div>
+              <p className="mt-3 text-sm text-foreground-muted">
+                Our catalog is being updated — please check back shortly.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {productCategories.map((c, i) => {
+                const accent = ACCENTS[i % ACCENTS.length];
+                return (
+                  <Link
+                    key={c.id}
+                    href={`/collections/${c.handle}`}
+                    className={`group relative overflow-hidden rounded-2xl border border-border-soft bg-surface transition hover:-translate-y-1 hover:border-[#d9f000]/40 hover:${accent.glow}`}
                   >
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.25),transparent_60%)]" />
-                    <div className="absolute inset-0 grid place-items-center">
-                      <span className="text-7xl drop-shadow-2xl transition-transform duration-500 group-hover:scale-110 sm:text-8xl">
-                        {c.emoji}
-                      </span>
+                    {/* Hero image area — Shopify collection image */}
+                    <div
+                      className={`relative aspect-[4/3] w-full overflow-hidden bg-linear-to-br ${accent.gradient}`}
+                    >
+                      {c.image?.url ? (
+                        <Image
+                          src={c.image.url}
+                          alt={c.image.altText ?? c.title}
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <>
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.25),transparent_60%)]" />
+                          <div className="absolute inset-0 grid place-items-center">
+                            <span className="text-7xl drop-shadow-2xl sm:text-8xl">
+                              🗂️
+                            </span>
+                          </div>
+                        </>
+                      )}
+                      {/* shimmer overlay on hover */}
+                      <div className="pointer-events-none absolute -inset-full bg-linear-to-r from-transparent via-white/20 to-transparent opacity-0 transition-all duration-700 group-hover:left-full group-hover:opacity-100" />
                     </div>
-                    {/* shimmer overlay on hover */}
-                    <div className="pointer-events-none absolute -inset-full bg-linear-to-r from-transparent via-white/20 to-transparent opacity-0 transition-all duration-700 group-hover:left-full group-hover:opacity-100" />
-                  </div>
 
-                  {/* Card body */}
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="font-headline text-lg font-semibold leading-tight">
-                          {c.name}
+                    {/* Card body */}
+                    <div className="p-5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="font-headline text-lg font-semibold leading-tight">
+                            {c.title}
+                          </div>
+                          <div
+                            className={`mt-0.5 font-headline text-[11px] uppercase tracking-[0.2em] ${accent.text}`}
+                          >
+                            {c.productsCount}{" "}
+                            {c.productsCount === 1 ? "product" : "products"}
+                          </div>
                         </div>
-                        <div className="mt-0.5 font-headline text-[11px] uppercase tracking-[0.2em] text-[#d9f000]">
-                          {c.tagline}
-                        </div>
+                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/5 text-foreground/70 transition group-hover:bg-[#d9f000] group-hover:text-black">
+                          <Arrow size={14} />
+                        </span>
                       </div>
-                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/5 text-foreground/70 transition group-hover:bg-[#d9f000] group-hover:text-black">
-                        <Arrow size={14} />
-                      </span>
+                      {c.description && (
+                        <p className="mt-3 line-clamp-2 text-sm text-foreground-muted">
+                          {c.description}
+                        </p>
+                      )}
                     </div>
-                    <p className="mt-3 line-clamp-2 text-sm text-foreground-muted">
-                      {c.description}
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         {/* Quick Quote (multi-panel + material) CTA */}

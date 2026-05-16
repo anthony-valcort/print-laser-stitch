@@ -1,23 +1,20 @@
 /**
  * Server-side Header wrapper.
  *
- * Reads the current customer session and forwards to the client-side
- * <HeaderClient /> with the customer prop. Pages keep using `<Header />` —
- * no per-page changes needed when adding new auth-aware navigation pieces.
+ * Reads the current customer session + the live Shopify collections and
+ * forwards both to the client-side <HeaderClient />. Pages keep using
+ * `<Header />` — no per-page changes needed.
  *
- * If the Storefront API isn't configured (Anthony hasn't created the token
- * yet) we silently degrade to the unauthenticated header rather than crashing.
+ * If the Storefront API isn't configured we silently degrade to the
+ * unauthenticated header. If collections can't be fetched the Products
+ * dropdown simply links to the /collections page.
  */
 
-import HeaderClient from "./HeaderClient";
+import HeaderClient, { type HeaderCollection } from "./HeaderClient";
 import { getCurrentCustomer } from "@/lib/customer-session";
-import type { Category } from "@/lib/categories";
+import { getAllCollections } from "@/lib/shopify-collections";
 
-export default async function Header({
-  categories,
-}: {
-  categories?: Category[];
-}) {
+export default async function Header() {
   let customer = null;
   try {
     customer = await getCurrentCustomer();
@@ -25,9 +22,20 @@ export default async function Header({
     // Storefront API not configured or failed — show signed-out header.
   }
 
+  let collections: HeaderCollection[] = [];
+  try {
+    collections = (await getAllCollections()).map((c) => ({
+      handle: c.handle,
+      title: c.title,
+      imageUrl: c.image?.url ?? null,
+    }));
+  } catch {
+    // Shopify unreachable — Products menu falls back to a single link.
+  }
+
   return (
     <HeaderClient
-      categories={categories}
+      collections={collections}
       customer={
         customer
           ? {

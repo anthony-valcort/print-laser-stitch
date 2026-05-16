@@ -3,10 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import {
-  categories as fallbackCategories,
-  type Category,
-} from "@/lib/categories";
 import CartIcon from "./CartIcon";
 
 export type HeaderCustomer = {
@@ -15,22 +11,24 @@ export type HeaderCustomer = {
   email: string;
 };
 
+export type HeaderCollection = {
+  handle: string;
+  title: string;
+  imageUrl: string | null;
+};
+
 export default function HeaderClient({
-  categories = fallbackCategories,
+  collections = [],
   customer = null,
 }: {
-  categories?: Category[];
+  collections?: HeaderCollection[];
   customer?: HeaderCustomer | null;
 }) {
   const [productsOpen, setProductsOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Hide the standalone "Custom Signage Quote" entry from the Products dropdown
-  // because it gets its own top-level "Calculator" link.
-  const productCategories = categories.filter(
-    (c) => c.slug !== "signage-quotes",
-  );
+  const hasCollections = collections.length > 0;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border-soft bg-background/85 backdrop-blur-md">
@@ -53,65 +51,76 @@ export default function HeaderClient({
           >
             Home
           </Link>
-          <div
-            className="relative"
-            onMouseEnter={() => setProductsOpen(true)}
-            onMouseLeave={() => setProductsOpen(false)}
-          >
-            <button
-              type="button"
-              className="flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
-              onClick={() => setProductsOpen((v) => !v)}
+          {hasCollections ? (
+            <div
+              className="relative"
+              onMouseEnter={() => setProductsOpen(true)}
+              onMouseLeave={() => setProductsOpen(false)}
+            >
+              <Link
+                href="/collections"
+                className="flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
+              >
+                Products
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className={`transition-transform ${productsOpen ? "rotate-180" : ""}`}
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </Link>
+              {productsOpen && (
+                <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2">
+                  <div className="w-md rounded-2xl border border-border-soft bg-background-soft p-2 shadow-2xl shadow-black/40">
+                    <div className="grid grid-cols-2 gap-1">
+                      {collections.map((c) => (
+                        <Link
+                          key={c.handle}
+                          href={`/collections/${c.handle}`}
+                          className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-white/5"
+                        >
+                          {c.imageUrl ? (
+                            <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-white/10">
+                              <Image
+                                src={c.imageUrl}
+                                alt=""
+                                fill
+                                sizes="32px"
+                                className="object-cover"
+                              />
+                            </span>
+                          ) : (
+                            <span className="text-lg">📦</span>
+                          )}
+                          <span className="font-medium">{c.title}</span>
+                        </Link>
+                      ))}
+                    </div>
+                    <Link
+                      href="/collections"
+                      className="mt-1 block rounded-xl border-t border-border-soft px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-[#18d3e8] hover:bg-white/5"
+                    >
+                      Browse all categories →
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              href="/collections"
+              className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
             >
               Products
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className={`transition-transform ${productsOpen ? "rotate-180" : ""}`}
-              >
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </button>
-            {productsOpen && (
-              <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2">
-                <div className="grid w-md grid-cols-2 gap-1 rounded-2xl border border-border-soft bg-background-soft p-2 shadow-2xl shadow-black/40">
-                  {productCategories.map((c) => (
-                    <Link
-                      key={c.slug}
-                      href={c.href}
-                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-white/5"
-                    >
-                      {c.imageUrl ? (
-                        <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-white/10">
-                          <Image
-                            src={c.imageUrl}
-                            alt=""
-                            fill
-                            sizes="32px"
-                            className="object-contain"
-                          />
-                        </span>
-                      ) : (
-                        <span className="text-lg">{c.emoji ?? "📦"}</span>
-                      )}
-                      <div>
-                        <div className="font-medium">{c.name}</div>
-                        <div className="text-xs text-foreground-muted">
-                          {c.tagline}
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+            </Link>
+          )}
           <Link
             href="/decal-quote"
             className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
@@ -295,13 +304,18 @@ export default function HeaderClient({
             >
               🔐 Portal
             </a>
-            <div className="px-4 py-2 text-xs uppercase tracking-wider text-foreground-muted">
-              Products
-            </div>
-            {productCategories.map((c) => (
+            <Link
+              href="/collections"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center justify-between px-4 py-2 text-xs uppercase tracking-wider text-foreground-muted hover:text-foreground"
+            >
+              <span>Products</span>
+              <span className="text-[#18d3e8]">All →</span>
+            </Link>
+            {collections.map((c) => (
               <Link
-                key={c.slug}
-                href={c.href}
+                key={c.handle}
+                href={`/collections/${c.handle}`}
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-3 rounded-xl px-4 py-2 text-sm hover:bg-white/5"
               >
@@ -312,13 +326,13 @@ export default function HeaderClient({
                       alt=""
                       fill
                       sizes="24px"
-                      className="object-contain"
+                      className="object-cover"
                     />
                   </span>
                 ) : (
-                  <span>{c.emoji ?? "📦"}</span>
+                  <span>📦</span>
                 )}
-                <span>{c.name}</span>
+                <span>{c.title}</span>
               </Link>
             ))}
             <div className="my-2 border-t border-border-soft" />

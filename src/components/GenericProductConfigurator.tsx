@@ -57,6 +57,31 @@ function valueIndicatesBothSides(value: string | undefined): boolean {
   );
 }
 
+// Print products that are commonly printed on both sides. When the Shopify
+// product has no explicit "Print Sides" option of its own, we still let the
+// customer choose Front Only vs Front & Back for these.
+const DOUBLE_SIDED_KEYWORDS = [
+  "business card",
+  "flyer",
+  "door hanger",
+  "brochure",
+  "postcard",
+  "rack card",
+  "hang tag",
+  "table tent",
+  "greeting card",
+  "invitation",
+  "leaflet",
+  "pamphlet",
+];
+
+function isDoubleSidedCapable(title: string, handle: string): boolean {
+  const haystack = `${title} ${handle}`
+    .toLowerCase()
+    .replace(/[-_]+/g, " ");
+  return DOUBLE_SIDED_KEYWORDS.some((kw) => haystack.includes(kw));
+}
+
 export default function GenericProductConfigurator({
   product,
   badge,
@@ -105,6 +130,7 @@ export default function GenericProductConfigurator({
 
   const [frontUpload, setFrontUpload] = useState<UploadSlot>(EMPTY_UPLOAD_SLOT);
   const [backUpload, setBackUpload] = useState<UploadSlot>(EMPTY_UPLOAD_SLOT);
+  const [printSide, setPrintSide] = useState<"front" | "both">("front");
 
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [galleryIdx, setGalleryIdx] = useState(0);
@@ -149,17 +175,33 @@ export default function GenericProductConfigurator({
     return () => clearTimeout(t);
   }, [toast]);
 
-  // Resolve effective upload mode. In "auto", inspect the product's print-
-  // sides option (if any) and use the customer's selected value.
+  // Resolve effective upload mode. In "auto":
+  //  1. If the product has its own Shopify "Print Sides"-type option, follow
+  //     the customer's selected value (e.g. Flyers → "Front and Back").
+  //  2. Otherwise, if it's a product commonly printed double-sided
+  //     (business cards, door hangers, brochures…), show our own built-in
+  //     Front Only / Front & Back selector.
+  //  3. Otherwise single uploader.
+  const sidesOpt =
+    uploadMode === "auto" ? findSidesOption(product.options) : undefined;
+  const showSideSelector =
+    uploadMode === "auto" &&
+    !sidesOpt &&
+    isDoubleSidedCapable(product.title, product.handle);
+
   let effectiveUploadMode: "single" | "front-back" | "none";
   if (uploadMode === "auto") {
-    const sidesOpt = findSidesOption(product.options);
-    const selectedSidesValue = sidesOpt
-      ? selectedOptions[sidesOpt.name]
-      : undefined;
-    effectiveUploadMode = valueIndicatesBothSides(selectedSidesValue)
-      ? "front-back"
-      : "single";
+    if (sidesOpt) {
+      effectiveUploadMode = valueIndicatesBothSides(
+        selectedOptions[sidesOpt.name],
+      )
+        ? "front-back"
+        : "single";
+    } else if (showSideSelector) {
+      effectiveUploadMode = printSide === "both" ? "front-back" : "single";
+    } else {
+      effectiveUploadMode = "single";
+    }
   } else {
     effectiveUploadMode = uploadMode;
   }
@@ -209,6 +251,10 @@ export default function GenericProductConfigurator({
           extraProperties["Back Design Filename"] = backUpload.file.name;
         }
       }
+    }
+    if (showSideSelector) {
+      extraProperties["Print Sides"] =
+        printSide === "both" ? "Front & Back" : "Front Only";
     }
     if (phone.trim()) extraProperties["Phone Number"] = phone.trim();
     if (instructions.trim()) extraProperties["Instructions"] = instructions.trim();
@@ -383,6 +429,36 @@ export default function GenericProductConfigurator({
                   min={minQuantity}
                   onChange={setQuantity}
                 />
+              </Section>
+            )}
+
+            {/* Built-in Print Side selector — only when the product has no
+                Shopify sides option but is a double-sided-capable type. */}
+            {showSideSelector && (
+              <Section title="Print side" value={
+                printSide === "both" ? "Front & Back" : "Front Only"
+              }>
+                <div className="flex flex-wrap gap-2">
+                  {(
+                    [
+                      { key: "front", label: "Front Only" },
+                      { key: "both", label: "Front & Back" },
+                    ] as const
+                  ).map((o) => (
+                    <button
+                      key={o.key}
+                      type="button"
+                      onClick={() => setPrintSide(o.key)}
+                      className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition ${
+                        printSide === o.key
+                          ? "border-highlight bg-highlight-soft"
+                          : "border-border-soft bg-white/3 hover:bg-white/6"
+                      }`}
+                    >
+                      {o.label}
+                    </button>
+                  ))}
+                </div>
               </Section>
             )}
 

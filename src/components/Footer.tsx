@@ -2,147 +2,88 @@ import Image from "next/image";
 import Link from "next/link";
 
 const HOURS: { day: string; time: string }[] = [
-  { day: "Monday", time: "9am–5pm" },
-  { day: "Tuesday", time: "9am–5pm" },
-  { day: "Wednesday", time: "9am–5pm" },
-  { day: "Thursday", time: "9am–5pm" },
-  { day: "Friday", time: "9am–5pm" },
-  { day: "Saturday", time: "9am–5pm" },
-  { day: "Sunday", time: "Closed" },
+  { day: "Mon", time: "9am–5pm" },
+  { day: "Tue", time: "9am–5pm" },
+  { day: "Wed", time: "9am–5pm" },
+  { day: "Thu", time: "9am–5pm" },
+  { day: "Fri", time: "9am–5pm" },
+  { day: "Sat", time: "9am–5pm" },
+  { day: "Sun", time: "Closed" },
+];
+
+const SOCIALS = [
+  {
+    label: "Facebook",
+    href: "https://www.facebook.com/share/1D34YQAGuE/?mibextid=wwXIfr",
+    path: "M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15h-2.5v-3H10V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z",
+  },
 ];
 
 export default function Footer() {
   return (
-    <footer className="mt-16 border-t border-border-soft bg-background-soft">
-      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-12">
-          {/* Logo + rating */}
-          <div className="lg:col-span-3">
-            <div className="flex items-center gap-2">
+    <footer className="relative mt-20 overflow-hidden border-t border-border-soft bg-background">
+      {/* Neon hairline + ambient orbs to match the rest of the site */}
+      <div className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-[#18d3e8]/60 to-transparent" />
+      <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#d94cb3]/10 blur-3xl" />
+      <div className="pointer-events-none absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-[#18d3e8]/10 blur-3xl" />
+
+      <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid gap-12 lg:grid-cols-12">
+          {/* Brand */}
+          <div className="lg:col-span-4">
+            <Link href="/" className="flex items-center gap-2">
               <Image
                 src="/logo.avif"
                 alt="Print Laser Stitch"
-                width={36}
-                height={36}
-                className="h-9 w-auto"
+                width={40}
+                height={40}
+                className="h-10 w-auto"
               />
-              <span className="text-lg font-semibold">
-                Print Laser <span className="accent-gradient-text">Stitch</span>
+              <span className="font-display text-lg font-black uppercase tracking-tight">
+                Print Laser{" "}
+                <span className="accent-gradient-text">Stitch</span>
               </span>
-            </div>
-            <div className="mt-4 flex items-center gap-2">
-              <div className="flex">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Star key={i} />
-                ))}
-              </div>
-              <span className="text-sm font-semibold">5.0</span>
-            </div>
-            <p className="mt-2 text-xs text-foreground-muted">
-              Trusted by hundreds of brands.
+            </Link>
+            <p className="mt-5 max-w-xs text-sm leading-relaxed text-foreground-muted">
+              We print, engrave and stitch — custom prints, apparel and
+              signage delivered as fast as humanly possible.
             </p>
-          </div>
 
-          {/* Products */}
-          <FooterColumn
-            title="Products"
-            items={[
-              { label: "Vinyl Stickers", href: "/products/vinyl-stickers" },
-              { label: "T-Shirts", href: "/products/tshirts" },
-              { label: "Business Cards", href: "/products/business-cards" },
-              { label: "Banners", href: "/products/banners" },
-              { label: "Engraved Cups", href: "/products/engraved-cups" },
-              { label: "Signage Calculator", href: "/signage-quotes" },
-            ]}
-          />
+            <Link
+              href="/collections"
+              className="mt-6 inline-flex items-center gap-2 rounded-md accent-gradient px-5 py-2.5 font-headline text-xs font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 transition hover:brightness-110"
+            >
+              Start your order
+              <Arrow />
+            </Link>
 
-          {/* Company */}
-          <FooterColumn
-            title="Company"
-            items={[{ label: "About Us", href: "/about" }]}
-          />
-
-          {/* Support with hours */}
-          <div className="lg:col-span-2">
-            <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
-              <span>🎧</span> Support
-            </div>
-            <ul className="space-y-2 text-sm text-foreground-muted">
-              <li>
+            <div className="mt-7 flex gap-3">
+              {SOCIALS.map((s) => (
                 <a
-                  className="hover:text-foreground"
-                  href="mailto:office@psolutionservices.com"
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={s.label}
+                  className="grid h-9 w-9 place-items-center rounded-full border border-border-soft text-foreground-muted transition hover:border-[#18d3e8]/50 hover:text-[#18d3e8]"
                 >
-                  Help
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden
+                  >
+                    <path d={s.path} />
+                  </svg>
                 </a>
-              </li>
-              <li>
-                <Link className="hover:text-foreground" href="#">
-                  Returns
-                </Link>
-              </li>
-            </ul>
-            <div className="mt-5">
-              <div className="text-xs font-semibold uppercase tracking-wider text-foreground/80">
-                Hours <span className="text-foreground-muted">(Eastern Time)</span>
-              </div>
-              <ul className="mt-2 space-y-1 text-xs text-foreground-muted">
-                {HOURS.map((h) => (
-                  <li key={h.day} className="flex items-center justify-between gap-2">
-                    <span>{h.day}</span>
-                    <span className={h.time === "Closed" ? "text-foreground-muted/60" : "text-foreground/80"}>
-                      {h.time}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Shop */}
-          <FooterColumn
-            title="Shop"
-            items={[
-              { label: "Start Your Order →", href: "/products/vinyl-stickers" },
-              { label: "Log in", href: "/login" },
-              { label: "Signup", href: "/signup" },
-            ]}
-          />
-
-          {/* Mission + social */}
-          <div className="lg:col-span-2">
-            <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
-              <span>🚀</span> Our Mission
-            </div>
-            <p className="text-xs leading-relaxed text-foreground-muted">
-              We&apos;re Print Laser Stitch — our mission is to deliver custom
-              prints, apparel, and engraving to your door as fast as humanly
-              possible.
-            </p>
-            <div className="mt-4 flex gap-3">
-              <a
-                href="https://www.facebook.com/share/1D34YQAGuE/?mibextid=wwXIfr"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Facebook"
-                className="grid h-9 w-9 place-items-center rounded-full border border-border-soft text-foreground hover:bg-white/5"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden
-                >
-                  <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15h-2.5v-3H10V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z" />
-                </svg>
-              </a>
+              ))}
               <a
                 href="https://www.instagram.com/print_laser_stitch"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="grid h-9 w-9 place-items-center rounded-full border border-border-soft text-foreground hover:bg-white/5"
+                className="grid h-9 w-9 place-items-center rounded-full border border-border-soft text-foreground-muted transition hover:border-[#d94cb3]/50 hover:text-[#d94cb3]"
               >
                 <svg
                   width="16"
@@ -164,7 +105,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Yelp"
-                className="grid h-9 w-9 place-items-center rounded-full border border-border-soft text-foreground hover:bg-white/5"
+                className="grid h-9 w-9 place-items-center rounded-full border border-border-soft text-foreground-muted transition hover:border-[#d9f000]/50 hover:text-[#d9f000]"
               >
                 <svg
                   width="16"
@@ -178,21 +119,101 @@ export default function Footer() {
               </a>
             </div>
           </div>
+
+          {/* Explore */}
+          <FooterColumn
+            className="lg:col-span-2"
+            title="Explore"
+            items={[
+              { label: "Home", href: "/" },
+              { label: "All Products", href: "/collections" },
+              { label: "Quick Quote", href: "/decal-quote" },
+              { label: "Decal Signage", href: "/signage-quotes" },
+              { label: "About Us", href: "/about" },
+            ]}
+          />
+
+          {/* Account */}
+          <FooterColumn
+            className="lg:col-span-2"
+            title="Account"
+            items={[
+              { label: "Log in", href: "/login" },
+              { label: "Sign up", href: "/signup" },
+              { label: "My Orders", href: "/account" },
+              {
+                label: "Customer Portal",
+                href: "https://printlaserstitch.app/",
+                external: true,
+              },
+            ]}
+          />
+
+          {/* Hours + contact */}
+          <div className="lg:col-span-4">
+            <div className="font-headline text-xs font-bold uppercase tracking-[0.2em] text-foreground">
+              Hours{" "}
+              <span className="text-foreground-muted">(Eastern Time)</span>
+            </div>
+            <ul className="mt-4 grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs sm:max-w-xs">
+              {HOURS.map((h) => (
+                <li
+                  key={h.day}
+                  className="flex items-center justify-between gap-2"
+                >
+                  <span className="text-foreground-muted">{h.day}</span>
+                  <span
+                    className={
+                      h.time === "Closed"
+                        ? "text-foreground-muted/50"
+                        : "font-medium text-foreground/90"
+                    }
+                  >
+                    {h.time}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <a
+              href="mailto:valcourtarts@gmail.com"
+              className="mt-6 inline-flex items-center gap-2 text-sm text-foreground-muted transition hover:text-[#18d3e8]"
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect width="20" height="16" x="2" y="4" rx="2" />
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+              </svg>
+              valcourtarts@gmail.com
+            </a>
+          </div>
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border-soft pt-6 text-xs text-foreground-muted sm:flex-row">
-          <div className="flex flex-wrap items-center gap-4">
+        <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-border-soft pt-6 text-xs text-foreground-muted sm:flex-row">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <span>© {new Date().getFullYear()} Print Laser Stitch</span>
-            <Link href="#" className="hover:text-foreground">Terms</Link>
-            <Link href="#" className="hover:text-foreground">Privacy</Link>
-            <Link href="#" className="hover:text-foreground">Cookies</Link>
-            <Link href="#" className="hover:text-foreground">DMCA</Link>
+            <Link href="#" className="transition hover:text-foreground">
+              Terms
+            </Link>
+            <Link href="#" className="transition hover:text-foreground">
+              Privacy
+            </Link>
+            <Link href="#" className="transition hover:text-foreground">
+              Cookies
+            </Link>
           </div>
-          <div className="flex items-center gap-2">
-            <span>Built with</span>
-            <span className="text-rose-400">♥</span>
-            <span>by © Print Laser Stitch</span>
+          <div className="flex items-center gap-1.5">
+            <span>Crafted with</span>
+            <span className="text-[#d94cb3]">♥</span>
+            <span>by Print Laser Stitch</span>
           </div>
         </div>
       </div>
@@ -200,10 +221,20 @@ export default function Footer() {
   );
 }
 
-function Star() {
+function Arrow() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="#facc15" aria-hidden>
-      <path d="M12 2.25l3.09 6.26 6.91 1-5 4.87 1.18 6.87L12 17.77 5.82 21.25 7 14.38l-5-4.87 6.91-1z" />
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12h14" />
+      <path d="m12 5 7 7-7 7" />
     </svg>
   );
 }
@@ -211,21 +242,41 @@ function Star() {
 function FooterColumn({
   title,
   items,
+  className = "",
 }: {
   title: string;
-  items: { label: string; href: string }[];
+  items: { label: string; href: string; external?: boolean }[];
+  className?: string;
 }) {
   return (
-    <div className="lg:col-span-1">
-      <div className="text-sm font-semibold text-foreground">{title}</div>
-      <ul className="mt-4 space-y-2 text-sm text-foreground-muted">
-        {items.map((item) => (
-          <li key={item.label}>
-            <Link href={item.href} className="hover:text-foreground">
-              {item.label}
-            </Link>
-          </li>
-        ))}
+    <div className={className}>
+      <div className="font-headline text-xs font-bold uppercase tracking-[0.2em] text-foreground">
+        {title}
+      </div>
+      <ul className="mt-4 space-y-2.5 text-sm text-foreground-muted">
+        {items.map((item) =>
+          item.external ? (
+            <li key={item.label}>
+              <a
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition hover:text-[#18d3e8]"
+              >
+                {item.label}
+              </a>
+            </li>
+          ) : (
+            <li key={item.label}>
+              <Link
+                href={item.href}
+                className="transition hover:text-[#18d3e8]"
+              >
+                {item.label}
+              </Link>
+            </li>
+          ),
+        )}
       </ul>
     </div>
   );

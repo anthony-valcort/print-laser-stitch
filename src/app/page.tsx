@@ -3,6 +3,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getAllCollections } from "@/lib/shopify-collections";
+import { getBestSellingProducts } from "@/lib/shopify-products";
 
 export const revalidate = 300;
 
@@ -30,10 +31,24 @@ const ACCENTS = [
 
 export default async function Home() {
   let productCategories: Awaited<ReturnType<typeof getAllCollections>> = [];
+  let bestSellers: Awaited<ReturnType<typeof getBestSellingProducts>> = [];
   try {
-    productCategories = await getAllCollections();
+    [productCategories, bestSellers] = await Promise.all([
+      getAllCollections(),
+      getBestSellingProducts(8),
+    ]);
   } catch {
-    productCategories = [];
+    // Either call failing shouldn't blank the whole home page.
+    try {
+      productCategories = await getAllCollections();
+    } catch {
+      productCategories = [];
+    }
+    try {
+      bestSellers = await getBestSellingProducts(8);
+    } catch {
+      bestSellers = [];
+    }
   }
 
   return (
@@ -192,6 +207,67 @@ export default async function Home() {
             </div>
           )}
         </section>
+
+        {/* Best Sellers — Shopify's own sales ranking (Storefront API) */}
+        {bestSellers.length > 0 && (
+          <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+            <div className="mb-10 text-center">
+              <span className="inline-block rounded-full border border-[#d94cb3]/30 bg-[#d94cb3]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d94cb3]">
+                Customer favorites
+              </span>
+              <h2 className="mt-3 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
+                Our{" "}
+                <span className="accent-gradient-text">best sellers</span>
+              </h2>
+              <p className="mx-auto mt-3 max-w-2xl text-sm text-foreground-muted">
+                The products our customers order most — ranked automatically by
+                real sales.
+              </p>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {bestSellers.map((p) => (
+                <Link
+                  key={p.handle}
+                  href={`/products/${p.handle}`}
+                  className="group relative flex flex-col overflow-hidden rounded-2xl border border-border-soft bg-surface transition hover:-translate-y-1 hover:border-[#d94cb3]/40 hover:shadow-[0_0_40px_rgba(217,76,179,0.18)]"
+                >
+                  <div className="relative aspect-square w-full overflow-hidden bg-white/5">
+                    {p.featuredImage?.url ? (
+                      <Image
+                        src={p.featuredImage.url}
+                        alt={p.featuredImage.altText ?? p.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 grid place-items-center">
+                        <span className="text-5xl">📦</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-1 flex-col p-4">
+                    <div className="font-headline text-sm font-semibold leading-snug">
+                      {p.title}
+                    </div>
+                    <div className="mt-auto pt-3">
+                      {p.minPrice ? (
+                        <span className="font-headline text-sm font-bold text-[#18d3e8]">
+                          From ${Number(p.minPrice).toFixed(2)}
+                        </span>
+                      ) : (
+                        <span className="font-headline text-xs uppercase tracking-wider text-foreground-muted">
+                          View options
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Quick Quote (multi-panel + material) CTA */}
         <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">

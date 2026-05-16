@@ -1,4 +1,6 @@
+import { unstable_cache } from "next/cache";
 import { shopifyAdminFetch } from "./shopify";
+import { shopifyStorefrontFetch } from "./shopify-storefront";
 
 export type ShopifyImage = {
   url: string;
@@ -184,3 +186,75 @@ export async function getAllActiveProducts(): Promise<ShopifyProductSummary[]> {
   );
   return data.products.nodes;
 }
+
+export type BestSellingProduct = {
+  handle: string;
+  title: string;
+  featuredImage: ShopifyImage | null;
+  minPrice: string | null;
+  currencyCode: string | null;
+};
+
+// BEST_SELLING is only supported by the Storefront API products query (the
+// Admin API's ProductSortKeys has no such value). Shopify maintains this
+// ranking internally from real order/sales data, so we don't aggregate
+// orders ourselves.
+const BEST_SELLING_PRODUCTS = `
+  query BestSellers($first: Int!) {
+    products(first: $first, sortKey: BEST_SELLING) {
+      nodes {
+        handle
+        title
+        featuredImage { url altText }
+        priceRange {
+          minVariantPrice { amount currencyCode }
+        }
+      }
+    }
+  }
+`;
+
+type RawBestSellersResp = {
+  products: {
+    nodes: Array<{
+      handle: string;
+      title: string;
+      featuredImage: ShopifyImage | null;
+      priceRange: {
+        minVariantPrice: { amount: string; currencyCode: string } | null;
+      } | null;
+    }>;
+  };
+};
+
+async function fetchBestSellingProducts(
+  limit: number,
+): Promise<BestSellingProduct[]> {
+  const data = await shopifyStorefrontFetch<RawBestSellersResp>(
+    BEST_SELLING_PRODUCTS,
+    { first: limit },
+  );
+  return data.products.nodes.map((p) => {
+    const min = p.priceRange?.minVariantPrice ?? null;
+    const hasRealPrice = !!min && Number(min.amount) > 0;
+    return {
+      handle: p.handle,
+      title: p.title,
+      featuredImage: p.featuredImage,
+      minPrice: hasRealPrice ? min.amount : null,
+      currencyCode: hasRealPrice ? min.currencyCode : null,
+    };
+  });
+}
+
+/**
+ * Top-selling products by Shopify's own sales ranking. Wrapped in
+ * `unstable_cache` (the Storefront fetch is POST + `no-store`, so it would
+ * otherwise hit Shopify on every render). Best sellers don't shift minute to
+ * minute, so we refresh hourly. Bust on demand via `revalidateTag`.
+ */
+export const getBestSellingProducts = unstable_cache(
+  fetchBestSellingProducts,
+  ["pls-best-sellers"],
+  { revalidate: 3600, tags: ["products:bestsellers"] },
+);

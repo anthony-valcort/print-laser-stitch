@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CartIcon from "./CartIcon";
 
 export type HeaderCustomer = {
@@ -27,6 +27,17 @@ export default function HeaderClient({
   const [productsOpen, setProductsOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Lock background scroll while the mobile menu is open so scrolling the
+  // (long) collection list doesn't scroll the page behind it.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileOpen]);
 
   const hasCollections = collections.length > 0;
 
@@ -265,7 +276,7 @@ export default function HeaderClient({
       </div>
 
       {mobileOpen && (
-        <div className="border-t border-border-soft bg-background-soft md:hidden">
+        <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-border-soft bg-background-soft md:hidden">
           <div className="mx-auto max-w-7xl space-y-1 px-4 py-4">
             <Link
               href="/"

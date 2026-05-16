@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import HeroFloatingIcons from "@/components/HeroFloatingIcons";
 import { getAllCollections } from "@/lib/shopify-collections";
 
 export const revalidate = 300;
@@ -43,8 +42,6 @@ export default async function Home() {
       <main className="flex-1">
         {/* HERO — split layout: text left, Hero.jpeg right */}
         <section className="relative overflow-x-clip isolate">
-          <HeroFloatingIcons />
-
           <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 pt-16 sm:px-6 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:pt-24">
             {/* Left — copy */}
             <div className="text-center lg:text-left">

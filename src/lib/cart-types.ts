@@ -46,6 +46,21 @@ export interface VinylStickerCartItem extends CartItemBase {
   fileUrl?: string;
   fileName?: string;
   instructions?: string;
+  /** Preflight proof (set once the customer reviews & approves a proof). */
+  proof?: {
+    status: "approved" | "changes-requested";
+    /** Shopify Files URL of the flattened proof preview. */
+    proofUrl?: string;
+    /** Shopify Files URL of the production cutline SVG. */
+    cutlineUrl?: string;
+    shape: string;
+    borderThickness: string;
+    roundedCorners: string;
+    removedBackground: boolean;
+    lowResolution: boolean;
+    /** Customer note when they asked for changes instead of approving. */
+    changeNote?: string;
+  };
 }
 
 export interface TShirtSizeLine {

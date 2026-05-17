@@ -114,10 +114,64 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* Custom Sticker Builder — flagship tool with instant proof */}
+        <section className="mx-auto max-w-7xl px-4 pb-4 pt-2 sm:px-6 lg:px-8">
+          <Link
+            href="/products/vinyl-stickers"
+            className="group relative block overflow-hidden rounded-3xl border border-[#d9f000]/30 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#d94cb3]/10 p-8 transition hover:border-[#d9f000]/50 sm:p-12"
+          >
+            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#d9f000]/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#d94cb3]/15 blur-3xl" />
+            <div className="relative grid items-center gap-8 lg:grid-cols-[1.4fr_1fr]">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#d9f000]/40 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#d9f000]" />
+                  Design it yourself
+                </span>
+                <h2 className="mt-4 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
+                  Custom{" "}
+                  <span className="accent-gradient-text">Vinyl Stickers</span>
+                </h2>
+                <p className="mt-4 max-w-xl text-base text-foreground-muted">
+                  Upload your artwork, pick a shape, size and finish, then see
+                  an{" "}
+                  <span className="text-foreground">
+                    instant proof with a die-cut preview
+                  </span>{" "}
+                  — before you ever check out.
+                </p>
+                <ul className="mt-6 grid gap-2 text-sm text-foreground/85 sm:grid-cols-2">
+                  <li className="flex items-center gap-2">
+                    <CheckIcon /> Instant preflight proof
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckIcon /> Auto die-cut &amp; white border
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckIcon /> Background remover built in
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckIcon /> Waterproof premium vinyl
+                  </li>
+                </ul>
+                <span className="mt-8 inline-flex items-center gap-2 rounded-md accent-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 transition group-hover:brightness-110">
+                  Start Designing
+                  <Arrow />
+                </span>
+              </div>
+              <div className="relative hidden lg:block">
+                <div className="grid aspect-square place-items-center rounded-2xl border border-border-soft bg-background/60 text-8xl shadow-2xl shadow-black/40 backdrop-blur transition group-hover:scale-105">
+                  ✨
+                </div>
+              </div>
+            </div>
+          </Link>
+        </section>
+
         {/* Make your selection — image-driven product grid */}
         <section
           id="categories"
-          className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8"
+          className="mx-auto max-w-7xl px-4 pb-12 pt-8 sm:px-6 lg:px-8"
         >
           <div className="mb-10 text-center">
             <span className="inline-block rounded-full border border-[#d9f000]/30 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">

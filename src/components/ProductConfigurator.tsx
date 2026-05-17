@@ -18,6 +18,10 @@ import {
 import { useCart } from "@/lib/cart-store";
 import { useRouter } from "next/navigation";
 import type { VinylStickerCartItem } from "@/lib/cart-types";
+import ProofModal, {
+  type ProofApprovalData,
+} from "@/components/proof/ProofModal";
+import type { ProofShape, RoundedCorners } from "@/lib/proof/types";
 
 type SizeChoice = SizeKey | "custom";
 
@@ -82,6 +86,7 @@ export default function ProductConfigurator() {
   const [dragActive, setDragActive] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [showProof, setShowProof] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -218,11 +223,65 @@ export default function ProductConfigurator() {
     }
   }
 
-  function handleAddToCart() {
-    if (!file || isCheckingOut || isUploading) return;
-    setIsCheckingOut(true);
-    setToast(null);
+  function sizeInches(): { w: number; h: number } {
+    if (size === "custom") return { w: customWidth, h: customHeight };
+    const n =
+      ({ "2x2": 2, "3x3": 3, "4x4": 4, "5x5": 5 } as Record<string, number>)[
+        size
+      ] ?? 3;
+    return { w: n, h: n };
+  }
 
+  /** Generic Shopify staged upload — used for the proof PNG + cutline SVG. */
+  async function uploadBlobToShopify(
+    blob: Blob,
+    filename: string,
+    mimeType: string,
+  ): Promise<string | undefined> {
+    try {
+      const stageResp = await fetch("/api/shopify-upload/stage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename, mimeType, fileSize: blob.size }),
+      });
+      const stage = (await stageResp.json()) as
+        | {
+            url: string;
+            resourceUrl: string;
+            parameters: Array<{ name: string; value: string }>;
+          }
+        | { error: string };
+      if (!stageResp.ok || "error" in stage) return undefined;
+
+      const fd = new FormData();
+      for (const param of stage.parameters) fd.append(param.name, param.value);
+      fd.append("file", blob, filename);
+      const up = await fetch(stage.url, { method: "POST", body: fd });
+      if (!up.ok) return undefined;
+
+      const regResp = await fetch("/api/shopify-upload/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resourceUrl: stage.resourceUrl,
+          filename,
+          mimeType,
+        }),
+      });
+      const reg = (await regResp.json()) as
+        | { fileId: string; url: string }
+        | { error: string };
+      if (!regResp.ok || "error" in reg) return undefined;
+      return reg.url;
+    } catch {
+      return undefined;
+    }
+  }
+
+  function buildBaseCartItem(): Omit<
+    VinylStickerCartItem,
+    "id" | "addedAt"
+  > {
     const tierQty: QuantityKey = effectiveQty;
     const sizeLabel =
       size === "custom"
@@ -233,7 +292,7 @@ export default function ProductConfigurator() {
     const materialLabel =
       MATERIAL_OPTIONS.find((m) => m.key === material)?.label ?? material;
 
-    const cartItem: Omit<VinylStickerCartItem, "id" | "addedAt"> = {
+    return {
       kind: "vinyl-sticker",
       title: "Custom Vinyl Stickers",
       subtitle: `${sizeLabel} · ${shapeLabel} · ${materialLabel}`,
@@ -251,13 +310,68 @@ export default function ProductConfigurator() {
       tierQty,
       perUnit: price.perUnit,
       fileUrl: fileUrl ?? undefined,
-      fileName: file.name,
+      fileName: file?.name,
       instructions: instructions || undefined,
       editHref: "/products/vinyl-stickers",
+    };
+  }
+
+  /** Non-image files (PDF/AI/SVG) skip the proof step — straight to cart. */
+  function addToCartNoProof() {
+    if (!file || isCheckingOut || isUploading) return;
+    setIsCheckingOut(true);
+    setToast(null);
+    addItem(buildBaseCartItem());
+    router.push("/cart");
+  }
+
+  async function finalizeWithProof(
+    data: ProofApprovalData,
+    changeNote?: string,
+  ) {
+    setShowProof(false);
+    setIsCheckingOut(true);
+    setToast(null);
+
+    const stamp = Date.now();
+    const [proofUrl, cutlineUrl] = await Promise.all([
+      uploadBlobToShopify(
+        data.proofPng,
+        `proof-${stamp}.png`,
+        "image/png",
+      ),
+      uploadBlobToShopify(
+        new Blob([data.cutlineSvg], { type: "image/svg+xml" }),
+        `cutline-${stamp}.svg`,
+        "image/svg+xml",
+      ),
+    ]);
+
+    const cartItem = buildBaseCartItem();
+    cartItem.proof = {
+      status: changeNote ? "changes-requested" : "approved",
+      proofUrl,
+      cutlineUrl,
+      shape: data.shape,
+      borderThickness: data.borderThickness,
+      roundedCorners: data.roundedCorners,
+      removedBackground: data.removedBackground,
+      lowResolution: data.lowResolution,
+      changeNote: changeNote || undefined,
     };
 
     addItem(cartItem);
     router.push("/cart");
+  }
+
+  /** CTA: image files open the preflight proof; others go straight to cart. */
+  function handleCheckoutClick() {
+    if (!file || isCheckingOut || isUploading) return;
+    if (file.type.startsWith("image/")) {
+      setShowProof(true);
+    } else {
+      addToCartNoProof();
+    }
   }
 
   function applyPopularSize(w: number, h: number) {
@@ -641,7 +755,7 @@ export default function ProductConfigurator() {
         <div className="mt-4">
           <button
             type="button"
-            onClick={handleAddToCart}
+            onClick={handleCheckoutClick}
             disabled={!file || isCheckingOut || isUploading}
             className={`group relative flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-semibold transition ${
               file && !isCheckingOut && !isUploading
@@ -661,8 +775,8 @@ export default function ProductConfigurator() {
               </>
             ) : file ? (
               <>
-                <span>🛒</span>
-                Add to Cart · ${price.total.toFixed(2)}
+                <span>👁</span>
+                View Proof &amp; Checkout · ${price.total.toFixed(2)}
               </>
             ) : (
               <>
@@ -681,6 +795,27 @@ export default function ProductConfigurator() {
         <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full border border-border-strong bg-surface-elevated px-5 py-3 text-sm shadow-2xl shadow-black/40">
           {toast}
         </div>
+      )}
+
+      {showProof && file && (
+        <ProofModal
+          open={showProof}
+          file={file}
+          initialShape={shape as ProofShape}
+          initialBorder="normal"
+          initialRounded={
+            (shape === "square" || shape === "rectangle") && roundedCorners
+              ? "soft"
+              : ("none" as RoundedCorners)
+          }
+          widthIn={sizeInches().w}
+          heightIn={sizeInches().h}
+          onClose={() => setShowProof(false)}
+          onApprove={(d) => void finalizeWithProof(d)}
+          onRequestChanges={(noteText, d) =>
+            void finalizeWithProof(d, noteText)
+          }
+        />
       )}
     </section>
   );

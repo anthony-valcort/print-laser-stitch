@@ -198,6 +198,38 @@ export async function POST(req: NextRequest) {
           value: item.instructions.trim().slice(0, 2000),
         });
       }
+      if (item.proof) {
+        const p = item.proof;
+        properties.push({
+          name: "Proof Status",
+          value:
+            p.status === "approved"
+              ? "Approved by customer"
+              : "Changes requested",
+        });
+        if (p.proofUrl) {
+          properties.push({ name: "Approved Proof", value: p.proofUrl });
+        }
+        if (p.cutlineUrl) {
+          properties.push({ name: "Cutline (SVG)", value: p.cutlineUrl });
+        }
+        properties.push({
+          name: "Proof Settings",
+          value: `${p.shape} · ${p.borderThickness} border · corners ${p.roundedCorners} · bg ${p.removedBackground ? "removed" : "kept"}`,
+        });
+        if (p.lowResolution) {
+          properties.push({
+            name: "⚠ Resolution",
+            value: "Low — flagged for review before print",
+          });
+        }
+        if (p.changeNote?.trim()) {
+          properties.push({
+            name: "Customer Change Request",
+            value: p.changeNote.trim().slice(0, 2000),
+          });
+        }
+      }
 
       lineItems.push({
         title: `Custom Vinyl Stickers · ${sizeLabel} · ${item.shape}`,

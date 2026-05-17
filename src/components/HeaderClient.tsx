@@ -133,6 +133,13 @@ export default function HeaderClient({
             </Link>
           )}
           <Link
+            href="/products/vinyl-stickers"
+            className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-[#d9f000] transition hover:bg-[#d9f000]/20"
+          >
+            <span>✨</span>
+            Custom Stickers
+          </Link>
+          <Link
             href="/decal-quote"
             className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
           >
@@ -284,6 +291,13 @@ export default function HeaderClient({
               onClick={() => setMobileOpen(false)}
             >
               Home
+            </Link>
+            <Link
+              href="/products/vinyl-stickers"
+              onClick={() => setMobileOpen(false)}
+              className="block rounded-xl px-4 py-3 text-sm font-semibold text-[#d9f000] hover:bg-[#d9f000]/20"
+            >
+              ✨ Custom Stickers
             </Link>
             <Link
               href="/decal-quote"

@@ -296,7 +296,7 @@ export default function ProductConfigurator() {
       kind: "vinyl-sticker",
       title: "Custom Vinyl Stickers",
       subtitle: `${sizeLabel} · ${shapeLabel} · ${materialLabel}`,
-      thumbnail: "🌟",
+      thumbnail: "/logo.avif",
       unitLabel: `$${price.perUnit.toFixed(2)} / sticker`,
       totalPrice: price.total,
       quantity: tierQty,

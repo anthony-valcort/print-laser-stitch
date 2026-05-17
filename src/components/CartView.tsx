@@ -201,12 +201,13 @@ function CartRow({
   return (
     <article className="flex gap-4 rounded-2xl border border-border-soft bg-surface p-4 sm:p-5">
       <div className="relative grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-xl bg-white/5 text-3xl sm:h-24 sm:w-24 sm:text-4xl">
-        {item.thumbnail.startsWith("http") ? (
+        {item.thumbnail.startsWith("http") ||
+        item.thumbnail.startsWith("/") ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={item.thumbnail}
             alt=""
-            className="h-full w-full object-contain"
+            className="h-full w-full object-contain p-1.5"
           />
         ) : (
           <span>{item.thumbnail}</span>

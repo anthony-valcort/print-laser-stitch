@@ -21,7 +21,7 @@ export function buildProofSvg(
   const { widthPx, heightPx, imageDataUrl, baseShape, whiteBorder, cutline } =
     result;
   const cut = showCutline
-    ? `<path d="${pathD(cutline)}" fill="none" stroke="#39e600" stroke-width="${Math.max(
+    ? `<path d="${pathD(cutline)}" fill="none" stroke="#18d3e8" stroke-width="${Math.max(
         2,
         widthPx * 0.004,
       )}" stroke-dasharray="${widthPx * 0.014} ${widthPx * 0.01}"/>`

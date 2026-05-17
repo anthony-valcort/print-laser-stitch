@@ -380,127 +380,171 @@ export default function ProductConfigurator() {
     setCustomHeight(h);
   }
 
+  const ctaDisabled = !file || isCheckingOut || isUploading;
+
   return (
     <section className="relative">
-      {/* Top bar: Sticker Types breadcrumb */}
+      {/* Breadcrumb */}
       <div className="border-b border-border-soft bg-background-soft/60">
-        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 text-xs sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2.5 text-xs sm:px-6 lg:px-8">
           <Link
             href="/"
-            className="flex items-center gap-1 text-foreground-muted hover:text-foreground"
+            className="flex items-center gap-1 text-foreground-muted transition hover:text-foreground"
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 18 9 12 15 6" />
             </svg>
-            Sticker Types
+            Home
           </Link>
+          <span className="text-foreground-muted/40">/</span>
+          <span className="font-medium">Custom Stickers</span>
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        {/* HERO BANNER */}
-        <HeroBanner />
-
-        {/* CONFIGURATOR — 4 columns */}
-        <div className="mt-4 grid gap-4 lg:grid-cols-[260px_220px_minmax(0,1fr)_320px]">
-          {/* Column 1: Shape */}
-          <Panel title="Select a Shape" icon="✨">
-            <ShapeButton
-              shape="custom"
-              active={shape === "custom"}
-              onClick={() => setShape("custom")}
-              full
-            />
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              {SHAPE_OPTIONS.filter((s) => s.key !== "custom").map((s) => (
-                <ShapeButton
-                  key={s.key}
-                  shape={s.key as ShapeKey}
-                  active={shape === s.key}
-                  onClick={() => setShape(s.key as ShapeKey)}
-                />
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* HERO */}
+        <div className="relative overflow-hidden rounded-3xl border border-[#d9f000]/25 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#d94cb3]/10 p-7 sm:p-10">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[#d9f000]/15 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-[#18d3e8]/15 blur-3xl" />
+          <div className="relative">
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#d9f000]/40 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#d9f000]" />
+              Design it yourself
+            </span>
+            <h1 className="mt-4 font-display text-3xl font-black uppercase leading-[1.05] tracking-tight sm:text-5xl">
+              Custom{" "}
+              <span className="accent-gradient-text">Vinyl Stickers</span>
+            </h1>
+            <p className="mt-3 max-w-xl text-sm text-foreground-muted sm:text-base">
+              Premium vinyl built for laptops, water bottles and the outdoors —
+              waterproof, scratch-resistant and dishwasher safe. Upload your
+              art and see a live proof before you check out.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {[
+                "💧 Waterproof",
+                "🛡️ Scratch-resistant",
+                "🍽️ Dishwasher safe",
+                "👁 Instant proof",
+              ].map((t) => (
+                <span
+                  key={t}
+                  className="rounded-full border border-border-soft bg-white/5 px-3 py-1 text-xs font-medium text-foreground/80"
+                >
+                  {t}
+                </span>
               ))}
             </div>
+          </div>
+        </div>
 
-            {/* Rounded Corners toggle (Square / Rectangle only) */}
-            {(shape === "square" || shape === "rectangle") && (
-              <div className="mt-4 border-t border-border-soft pt-4">
-                <div className="mb-2 text-sm font-semibold">
-                  Rounded Corners?
+        {/* CONFIGURATOR — left options / right sticky summary */}
+        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+          {/* LEFT */}
+          <div className="min-w-0 space-y-6">
+            {/* Shape */}
+            <Section step={1} title="Choose a shape">
+              <button
+                type="button"
+                onClick={() => setShape("custom")}
+                className={`mb-3 flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition ${
+                  shape === "custom" ? TILE_ON : TILE_OFF
+                }`}
+              >
+                <Image
+                  src={SHAPE_ICON.custom}
+                  alt="Custom Shape"
+                  width={56}
+                  height={56}
+                  className="h-14 w-14 shrink-0 object-contain"
+                />
+                <div className="min-w-0">
+                  <div className="font-headline text-sm font-bold uppercase tracking-wide">
+                    Custom Shape
+                  </div>
+                  <div className="text-xs text-foreground-muted">
+                    Die-cut to follow your artwork
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setRoundedCorners(true)}
-                    className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${
-                      roundedCorners
-                        ? "border-highlight bg-highlight-soft"
-                        : "border-border-soft bg-white/3 hover:bg-white/6"
-                    }`}
-                  >
-                    Yes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRoundedCorners(false)}
-                    className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${
-                      !roundedCorners
-                        ? "border-highlight bg-highlight-soft"
-                        : "border-border-soft bg-white/3 hover:bg-white/6"
-                    }`}
-                  >
-                    No
-                  </button>
-                </div>
+                {shape === "custom" && <CheckBadge />}
+              </button>
+
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {SHAPE_OPTIONS.filter((s) => s.key !== "custom").map((s) => (
+                  <OptionTile
+                    key={s.key}
+                    icon={SHAPE_ICON[s.key as ShapeKey]}
+                    label={s.label}
+                    active={shape === s.key}
+                    onClick={() => setShape(s.key as ShapeKey)}
+                  />
+                ))}
               </div>
-            )}
-          </Panel>
 
-          {/* Column 2: Material */}
-          <Panel title="Material" icon="📋">
-            <div className="grid grid-cols-2 gap-3">
-              {MATERIAL_OPTIONS.map((m) => (
-                <MaterialButton
-                  key={m.key}
-                  material={m.key as MaterialKey}
-                  label={m.label}
-                  active={material === m.key}
-                  onClick={() => setMaterial(m.key as MaterialKey)}
-                />
-              ))}
-            </div>
-          </Panel>
+              {(shape === "square" || shape === "rectangle") && (
+                <div className="mt-5 border-t border-border-soft pt-5">
+                  <div className="mb-2 font-headline text-xs font-bold uppercase tracking-wider text-foreground-muted">
+                    Rounded corners?
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRoundedCorners(true)}
+                      className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
+                        roundedCorners ? TILE_ON : TILE_OFF
+                      }`}
+                    >
+                      Yes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRoundedCorners(false)}
+                      className={`rounded-xl border px-3 py-2.5 text-sm font-semibold transition ${
+                        !roundedCorners ? TILE_ON : TILE_OFF
+                      }`}
+                    >
+                      No
+                    </button>
+                  </div>
+                </div>
+              )}
+            </Section>
 
-          {/* Column 3: Size */}
-          <Panel title="Select a size" icon="📐">
-            <div className="grid grid-cols-2 gap-3">
-              {SIZE_OPTIONS.map((s) => (
-                <SizeButton
-                  key={s.key}
-                  size={s.key}
-                  label={s.label}
-                  active={size === s.key}
-                  onClick={() => setSize(s.key)}
-                />
-              ))}
-            </div>
-            <div className="mt-3">
+            {/* Material */}
+            <Section step={2} title="Pick a material">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {MATERIAL_OPTIONS.map((m) => (
+                  <OptionTile
+                    key={m.key}
+                    icon={MATERIAL_ICON[m.key as MaterialKey]}
+                    label={m.label}
+                    active={material === m.key}
+                    onClick={() => setMaterial(m.key as MaterialKey)}
+                  />
+                ))}
+              </div>
+            </Section>
+
+            {/* Size */}
+            <Section step={3} title="Select a size">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {SIZE_OPTIONS.map((s) => (
+                  <SizeTile
+                    key={s.key}
+                    size={s.key}
+                    label={s.label}
+                    active={size === s.key}
+                    onClick={() => setSize(s.key)}
+                  />
+                ))}
+              </div>
               <button
                 type="button"
                 onClick={() => setSize("custom")}
-                className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition ${
+                className={`mt-3 flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition ${
                   size === "custom"
-                    ? "border-highlight bg-highlight-soft"
-                    : "border-dashed border-border-strong bg-white/2 hover:bg-white/5"
+                    ? TILE_ON
+                    : "border-dashed border-border-strong bg-white/[0.02] hover:bg-white/5"
                 }`}
               >
                 <Image
@@ -510,27 +554,27 @@ export default function ProductConfigurator() {
                   height={28}
                   className="shrink-0"
                 />
-                <span className="font-medium">Custom size</span>
+                <span className="font-semibold">Custom size</span>
               </button>
               {size === "custom" && (
-                <div className="mt-3 space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
+                <div className="mt-3 space-y-3 rounded-2xl border border-border-soft bg-white/[0.02] p-4">
+                  <div className="grid grid-cols-2 gap-3">
                     <NumberField
-                      label="W (in)"
+                      label="Width (in)"
                       value={customWidth}
                       onChange={setCustomWidth}
                     />
                     <NumberField
-                      label="H (in)"
+                      label="Height (in)"
                       value={customHeight}
                       onChange={setCustomHeight}
                     />
                   </div>
                   <div>
-                    <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-foreground-muted">
-                      Other Popular Sizes:
+                    <div className="mb-2 font-headline text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
+                      Popular sizes
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                       {POPULAR_SIZES.map((p) => {
                         const active =
                           size === "custom" &&
@@ -542,9 +586,7 @@ export default function ProductConfigurator() {
                             type="button"
                             onClick={() => applyPopularSize(p.w, p.h)}
                             className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${
-                              active
-                                ? "border-highlight bg-highlight-soft"
-                                : "border-border-soft bg-white/3 hover:bg-white/6"
+                              active ? TILE_ON : TILE_OFF
                             }`}
                           >
                             {p.label}
@@ -555,239 +597,239 @@ export default function ProductConfigurator() {
                   </div>
                 </div>
               )}
-            </div>
-          </Panel>
+            </Section>
 
-          {/* Column 4: Quantity */}
-          <Panel title="Select a quantity" icon="#">
-            <div className="space-y-1.5">
-              <button
-                type="button"
-                onClick={() => setQuantity("custom")}
-                className={`flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-sm transition ${
-                  quantity === "custom"
-                    ? "border-highlight bg-highlight-soft"
-                    : "border-border-soft bg-white/3 hover:bg-white/6"
+            {/* Upload */}
+            <Section step={4} title="Upload your artwork">
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept={ACCEPT}
+                onChange={(e) => handleFile(e.target.files?.[0])}
+              />
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragActive(true);
+                }}
+                onDragLeave={() => setDragActive(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragActive(false);
+                  handleFile(e.dataTransfer.files?.[0]);
+                }}
+                onClick={() => fileInputRef.current?.click()}
+                className={`relative flex min-h-44 min-w-0 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition ${
+                  dragActive
+                    ? "border-[#d9f000] bg-[#d9f000]/10"
+                    : "border-border-strong bg-white/[0.02] hover:bg-white/5"
                 }`}
               >
-                <span className="font-medium">Custom</span>
-                {quantity === "custom" && (
-                  <input
-                    type="number"
-                    min={1}
-                    value={customQty}
-                    onChange={(e) => {
-                      const v = Number(e.target.value);
-                      setCustomQty(Number.isFinite(v) && v > 0 ? v : 1);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-20 rounded-md border border-border-soft bg-white/5 px-2 py-1 text-right text-xs outline-none"
-                  />
-                )}
-              </button>
-
-              {tierPrices.map(({ qty, total, savingsPercent }) => {
-                const active = quantity === qty;
-                return (
-                  <button
-                    key={qty}
-                    type="button"
-                    onClick={() => setQuantity(qty)}
-                    className={`flex w-full items-center justify-between rounded-lg border px-3 py-2.5 text-sm transition ${
-                      active
-                        ? "border-highlight bg-highlight-soft"
-                        : "border-border-soft bg-white/3 hover:bg-white/6"
-                    }`}
-                  >
-                    <span className="font-medium">{qty.toLocaleString()}</span>
-                    <span className="flex items-center gap-2">
-                      <span className="font-semibold">${total.toFixed(2)}</span>
-                      {savingsPercent > 0 && (
-                        <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-300">
-                          Save {savingsPercent}%
-                        </span>
+                {file ? (
+                  <div className="flex w-full items-center gap-4 sm:gap-5">
+                    <div className="relative h-24 w-24 shrink-0 sm:h-36 sm:w-36">
+                      {filePreview ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={filePreview}
+                          alt="Upload preview"
+                          className="h-24 w-24 rounded-xl bg-white/5 object-contain ring-1 ring-border-strong sm:h-36 sm:w-36"
+                        />
+                      ) : (
+                        <div className="grid h-24 w-24 place-items-center rounded-xl bg-white/5 text-4xl sm:h-36 sm:w-36 sm:text-5xl">
+                          📄
+                        </div>
                       )}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Total card */}
-            <div className="mt-4 overflow-hidden rounded-xl total-gradient p-4">
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="text-sm font-medium text-white/90">Total:</span>
-                <span className="text-2xl font-bold text-white">
-                  ${price.total.toFixed(2)}
-                </span>
+                      {isUploading && (
+                        <div className="absolute inset-0 grid place-items-center rounded-xl bg-black/50 backdrop-blur-sm">
+                          <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1 text-left">
+                      <div className="font-medium break-words [overflow-wrap:anywhere] text-foreground">
+                        {file.name}
+                      </div>
+                      <div className="text-xs text-foreground-muted">
+                        {(file.size / 1024).toFixed(1)} KB
+                      </div>
+                      {isUploading && (
+                        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#18d3e8]/15 px-2 py-0.5 text-[11px] font-semibold text-[#18d3e8]">
+                          Uploading to Shopify…
+                        </div>
+                      )}
+                      {!isUploading && fileUrl && (
+                        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
+                          ✓ Uploaded to Shopify Files
+                        </div>
+                      )}
+                      {!isUploading && !fileUrl && uploadError && (
+                        <div className="mt-2 max-w-md break-words rounded-md bg-amber-500/10 px-2 py-1 text-[11px] text-amber-300">
+                          ⚠ Upload failed: {uploadError}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFile(null);
+                        setFileUrl(null);
+                        setUploadError(null);
+                        if (fileInputRef.current)
+                          fileInputRef.current.value = "";
+                      }}
+                      className="shrink-0 rounded-full border border-border-soft bg-white/5 px-3 py-1 text-xs hover:bg-white/10"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid h-12 w-12 place-items-center rounded-full accent-gradient text-2xl text-black">
+                      ⬆
+                    </div>
+                    <div className="mt-3 text-base font-semibold">
+                      Drag or click to upload your file
+                    </div>
+                    <div className="mt-1 text-xs text-foreground-muted">
+                      PNG · JPG · PDF · SVG · AI · Max 25MB · 1 file per order
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="mt-1 text-right text-xs font-medium text-white/80">
-                ${price.perUnit.toFixed(2)}/ea.
-              </div>
-            </div>
+            </Section>
 
-            {/* Shipping info */}
-            <div className="mt-3 flex items-center gap-2 rounded-lg border border-border-soft bg-white/3 px-3 py-2 text-[12px] text-foreground-muted">
-              <span>🕒</span>
-              <span>Printed and shipped next business day</span>
-            </div>
-          </Panel>
-        </div>
-
-        {/* Instructions + Upload */}
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border border-dashed border-border-strong bg-surface/60 p-5">
-            <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
-              <span>✏️</span> Additional Instructions
-              <span className="text-xs font-normal text-foreground-muted">
-                (optional)
-              </span>
-            </div>
-            <textarea
-              value={instructions}
-              onChange={(e) => setInstructions(e.target.value)}
-              rows={4}
-              placeholder="Enter any special requests or notes here..."
-              className="w-full resize-none rounded-xl bg-transparent text-sm text-foreground placeholder:text-foreground-muted/60 outline-none"
-            />
+            {/* Instructions */}
+            <Section step={5} title="Additional instructions" optional>
+              <textarea
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                rows={4}
+                placeholder="Enter any special requests or notes here…"
+                className="w-full resize-none rounded-xl border border-border-soft bg-white/[0.03] px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/60 outline-none ring-[#d9f000]/30 focus:ring-2"
+              />
+            </Section>
           </div>
 
-          <div
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragActive(true);
-            }}
-            onDragLeave={() => setDragActive(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDragActive(false);
-              handleFile(e.dataTransfer.files?.[0]);
-            }}
-            onClick={() => fileInputRef.current?.click()}
-            className={`relative flex min-h-44 min-w-0 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition ${
-              dragActive
-                ? "border-highlight bg-highlight-soft"
-                : "border-border-strong bg-surface/60 hover:bg-white/5"
-            }`}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              accept={ACCEPT}
-              onChange={(e) => handleFile(e.target.files?.[0])}
-            />
-            {file ? (
-              <div className="flex w-full items-center gap-4 sm:gap-5">
-                <div className="relative h-24 w-24 shrink-0 sm:h-40 sm:w-40">
-                  {filePreview ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={filePreview}
-                      alt="Upload preview"
-                      className="h-24 w-24 rounded-xl object-contain bg-white/5 ring-1 ring-border-strong sm:h-40 sm:w-40"
-                    />
-                  ) : (
-                    <div className="grid h-24 w-24 place-items-center rounded-xl bg-white/5 text-4xl sm:h-40 sm:w-40 sm:text-5xl">
-                      📄
-                    </div>
-                  )}
-                  {isUploading && (
-                    <div className="absolute inset-0 grid place-items-center rounded-xl bg-black/50 backdrop-blur-sm">
-                      <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    </div>
-                  )}
-                </div>
-                <div className="min-w-0 flex-1 text-left">
-                  <div className="font-medium break-words [overflow-wrap:anywhere] text-foreground">
-                    {file.name}
-                  </div>
-                  <div className="text-xs text-foreground-muted">
-                    {(file.size / 1024).toFixed(1)} KB
-                  </div>
-                  {isUploading && (
-                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#18d3e8]/15 px-2 py-0.5 text-[11px] font-semibold text-[#18d3e8]">
-                      Uploading to Shopify…
-                    </div>
-                  )}
-                  {!isUploading && fileUrl && (
-                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
-                      ✓ Uploaded to Shopify Files
-                    </div>
-                  )}
-                  {!isUploading && !fileUrl && uploadError && (
-                    <div className="mt-2 max-w-md truncate rounded-md bg-amber-500/10 px-2 py-1 text-[11px] text-amber-300">
-                      ⚠ Upload failed: {uploadError}
-                    </div>
-                  )}
-                </div>
+          {/* RIGHT — sticky summary */}
+          <div className="lg:sticky lg:top-20 lg:self-start">
+            <div className="space-y-4 rounded-2xl border border-border-soft bg-surface/70 p-5 backdrop-blur">
+              <div className="font-headline text-sm font-bold uppercase tracking-wider">
+                Quantity
+              </div>
+              <div className="space-y-1.5">
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setFile(null);
-                    setFileUrl(null);
-                    setUploadError(null);
-                    if (fileInputRef.current) fileInputRef.current.value = "";
-                  }}
-                  className="rounded-full border border-border-soft bg-white/5 px-3 py-1 text-xs hover:bg-white/10"
+                  onClick={() => setQuantity("custom")}
+                  className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-sm transition ${
+                    quantity === "custom" ? TILE_ON : TILE_OFF
+                  }`}
                 >
-                  Remove
+                  <span className="font-medium">Custom</span>
+                  {quantity === "custom" && (
+                    <input
+                      type="number"
+                      min={1}
+                      value={customQty}
+                      onChange={(e) => {
+                        const v = Number(e.target.value);
+                        setCustomQty(Number.isFinite(v) && v > 0 ? v : 1);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-20 rounded-md border border-border-soft bg-white/5 px-2 py-1 text-right text-xs outline-none"
+                    />
+                  )}
                 </button>
-              </div>
-            ) : (
-              <>
-                <div className="grid h-12 w-12 place-items-center rounded-full bg-highlight text-2xl">
-                  ⬆
-                </div>
-                <div className="mt-3 text-base font-semibold">
-                  Drag or click to upload your file
-                </div>
-                <div className="mt-1 text-xs text-foreground-muted">
-                  All formats supported · Max file size: 25MB · 1 file per order
-                </div>
-              </>
-            )}
-          </div>
-        </div>
 
-        {/* CTA bar */}
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={handleCheckoutClick}
-            disabled={!file || isCheckingOut || isUploading}
-            className={`group relative flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-semibold transition ${
-              file && !isCheckingOut && !isUploading
-                ? "accent-gradient text-black shadow-lg shadow-[#d9f000]/30 hover:brightness-110"
-                : "cursor-not-allowed border border-border-soft bg-white/4 text-foreground-muted"
-            }`}
-          >
-            {isCheckingOut ? (
-              <>
-                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Creating order…
-              </>
-            ) : isUploading ? (
-              <>
-                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Uploading file…
-              </>
-            ) : file ? (
-              <>
-                <span>👁</span>
-                View Proof &amp; Checkout · ${price.total.toFixed(2)}
-              </>
-            ) : (
-              <>
-                <span>⬆</span>
-                Upload Artwork to Continue
-              </>
-            )}
-          </button>
-          <p className="mt-2 text-center text-xs text-foreground-muted">
-            You&apos;ll be redirected to Shopify checkout to complete payment.
-          </p>
+                {tierPrices.map(({ qty, total, savingsPercent }) => {
+                  const active = quantity === qty;
+                  return (
+                    <button
+                      key={qty}
+                      type="button"
+                      onClick={() => setQuantity(qty)}
+                      className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-sm transition ${
+                        active ? TILE_ON : TILE_OFF
+                      }`}
+                    >
+                      <span className="font-medium">
+                        {qty.toLocaleString()}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <span className="font-semibold">
+                          ${total.toFixed(2)}
+                        </span>
+                        {savingsPercent > 0 && (
+                          <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-300">
+                            Save {savingsPercent}%
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Total */}
+              <div className="overflow-hidden rounded-2xl total-gradient p-4">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-sm font-medium text-white/90">
+                    Total
+                  </span>
+                  <span className="font-display text-3xl font-black text-white tabular-nums">
+                    ${price.total.toFixed(2)}
+                  </span>
+                </div>
+                <div className="mt-1 text-right text-xs font-medium text-white/80">
+                  ${price.perUnit.toFixed(2)} / sticker
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-xl border border-border-soft bg-white/[0.03] px-3 py-2 text-[12px] text-foreground-muted">
+                <span>🕒</span>
+                <span>Printed &amp; shipped next business day</span>
+              </div>
+
+              {/* CTA */}
+              <button
+                type="button"
+                onClick={handleCheckoutClick}
+                disabled={ctaDisabled}
+                className={`group flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 font-headline text-sm font-bold uppercase tracking-wider transition ${
+                  !ctaDisabled
+                    ? "accent-gradient text-black shadow-lg shadow-[#d9f000]/30 hover:brightness-110"
+                    : "cursor-not-allowed border border-border-soft bg-white/[0.04] text-foreground-muted"
+                }`}
+              >
+                {isCheckingOut ? (
+                  <>
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Creating order…
+                  </>
+                ) : isUploading ? (
+                  <>
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Uploading file…
+                  </>
+                ) : file ? (
+                  <>
+                    <span>👁</span>
+                    View Proof · ${price.total.toFixed(2)}
+                  </>
+                ) : (
+                  <>
+                    <span>⬆</span>
+                    Upload Artwork
+                  </>
+                )}
+              </button>
+              <p className="text-center text-xs text-foreground-muted">
+                Review your proof, then we&apos;ll take you to secure checkout.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -823,113 +865,59 @@ export default function ProductConfigurator() {
 
 /* ----------------- subcomponents ----------------- */
 
-function HeroBanner() {
-  return (
-    <div className="relative min-h-44 overflow-hidden rounded-2xl">
-      <Image
-        src="/StickerShuttle_Banner_CustomStickers_scxnng.png"
-        alt=""
-        fill
-        sizes="(min-width: 1024px) 75vw, 100vw"
-        className="object-cover"
-        priority
-      />
-      <div className="relative flex min-h-44 items-center gap-4 px-6 py-6 sm:px-8">
-        <div className="hidden shrink-0 sm:block">
-          <Image
-            src="/custom_shape-removebg-preview.png"
-            alt=""
-            width={140}
-            height={140}
-            className="drop-shadow-xl"
-            priority
-          />
-        </div>
-        <div className="flex-1">
-          <div className="text-2xl font-bold text-white sm:text-3xl">
-            Vinyl Stickers
-          </div>
-          <div className="mt-1 text-sm font-semibold text-white/95">
-            Perfect for any application. The perfect sticker.
-          </div>
-          <p className="mt-2 max-w-lg text-xs leading-relaxed text-white/95 sm:text-sm">
-            Premium vinyl stickers built for laptops, water bottles, and the
-            outdoors — waterproof, scratch-resistant, and dishwasher safe.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
+const TILE_ON =
+  "border-[#d9f000] bg-[#d9f000]/10 ring-1 ring-[#d9f000]/40 text-foreground";
+const TILE_OFF =
+  "border-border-soft bg-white/[0.03] text-foreground hover:bg-white/[0.06]";
 
-function Panel({
+function Section({
+  step,
   title,
-  icon,
+  optional,
   children,
 }: {
+  step: number;
   title: string;
-  icon: string;
+  optional?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-border-soft bg-surface p-4 sm:p-5">
-      <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
-        <span className="text-highlight">{icon}</span>
-        {title}
+    <div className="rounded-2xl border border-border-soft bg-surface/70 p-5 backdrop-blur sm:p-6">
+      <div className="mb-4 flex items-center gap-3">
+        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full accent-gradient text-xs font-black text-black">
+          {step}
+        </span>
+        <h2 className="font-headline text-sm font-bold uppercase tracking-wider sm:text-base">
+          {title}
+        </h2>
+        {optional && (
+          <span className="text-xs font-normal text-foreground-muted">
+            (optional)
+          </span>
+        )}
       </div>
       {children}
     </div>
   );
 }
 
-function ShapeButton({
-  shape,
-  active,
-  onClick,
-  full = false,
-}: {
-  shape: ShapeKey;
-  active: boolean;
-  onClick: () => void;
-  full?: boolean;
-}) {
-  const opt = SHAPE_OPTIONS.find((s) => s.key === shape);
+function CheckBadge() {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`group relative flex flex-col items-center justify-center rounded-xl border px-3 transition ${
-        full ? "py-5" : "py-4"
-      } ${
-        active
-          ? "border-highlight bg-highlight-soft"
-          : "border-border-soft bg-white/3 hover:bg-white/6"
-      }`}
-    >
-      {active && (
-        <span className="absolute left-2 top-2 grid h-4 w-4 place-items-center rounded-full bg-highlight text-[9px] font-bold text-black">
-          ★
-        </span>
-      )}
-      <Image
-        src={SHAPE_ICON[shape]}
-        alt={opt?.label ?? shape}
-        width={full ? 64 : 56}
-        height={full ? 64 : 56}
-        className={`${full ? "h-16 w-16" : "h-14 w-14"} object-contain transition-transform duration-500 ease-out group-hover:rotate-180`}
-      />
-      <span className="mt-2 text-xs font-medium">{opt?.label}</span>
-    </button>
+    <span className="ml-auto grid h-6 w-6 shrink-0 place-items-center rounded-full accent-gradient text-black">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    </span>
   );
 }
 
-function MaterialButton({
-  material,
+function OptionTile({
+  icon,
   label,
   active,
   onClick,
 }: {
-  material: MaterialKey;
+  icon: string;
   label: string;
   active: boolean;
   onClick: () => void;
@@ -938,30 +926,30 @@ function MaterialButton({
     <button
       type="button"
       onClick={onClick}
-      className={`group relative flex flex-col items-center justify-center rounded-xl border px-3 py-4 transition ${
-        active
-          ? "border-highlight bg-highlight-soft"
-          : "border-border-soft bg-white/3 hover:bg-white/6"
+      className={`group relative flex flex-col items-center justify-center rounded-2xl border px-3 py-4 transition ${
+        active ? TILE_ON : TILE_OFF
       }`}
     >
       {active && (
-        <span className="absolute left-2 top-2 grid h-4 w-4 place-items-center rounded-full bg-highlight text-[9px] font-bold text-black">
-          ★
+        <span className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full accent-gradient text-black">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
         </span>
       )}
       <Image
-        src={MATERIAL_ICON[material]}
+        src={icon}
         alt={label}
         width={56}
         height={56}
-        className="h-14 w-14 object-contain transition-transform duration-500 ease-out group-hover:rotate-180"
+        className="h-14 w-14 object-contain transition-transform duration-500 ease-out group-hover:scale-110"
       />
-      <span className="mt-2 text-xs font-medium">{label}</span>
+      <span className="mt-2 text-center text-xs font-medium">{label}</span>
     </button>
   );
 }
 
-function SizeButton({
+function SizeTile({
   size,
   label,
   active,
@@ -976,15 +964,15 @@ function SizeButton({
     <button
       type="button"
       onClick={onClick}
-      className={`group relative flex flex-col items-center justify-center rounded-xl border px-3 py-4 transition ${
-        active
-          ? "border-highlight bg-highlight-soft"
-          : "border-border-soft bg-white/3 hover:bg-white/6"
+      className={`group relative flex flex-col items-center justify-center rounded-2xl border px-3 py-4 transition ${
+        active ? TILE_ON : TILE_OFF
       }`}
     >
       {active && (
-        <span className="absolute left-2 top-2 grid h-4 w-4 place-items-center rounded-full bg-highlight text-[9px] font-bold text-black">
-          ★
+        <span className="absolute right-2 top-2 grid h-5 w-5 place-items-center rounded-full accent-gradient text-black">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
         </span>
       )}
       <div className="relative grid h-14 w-14 place-items-center overflow-hidden">
@@ -1015,7 +1003,7 @@ function NumberField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-foreground-muted">
+      <span className="mb-1 block font-headline text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
         {label}
       </span>
       <input
@@ -1027,7 +1015,7 @@ function NumberField({
           const v = Number(e.target.value);
           onChange(Number.isFinite(v) && v > 0 ? v : 0);
         }}
-        className="w-full rounded-lg border border-border-soft bg-white/4 px-3 py-1.5 text-sm text-foreground outline-none ring-highlight/40 focus:ring-2"
+        className="w-full rounded-lg border border-border-soft bg-white/[0.04] px-3 py-2 text-sm text-foreground outline-none ring-[#d9f000]/30 focus:ring-2"
       />
     </label>
   );

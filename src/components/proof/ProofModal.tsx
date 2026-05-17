@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   generateProof,
   rasterizeSvgToPng,
+  removeImageBackground,
   type Fit,
   type GenerateProofOutput,
 } from "@/lib/proof/build-proof";
@@ -54,6 +55,11 @@ const SHAPES: { key: ProofShape; label: string; icon: string }[] = [
 const BORDERS: BorderThickness[] = ["thin", "normal", "wide"];
 const ROUNDED: RoundedCorners[] = ["none", "soft", "medium", "heavy"];
 
+// Brand palette — lime / cyan on pure black (Print Laser Stitch theme).
+const ACTIVE = "border-[#18d3e8] bg-[#18d3e8]/15 text-white";
+const IDLE =
+  "border-white/10 bg-white/5 text-foreground-muted hover:bg-white/10";
+
 export default function ProofModal({
   open,
   file,
@@ -72,14 +78,19 @@ export default function ProofModal({
   const [fit, setFit] = useState<Fit>("fill");
   const [zoom, setZoom] = useState(1);
   const [showCutline, setShowCutline] = useState(true);
+  const [removeBg, setRemoveBg] = useState(false);
 
   const [result, setResult] = useState<GenerateProofOutput | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [bgBusy, setBgBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<"proof" | "changes">("proof");
   const [note, setNote] = useState("");
 
+  // Cache the bg-removed blob so toggling other controls doesn't re-run the
+  // (slow) browser model.
+  const bgRemovedRef = useRef<Blob | null>(null);
   const runToken = useRef(0);
 
   useEffect(() => {
@@ -96,11 +107,20 @@ export default function ProofModal({
     setBusy(true);
     setError(null);
     try {
+      let src: Blob = file;
+      if (removeBg) {
+        if (!bgRemovedRef.current) {
+          setBgBusy(true);
+          bgRemovedRef.current = await removeImageBackground(file);
+          setBgBusy(false);
+        }
+        src = bgRemovedRef.current;
+      }
       const out = await generateProof({
-        file,
+        file: src,
         settings: {
           shape,
-          removeBackground: false,
+          removeBackground: removeBg,
           borderThickness: border,
           roundedCorners: rounded,
           widthIn,
@@ -126,10 +146,14 @@ export default function ProofModal({
         );
       }
     } finally {
-      if (token === runToken.current) setBusy(false);
+      if (token === runToken.current) {
+        setBusy(false);
+        setBgBusy(false);
+      }
     }
   }, [
     file,
+    removeBg,
     shape,
     border,
     rounded,
@@ -144,7 +168,6 @@ export default function ProofModal({
     if (open) void regenerate();
   }, [open, regenerate]);
 
-  // Cleanup object URL on unmount.
   useEffect(() => {
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -166,7 +189,7 @@ export default function ProofModal({
       shape,
       borderThickness: border,
       roundedCorners: rounded,
-      removedBackground: false,
+      removedBackground: removeBg,
       fit,
       zoom,
       lowResolution: result.lowResolution,
@@ -203,16 +226,16 @@ export default function ProofModal({
   const isSquareish = shape === "square" || shape === "rectangle";
 
   return (
-    <div className="fixed inset-0 z-100 flex flex-col overflow-y-auto overflow-x-hidden overscroll-contain bg-[#0a0f2c]">
+    <div className="fixed inset-0 z-100 flex flex-col overflow-y-auto overflow-x-hidden overscroll-contain bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-white/10 bg-[#0a0f2c]/95 px-4 py-3 backdrop-blur">
+      <div className="sticky top-0 z-10 border-b border-border-soft bg-background/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-lg">🚀</span>
+            <span className="text-lg">✨</span>
             <span className="font-display text-base font-black uppercase tracking-tight">
-              Preflight
+              Proof <span className="accent-gradient-text">Studio</span>
             </span>
-            <span className="rounded-full bg-[#6c5ce7]/30 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#a99bff]">
+            <span className="rounded-full border border-[#18d3e8]/40 bg-[#18d3e8]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#18d3e8]">
               Beta
             </span>
           </div>
@@ -243,9 +266,7 @@ export default function ProofModal({
                     type="button"
                     onClick={() => setShape(s.key)}
                     className={`flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition ${
-                      active
-                        ? "border-[#6c5ce7] bg-[#6c5ce7]/25 text-white"
-                        : "border-white/10 bg-white/5 text-foreground-muted hover:bg-white/10"
+                      active ? ACTIVE : IDLE
                     }`}
                   >
                     <span className="relative h-5 w-5 shrink-0">
@@ -267,7 +288,7 @@ export default function ProofModal({
               >
                 −
               </button>
-              <div className="aspect-square min-w-0 flex-1 overflow-hidden rounded-2xl">
+              <div className="aspect-square min-w-0 flex-1 overflow-hidden rounded-2xl border border-border-soft bg-white/[0.02]">
                 {previewUrl && !busy ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -278,7 +299,9 @@ export default function ProofModal({
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-center text-xs text-foreground-muted">
                     <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    <span className="ml-2">Generating proof…</span>
+                    <span className="ml-2">
+                      {bgBusy ? "Removing background…" : "Generating proof…"}
+                    </span>
                   </div>
                 )}
               </div>
@@ -298,14 +321,14 @@ export default function ProofModal({
                 <button
                   type="button"
                   onClick={() => setFit("fill")}
-                  className={fit === "fill" ? "text-[#39e600]" : "text-foreground-muted"}
+                  className={fit === "fill" ? "text-[#d9f000]" : "text-foreground-muted"}
                 >
                   Fill
                 </button>
                 <button
                   type="button"
                   onClick={() => setFit("fit")}
-                  className={fit === "fit" ? "text-[#39e600]" : "text-foreground-muted"}
+                  className={fit === "fit" ? "text-[#d9f000]" : "text-foreground-muted"}
                 >
                   Fit
                 </button>
@@ -315,7 +338,7 @@ export default function ProofModal({
                   type="button"
                   onClick={() => setShowCutline((v) => !v)}
                   className={`grid h-7 w-7 place-items-center rounded-full ${
-                    showCutline ? "text-[#39e600]" : "text-foreground-muted"
+                    showCutline ? "text-[#d9f000]" : "text-foreground-muted"
                   } hover:bg-white/10`}
                   aria-label="Toggle cutline"
                   title="Show / hide cutline"
@@ -333,7 +356,7 @@ export default function ProofModal({
                     title={`${b} border`}
                     className={`h-1.5 rounded-full transition ${
                       b === "thin" ? "w-4" : b === "normal" ? "w-6" : "w-8"
-                    } ${border === b ? "bg-[#39e600]" : "bg-white/25 hover:bg-white/40"}`}
+                    } ${border === b ? "bg-[#d9f000]" : "bg-white/25 hover:bg-white/40"}`}
                   />
                 ))}
               </div>
@@ -352,9 +375,7 @@ export default function ProofModal({
                       type="button"
                       onClick={() => setRounded(r)}
                       className={`rounded-xl border px-2 py-3 text-xs font-semibold capitalize transition ${
-                        rounded === r
-                          ? "border-[#6c5ce7] bg-[#6c5ce7]/25 text-white"
-                          : "border-white/10 bg-white/5 text-foreground-muted hover:bg-white/10"
+                        rounded === r ? ACTIVE : IDLE
                       }`}
                     >
                       {r}
@@ -363,6 +384,32 @@ export default function ProofModal({
                 </div>
               </div>
             )}
+
+            {/* Remove background (browser-side; can take a few seconds) */}
+            <div className="mx-auto mt-5 max-w-md">
+              <button
+                type="button"
+                disabled={bgBusy || busy}
+                onClick={() => setRemoveBg((v) => !v)}
+                className={`flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition disabled:opacity-50 ${
+                  removeBg
+                    ? "border-[#d9f000]/50 bg-[#d9f000]/15 text-[#d9f000]"
+                    : "border-white/10 bg-white/5 text-foreground hover:bg-white/10"
+                }`}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M3 3l18 18M21 3L3 21" />
+                </svg>
+                {bgBusy
+                  ? "Removing background…"
+                  : removeBg
+                    ? "Background removed"
+                    : "Remove background"}
+              </button>
+              <p className="mt-1.5 text-center text-[11px] text-foreground-muted">
+                Runs in your browser — first use may take a few seconds.
+              </p>
+            </div>
 
             {/* Warnings */}
             {result?.warnings.length ? (
@@ -384,7 +431,7 @@ export default function ProofModal({
                 type="button"
                 disabled={busy || !result}
                 onClick={handleApprove}
-                className="w-full rounded-2xl bg-[#23b85a] px-5 py-4 text-sm font-bold text-white shadow-lg shadow-[#23b85a]/30 transition hover:brightness-110 disabled:opacity-50"
+                className="w-full rounded-2xl accent-gradient px-5 py-4 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 transition hover:brightness-110 disabled:opacity-50"
               >
                 Yes, print this
               </button>
@@ -392,7 +439,7 @@ export default function ProofModal({
                 type="button"
                 disabled={busy || !result}
                 onClick={() => setView("changes")}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-foreground-muted hover:bg-white/10 disabled:opacity-50"
+                className="w-full rounded-2xl border border-border-soft bg-white/5 px-5 py-3 text-sm font-semibold text-foreground-muted hover:bg-white/10 disabled:opacity-50"
               >
                 No, I need changes
               </button>
@@ -406,7 +453,7 @@ export default function ProofModal({
               <img
                 src={previewUrl}
                 alt="Sticker proof"
-                className="mx-auto mb-5 h-48 w-48 rounded-2xl object-contain"
+                className="mx-auto mb-5 h-48 w-48 rounded-2xl border border-border-soft object-contain"
               />
             )}
             <div className="mb-2 text-center text-sm font-bold">
@@ -417,16 +464,16 @@ export default function ProofModal({
               onChange={(e) => setNote(e.target.value)}
               rows={5}
               placeholder="Describe the look you're going for…"
-              className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/60 outline-none ring-[#6c5ce7]/40 focus:ring-2"
+              className="w-full resize-none rounded-xl border border-border-soft bg-white/5 px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/60 outline-none ring-[#18d3e8]/40 focus:ring-2"
               autoFocus
             />
             <button
               type="button"
               disabled={!note.trim() || busy}
               onClick={handleSubmitChanges}
-              className={`mt-3 w-full rounded-2xl px-5 py-4 text-sm font-bold transition ${
+              className={`mt-3 w-full rounded-2xl px-5 py-4 font-headline text-sm font-bold uppercase tracking-wider transition ${
                 note.trim() && !busy
-                  ? "bg-[#6c5ce7] text-white hover:brightness-110"
+                  ? "accent-gradient text-black hover:brightness-110"
                   : "cursor-not-allowed bg-white/5 text-foreground-muted"
               }`}
             >

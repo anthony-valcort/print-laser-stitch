@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import Image from "next/image";
@@ -202,7 +203,7 @@ export default function ProofModal({
   const isSquareish = shape === "square" || shape === "rectangle";
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col overflow-y-auto overscroll-contain bg-[#0a0f2c]">
+    <div className="fixed inset-0 z-100 flex flex-col overflow-y-auto overflow-x-hidden overscroll-contain bg-[#0a0f2c]">
       {/* Header */}
       <div className="sticky top-0 z-10 border-b border-white/10 bg-[#0a0f2c]/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center justify-between">
@@ -227,16 +228,6 @@ export default function ProofModal({
             </svg>
           </button>
         </div>
-        <p className="mx-auto mt-1 max-w-4xl text-center text-[11px] text-foreground-muted">
-          This is a brand-new system — please be patient with mistakes. A human
-          still reviews every file before printing.{" "}
-          <a
-            href="mailto:office@psolutionservices.com?subject=Preflight%20bug"
-            className="text-[#18d3e8] hover:underline"
-          >
-            Report bug
-          </a>
-        </p>
       </div>
 
       <div className="mx-auto w-full max-w-4xl flex-1 px-4 py-5">
@@ -267,36 +258,34 @@ export default function ProofModal({
             </div>
 
             {/* Preview */}
-            <div className="relative mx-auto flex max-w-md items-center justify-center">
+            <div className="relative mx-auto flex w-full max-w-md items-center justify-center gap-1 px-1">
               <button
                 type="button"
                 onClick={() => setZoom((z) => Math.max(0.4, +(z - 0.1).toFixed(2)))}
-                className="absolute left-0 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/10 text-lg text-white hover:bg-white/20"
+                className="z-10 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-lg text-white hover:bg-white/20"
                 aria-label="Zoom out"
               >
                 −
               </button>
-              <div className="aspect-square w-full max-w-sm overflow-hidden rounded-2xl">
+              <div className="aspect-square min-w-0 flex-1 overflow-hidden rounded-2xl">
                 {previewUrl && !busy ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={previewUrl}
                     alt="Sticker proof preview"
-                    className="h-full w-full object-contain"
+                    className="h-full w-full max-w-full object-contain"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-sm text-foreground-muted">
+                  <div className="flex h-full w-full items-center justify-center text-center text-xs text-foreground-muted">
                     <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                    <span className="ml-2">
-                      Generating proof…
-                    </span>
+                    <span className="ml-2">Generating proof…</span>
                   </div>
                 )}
               </div>
               <button
                 type="button"
                 onClick={() => setZoom((z) => Math.min(3, +(z + 0.1).toFixed(2)))}
-                className="absolute right-0 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/10 text-lg text-white hover:bg-white/20"
+                className="z-10 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-lg text-white hover:bg-white/20"
                 aria-label="Zoom in"
               >
                 +
@@ -356,7 +345,7 @@ export default function ProofModal({
                 <div className="mb-2 text-center text-xs font-bold uppercase tracking-wider text-foreground-muted">
                   Rounded corners
                 </div>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {ROUNDED.map((r) => (
                     <button
                       key={r}

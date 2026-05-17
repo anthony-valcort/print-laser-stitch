@@ -664,7 +664,7 @@ export default function ProductConfigurator() {
               handleFile(e.dataTransfer.files?.[0]);
             }}
             onClick={() => fileInputRef.current?.click()}
-            className={`relative flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition ${
+            className={`relative flex min-h-44 min-w-0 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition ${
               dragActive
                 ? "border-highlight bg-highlight-soft"
                 : "border-border-strong bg-surface/60 hover:bg-white/5"
@@ -678,17 +678,17 @@ export default function ProductConfigurator() {
               onChange={(e) => handleFile(e.target.files?.[0])}
             />
             {file ? (
-              <div className="flex w-full items-center gap-5">
-                <div className="relative h-40 w-40 shrink-0">
+              <div className="flex w-full items-center gap-4 sm:gap-5">
+                <div className="relative h-24 w-24 shrink-0 sm:h-40 sm:w-40">
                   {filePreview ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={filePreview}
                       alt="Upload preview"
-                      className="h-40 w-40 rounded-xl object-contain bg-white/5 ring-1 ring-border-strong"
+                      className="h-24 w-24 rounded-xl object-contain bg-white/5 ring-1 ring-border-strong sm:h-40 sm:w-40"
                     />
                   ) : (
-                    <div className="grid h-40 w-40 place-items-center rounded-xl bg-white/5 text-5xl">
+                    <div className="grid h-24 w-24 place-items-center rounded-xl bg-white/5 text-4xl sm:h-40 sm:w-40 sm:text-5xl">
                       📄
                     </div>
                   )}
@@ -698,8 +698,8 @@ export default function ProductConfigurator() {
                     </div>
                   )}
                 </div>
-                <div className="flex-1 truncate text-left">
-                  <div className="truncate font-medium text-foreground">
+                <div className="min-w-0 flex-1 text-left">
+                  <div className="font-medium break-words [overflow-wrap:anywhere] text-foreground">
                     {file.name}
                   </div>
                   <div className="text-xs text-foreground-muted">

@@ -55,7 +55,7 @@ export default function HeaderClient({
           />
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-1 lg:flex">
           <Link
             href="/"
             className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
@@ -157,6 +157,21 @@ export default function HeaderClient({
           >
             Blog
           </Link>
+          <a
+            href="https://printlaserstitchuniversity.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-foreground/80 transition hover:text-foreground hover:bg-white/5"
+          >
+            <Image
+              src="/university-logo.jpeg"
+              alt=""
+              width={18}
+              height={18}
+              className="h-[18px] w-[18px] shrink-0 rounded-full object-cover ring-1 ring-[#d94cb3]/40"
+            />
+            University
+          </a>
           <Link
             href="/about"
             className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
@@ -253,7 +268,7 @@ export default function HeaderClient({
         </nav>
 
         {/* Mobile-only: cart icon + hamburger sit on the right */}
-        <div className="flex items-center gap-2 md:hidden">
+        <div className="flex items-center gap-2 lg:hidden">
           <CartIcon />
           <button
             type="button"
@@ -289,7 +304,7 @@ export default function HeaderClient({
       </div>
 
       {mobileOpen && (
-        <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-border-soft bg-background-soft md:hidden">
+        <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-border-soft bg-background-soft lg:hidden">
           <div className="mx-auto max-w-7xl space-y-1 px-4 py-4">
             <Link
               href="/"
@@ -326,6 +341,22 @@ export default function HeaderClient({
             >
               📰 Blog
             </Link>
+            <a
+              href="https://printlaserstitchuniversity.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
+            >
+              <Image
+                src="/university-logo.jpeg"
+                alt=""
+                width={20}
+                height={20}
+                className="h-5 w-5 shrink-0 rounded-full object-cover ring-1 ring-[#d94cb3]/40"
+              />
+              University
+            </a>
             <Link
               href="/about"
               onClick={() => setMobileOpen(false)}

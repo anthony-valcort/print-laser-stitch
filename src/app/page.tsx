@@ -4,7 +4,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getAllCollections } from "@/lib/shopify-collections";
 import { getBestSellingProducts } from "@/lib/shopify-products";
-import { getBlogArticles } from "@/lib/shopify-blog";
 
 export const revalidate = 300;
 
@@ -33,16 +32,13 @@ const ACCENTS = [
 export default async function Home() {
   let productCategories: Awaited<ReturnType<typeof getAllCollections>> = [];
   let bestSellers: Awaited<ReturnType<typeof getBestSellingProducts>> = [];
-  let latestPosts: Awaited<ReturnType<typeof getBlogArticles>> = [];
   // Each call is independent — one failing must not blank the home page.
-  const [cats, best, posts] = await Promise.allSettled([
+  const [cats, best] = await Promise.allSettled([
     getAllCollections(),
-    getBestSellingProducts(8),
-    getBlogArticles(3),
+    getBestSellingProducts(4),
   ]);
   if (cats.status === "fulfilled") productCategories = cats.value;
   if (best.status === "fulfilled") bestSellers = best.value;
-  if (posts.status === "fulfilled") latestPosts = posts.value;
 
   return (
     <>
@@ -261,29 +257,28 @@ export default async function Home() {
           )}
         </section>
 
-        {/* Best Sellers — Shopify's own sales ranking (Storefront API) */}
+        {/* Best Sellers — compact strip (Shopify Storefront ranking) */}
         {bestSellers.length > 0 && (
-          <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-            <div className="mb-10 text-center">
-              <span className="inline-block rounded-full border border-[#d94cb3]/30 bg-[#d94cb3]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d94cb3]">
-                Customer favorites
-              </span>
-              <h2 className="mt-3 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
-                Our{" "}
-                <span className="accent-gradient-text">best sellers</span>
+          <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <h2 className="font-display text-xl font-black uppercase tracking-tight sm:text-2xl">
+                Best <span className="accent-gradient-text">sellers</span>
               </h2>
-              <p className="mx-auto mt-3 max-w-2xl text-sm text-foreground-muted">
-                The products our customers order most — ranked automatically by
-                real sales.
-              </p>
+              <Link
+                href="/collections"
+                className="inline-flex items-center gap-1.5 font-headline text-[11px] font-bold uppercase tracking-wider text-foreground-muted transition hover:text-[#18d3e8]"
+              >
+                View all
+                <Arrow size={13} />
+              </Link>
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
               {bestSellers.map((p) => (
                 <Link
                   key={p.handle}
                   href={`/products/${p.handle}`}
-                  className="group relative flex flex-col overflow-hidden rounded-2xl border border-border-soft bg-surface transition hover:-translate-y-1 hover:border-[#d94cb3]/40 hover:shadow-[0_0_40px_rgba(217,76,179,0.18)]"
+                  className="group flex flex-col overflow-hidden rounded-xl border border-border-soft bg-surface transition hover:border-[#d94cb3]/40 hover:shadow-[0_0_30px_rgba(217,76,179,0.15)]"
                 >
                   <div className="relative aspect-square w-full overflow-hidden bg-white/5">
                     {p.featuredImage?.url ? (
@@ -291,30 +286,24 @@ export default async function Home() {
                         src={p.featuredImage.url}
                         alt={p.featuredImage.altText ?? p.title}
                         fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        sizes="(max-width: 640px) 50vw, 25vw"
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
                       <div className="absolute inset-0 grid place-items-center">
-                        <span className="text-5xl">📦</span>
+                        <span className="text-4xl">📦</span>
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-1 flex-col p-4">
-                    <div className="font-headline text-sm font-semibold leading-snug">
+                  <div className="flex flex-1 items-center justify-between gap-2 px-3 py-2.5">
+                    <div className="min-w-0 truncate font-headline text-xs font-semibold leading-snug">
                       {p.title}
                     </div>
-                    <div className="mt-auto pt-3">
-                      {p.minPrice ? (
-                        <span className="font-headline text-sm font-bold text-[#18d3e8]">
-                          From ${Number(p.minPrice).toFixed(2)}
-                        </span>
-                      ) : (
-                        <span className="font-headline text-xs uppercase tracking-wider text-foreground-muted">
-                          View options
-                        </span>
-                      )}
-                    </div>
+                    {p.minPrice && (
+                      <span className="shrink-0 font-headline text-xs font-bold text-[#18d3e8]">
+                        ${Number(p.minPrice).toFixed(2)}
+                      </span>
+                    )}
                   </div>
                 </Link>
               ))}
@@ -463,68 +452,6 @@ export default async function Home() {
             </div>
           </div>
         </section>
-
-        {/* From the blog — Shopify blog (Storefront API) */}
-        {latestPosts.length > 0 && (
-          <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-            <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <span className="inline-block rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
-                  From the workshop
-                </span>
-                <h2 className="mt-3 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
-                  Tips &amp;{" "}
-                  <span className="accent-gradient-text">guides</span>
-                </h2>
-              </div>
-              <Link
-                href="/blog"
-                className="inline-flex items-center gap-2 rounded-full border border-border-strong bg-white/5 px-5 py-2 font-headline text-xs font-bold uppercase tracking-wider transition hover:bg-white/10"
-              >
-                Read the blog
-                <Arrow size={14} />
-              </Link>
-            </div>
-
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {latestPosts.map((post) => (
-                <Link
-                  key={post.handle}
-                  href={`/blog/${post.handle}`}
-                  className="group flex flex-col overflow-hidden rounded-2xl border border-border-soft bg-surface transition hover:-translate-y-1 hover:border-[#18d3e8]/40 hover:shadow-[0_0_40px_rgba(24,211,232,0.15)]"
-                >
-                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-white/5">
-                    {post.image?.url ? (
-                      <Image
-                        src={post.image.url}
-                        alt={post.image.altText ?? post.title}
-                        fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 grid place-items-center text-4xl">
-                        📰
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-1 flex-col gap-2 p-5">
-                    <span className="font-headline text-[10px] uppercase tracking-[0.2em] text-foreground-muted">
-                      {new Date(post.publishedAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </span>
-                    <h3 className="font-headline text-base font-semibold leading-snug group-hover:text-[#18d3e8]">
-                      {post.title}
-                    </h3>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
 
         {/* Print Laser Stitch University — external learning site */}
         <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">

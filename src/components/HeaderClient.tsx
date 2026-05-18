@@ -152,6 +152,12 @@ export default function HeaderClient({
             Decal Signage
           </Link>
           <Link
+            href="/blog"
+            className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
+          >
+            Blog
+          </Link>
+          <Link
             href="/about"
             className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
           >
@@ -312,6 +318,13 @@ export default function HeaderClient({
               className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
             >
               🪧 Decal Signage Calculator
+            </Link>
+            <Link
+              href="/blog"
+              onClick={() => setMobileOpen(false)}
+              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
+            >
+              📰 Blog
             </Link>
             <Link
               href="/about"

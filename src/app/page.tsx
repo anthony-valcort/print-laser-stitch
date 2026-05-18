@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getAllCollections } from "@/lib/shopify-collections";
 import { getBestSellingProducts } from "@/lib/shopify-products";
+import { getBlogArticles } from "@/lib/shopify-blog";
 
 export const revalidate = 300;
 
@@ -32,24 +33,16 @@ const ACCENTS = [
 export default async function Home() {
   let productCategories: Awaited<ReturnType<typeof getAllCollections>> = [];
   let bestSellers: Awaited<ReturnType<typeof getBestSellingProducts>> = [];
-  try {
-    [productCategories, bestSellers] = await Promise.all([
-      getAllCollections(),
-      getBestSellingProducts(8),
-    ]);
-  } catch {
-    // Either call failing shouldn't blank the whole home page.
-    try {
-      productCategories = await getAllCollections();
-    } catch {
-      productCategories = [];
-    }
-    try {
-      bestSellers = await getBestSellingProducts(8);
-    } catch {
-      bestSellers = [];
-    }
-  }
+  let latestPosts: Awaited<ReturnType<typeof getBlogArticles>> = [];
+  // Each call is independent — one failing must not blank the home page.
+  const [cats, best, posts] = await Promise.allSettled([
+    getAllCollections(),
+    getBestSellingProducts(8),
+    getBlogArticles(3),
+  ]);
+  if (cats.status === "fulfilled") productCategories = cats.value;
+  if (best.status === "fulfilled") bestSellers = best.value;
+  if (posts.status === "fulfilled") latestPosts = posts.value;
 
   return (
     <>
@@ -160,8 +153,14 @@ export default async function Home() {
                 </span>
               </div>
               <div className="relative hidden lg:block">
-                <div className="grid aspect-square place-items-center rounded-2xl border border-border-soft bg-background/60 text-8xl shadow-2xl shadow-black/40 backdrop-blur transition group-hover:scale-105">
-                  ✨
+                <div className="relative aspect-square overflow-hidden rounded-2xl border border-border-soft bg-background/60 shadow-2xl shadow-black/40 backdrop-blur transition group-hover:scale-105">
+                  <Image
+                    src="/vinyl-sticker-logo.jpeg"
+                    alt="Custom vinyl stickers"
+                    fill
+                    sizes="(max-width: 1024px) 0vw, 33vw"
+                    className="object-cover"
+                  />
                 </div>
               </div>
             </div>
@@ -465,33 +464,144 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Trust strip */}
+        {/* From the blog — Shopify blog (Storefront API) */}
+        {latestPosts.length > 0 && (
+          <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+            <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <span className="inline-block rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
+                  From the workshop
+                </span>
+                <h2 className="mt-3 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
+                  Tips &amp;{" "}
+                  <span className="accent-gradient-text">guides</span>
+                </h2>
+              </div>
+              <Link
+                href="/blog"
+                className="inline-flex items-center gap-2 rounded-full border border-border-strong bg-white/5 px-5 py-2 font-headline text-xs font-bold uppercase tracking-wider transition hover:bg-white/10"
+              >
+                Read the blog
+                <Arrow size={14} />
+              </Link>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {latestPosts.map((post) => (
+                <Link
+                  key={post.handle}
+                  href={`/blog/${post.handle}`}
+                  className="group flex flex-col overflow-hidden rounded-2xl border border-border-soft bg-surface transition hover:-translate-y-1 hover:border-[#18d3e8]/40 hover:shadow-[0_0_40px_rgba(24,211,232,0.15)]"
+                >
+                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-white/5">
+                    {post.image?.url ? (
+                      <Image
+                        src={post.image.url}
+                        alt={post.image.altText ?? post.title}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 grid place-items-center text-4xl">
+                        📰
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-1 flex-col gap-2 p-5">
+                    <span className="font-headline text-[10px] uppercase tracking-[0.2em] text-foreground-muted">
+                      {new Date(post.publishedAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </span>
+                    <h3 className="font-headline text-base font-semibold leading-snug group-hover:text-[#18d3e8]">
+                      {post.title}
+                    </h3>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Print Laser Stitch University — external learning site */}
+        <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+          <a
+            href="https://printlaserstitchuniversity.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group relative block overflow-hidden rounded-3xl border border-[#d94cb3]/30 bg-linear-to-br from-[#d94cb3]/10 via-surface to-[#18d3e8]/10 p-8 transition hover:border-[#d94cb3]/50 sm:p-12"
+          >
+            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#d94cb3]/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#18d3e8]/15 blur-3xl" />
+            <div className="relative grid items-center gap-8 lg:grid-cols-[1fr_1.4fr]">
+              <div className="order-2 lg:order-1">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#d94cb3]/40 bg-[#d94cb3]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d94cb3]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#d94cb3]" />
+                  Learn the craft
+                </span>
+                <h2 className="mt-4 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
+                  Print Laser Stitch{" "}
+                  <span className="bg-linear-to-r from-[#d94cb3] to-[#18d3e8] bg-clip-text text-transparent">
+                    University
+                  </span>
+                </h2>
+                <p className="mt-4 max-w-xl text-base text-foreground-muted">
+                  Want to sharpen your design and print skills? Step into our
+                  learning hub for tutorials, walkthroughs and courses from the
+                  Print Laser Stitch team.
+                </p>
+                <span className="mt-8 inline-flex items-center gap-2 rounded-md bg-linear-to-r from-[#d94cb3] to-[#18d3e8] px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d94cb3]/30 transition group-hover:brightness-110">
+                  Visit the University
+                  <Arrow />
+                </span>
+              </div>
+              <div className="order-1 lg:order-2">
+                <div className="relative mx-auto aspect-square max-w-xs overflow-hidden rounded-2xl border border-border-soft bg-background/60 shadow-2xl shadow-black/40 backdrop-blur transition group-hover:scale-[1.02]">
+                  <Image
+                    src="/university-logo.jpeg"
+                    alt="Print Laser Stitch University"
+                    fill
+                    sizes="(max-width: 1024px) 80vw, 360px"
+                    className="object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+          </a>
+        </section>
+
+        {/* Why order with us — promise band */}
         <section className="border-t border-border-soft bg-background-soft/60">
-          <div className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
-            <TrustItem
-              icon="🚚"
-              title="Free shipping"
-              text="On all U.S. orders over $75"
-              accent="yellow"
-            />
-            <TrustItem
-              icon="✏️"
-              title="Free proofs"
-              text="Approve before we print"
-              accent="cyan"
-            />
-            <TrustItem
-              icon="⚡"
-              title="24–48 hr turnaround"
-              text="Same-day for stickers"
-              accent="magenta"
-            />
-            <TrustItem
-              icon="🎯"
-              title="Satisfaction guarantee"
-              text="Reprint or full refund"
-              accent="yellow"
-            />
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+            <div className="grid divide-y divide-border-soft overflow-hidden rounded-2xl border border-border-soft bg-surface sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4 lg:divide-x">
+              <PromiseItem
+                num="01"
+                title="Free design proof"
+                text="See your artwork before we ever print it."
+                accent="yellow"
+              />
+              <PromiseItem
+                num="02"
+                title="Fast turnaround"
+                text="Most orders printed within 24–48 hours."
+                accent="cyan"
+              />
+              <PromiseItem
+                num="03"
+                title="Reprint guarantee"
+                text="Not right? We'll redo it — no hassle."
+                accent="magenta"
+              />
+              <PromiseItem
+                num="04"
+                title="Florida print shop"
+                text="Locally run and operated in Martin County, FL."
+                accent="yellow"
+              />
+            </div>
           </div>
         </section>
       </main>
@@ -546,36 +656,32 @@ function CalcRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function TrustItem({
-  icon,
+function PromiseItem({
+  num,
   title,
   text,
   accent,
 }: {
-  icon: string;
+  num: string;
   title: string;
   text: string;
   accent: "yellow" | "cyan" | "magenta";
 }) {
-  const tint =
+  const color =
     accent === "yellow"
-      ? "bg-[#d9f000]/10 text-[#d9f000]"
+      ? "text-[#d9f000]"
       : accent === "cyan"
-        ? "bg-[#18d3e8]/10 text-[#18d3e8]"
-        : "bg-[#d94cb3]/10 text-[#d94cb3]";
+        ? "text-[#18d3e8]"
+        : "text-[#d94cb3]";
   return (
-    <div className="flex items-start gap-3">
-      <span
-        className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-2xl ${tint}`}
-      >
-        {icon}
+    <div className="flex flex-col gap-2 p-6">
+      <span className={`font-display text-2xl font-black ${color}`}>
+        {num}
       </span>
-      <div>
-        <div className="font-headline font-semibold uppercase tracking-wider">
-          {title}
-        </div>
-        <div className="mt-0.5 text-sm text-foreground-muted">{text}</div>
+      <div className="font-headline text-sm font-bold uppercase tracking-wider">
+        {title}
       </div>
+      <div className="text-sm text-foreground-muted">{text}</div>
     </div>
   );
 }

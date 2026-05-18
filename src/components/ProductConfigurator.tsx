@@ -416,16 +416,17 @@ export default function ProductConfigurator() {
               <span className="accent-gradient-text">Vinyl Stickers</span>
             </h1>
             <p className="mt-3 max-w-xl text-sm text-foreground-muted sm:text-base">
-              Premium vinyl built for laptops, water bottles and the outdoors —
-              waterproof, scratch-resistant and dishwasher safe. Upload your
-              art and see a live proof before you check out.
+              Turn your artwork into tough, weatherproof stickers — cut to the
+              exact shape of your design and built to survive sun, rain and
+              everyday wear. Upload your file, preview the proof on screen,
+              then order in minutes.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               {[
-                "💧 Waterproof",
-                "🛡️ Scratch-resistant",
-                "🍽️ Dishwasher safe",
-                "👁 Instant proof",
+                "💦 Holds up outdoors",
+                "☀️ UV & fade resistant",
+                "✂️ Precision die-cut",
+                "🖥️ Live on-screen proof",
               ].map((t) => (
                 <span
                   key={t}

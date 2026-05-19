@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-type Mode = "login" | "signup";
+type Mode = "login" | "signup" | "recover";
 
 export default function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
@@ -30,18 +30,24 @@ export default function AuthForm({ mode }: { mode: Mode }) {
 
     try {
       const url =
-        mode === "login" ? "/api/auth/login" : "/api/auth/signup";
+        mode === "login"
+          ? "/api/auth/login"
+          : mode === "recover"
+            ? "/api/auth/recover"
+            : "/api/auth/signup";
       const body =
         mode === "login"
           ? { email, password }
-          : {
-              email,
-              password,
-              firstName: firstName || undefined,
-              lastName: lastName || undefined,
-              phone: phone || undefined,
-              acceptsMarketing,
-            };
+          : mode === "recover"
+            ? { email }
+            : {
+                email,
+                password,
+                firstName: firstName || undefined,
+                lastName: lastName || undefined,
+                phone: phone || undefined,
+                acceptsMarketing,
+              };
 
       const resp = await fetch(url, {
         method: "POST",
@@ -57,6 +63,14 @@ export default function AuthForm({ mode }: { mode: Mode }) {
 
       if (!resp.ok || !data.ok) {
         setError(data.error ?? "Something went wrong");
+        return;
+      }
+
+      if (mode === "recover") {
+        setSuccess(
+          data.message ??
+            "If an account exists for that email, we've sent a password reset link.",
+        );
         return;
       }
 
@@ -78,10 +92,18 @@ export default function AuthForm({ mode }: { mode: Mode }) {
   }
 
   const isLogin = mode === "login";
-  const title = isLogin ? "Welcome back" : "Create your account";
-  const subtitle = isLogin
-    ? "Log in to track your orders and reuse your details at checkout."
-    : "Save your design files, track every order, and reorder in one click.";
+  const isSignup = mode === "signup";
+  const isRecover = mode === "recover";
+  const title = isRecover
+    ? "Reset your password"
+    : isLogin
+      ? "Welcome back"
+      : "Create your account";
+  const subtitle = isRecover
+    ? "Enter your account email and we'll send you a link to set a new password."
+    : isLogin
+      ? "Log in to track your orders and reuse your details at checkout."
+      : "Save your design files, track every order, and reorder in one click.";
 
   return (
     <div className="mx-auto max-w-md rounded-3xl border border-border-soft bg-surface p-8 shadow-2xl shadow-black/40">
@@ -89,7 +111,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
       <p className="mt-2 text-sm text-foreground-muted">{subtitle}</p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-        {!isLogin && (
+        {isSignup && (
           <div className="grid grid-cols-2 gap-3">
             <Field label="First name">
               <input
@@ -126,63 +148,76 @@ export default function AuthForm({ mode }: { mode: Mode }) {
           />
         </Field>
 
-        <Field
-          label="Password"
-          required
-          hint={!isLogin ? "Minimum 8 characters" : undefined}
-        >
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={isLogin ? 1 : 8}
-              className="input pr-11"
-              autoComplete={isLogin ? "current-password" : "new-password"}
-              suppressHydrationWarning
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              tabIndex={-1}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-2 top-1/2 -translate-y-1/2 grid h-7 w-7 place-items-center rounded-md text-foreground-muted hover:bg-white/10 hover:text-foreground"
-            >
-              {showPassword ? (
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                  <line x1="1" y1="1" x2="23" y2="23" />
-                </svg>
-              ) : (
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-              )}
-            </button>
-          </div>
-        </Field>
+        {!isRecover && (
+          <Field
+            label="Password"
+            required
+            hint={isSignup ? "Minimum 8 characters" : undefined}
+          >
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={isLogin ? 1 : 8}
+                className="input pr-11"
+                autoComplete={isLogin ? "current-password" : "new-password"}
+                suppressHydrationWarning
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                tabIndex={-1}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute right-2 top-1/2 -translate-y-1/2 grid h-7 w-7 place-items-center rounded-md text-foreground-muted hover:bg-white/10 hover:text-foreground"
+              >
+                {showPassword ? (
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                ) : (
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </Field>
+        )}
 
-        {!isLogin && (
+        {isLogin && (
+          <div className="-mt-1 text-right">
+            <Link
+              href="/forgot-password"
+              className="text-xs font-medium text-foreground-muted hover:text-accent hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
+        )}
+
+        {isSignup && (
           <>
             <Field label="Phone (optional)" hint="With country code, e.g. +1 555 1234">
               <input
@@ -227,17 +262,31 @@ export default function AuthForm({ mode }: { mode: Mode }) {
           className="w-full rounded-md accent-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 hover:brightness-110 disabled:opacity-60"
         >
           {submitting
-            ? isLogin
-              ? "Signing in…"
-              : "Creating account…"
-            : isLogin
-              ? "Log in"
-              : "Create account"}
+            ? isRecover
+              ? "Sending…"
+              : isLogin
+                ? "Signing in…"
+                : "Creating account…"
+            : isRecover
+              ? "Send reset link"
+              : isLogin
+                ? "Log in"
+                : "Create account"}
         </button>
       </form>
 
       <div className="mt-6 text-center text-sm text-foreground-muted">
-        {isLogin ? (
+        {isRecover ? (
+          <>
+            Remembered it?{" "}
+            <Link
+              href={`/login${redirect !== "/account" ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
+              className="font-semibold text-accent hover:underline"
+            >
+              Back to log in
+            </Link>
+          </>
+        ) : isLogin ? (
           <>
             New to Print Laser Stitch?{" "}
             <Link

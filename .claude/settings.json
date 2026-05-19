@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(node -e ' *)",
-      "Bash(echo \"---tsc done \\(exit $?\\)--- building...\")"
+      "Bash(echo \"---tsc done \\(exit $?\\)--- building...\")",
+      "Bash(PW=123456Valcourt@ node -e ' *)"
     ]
   }
 }

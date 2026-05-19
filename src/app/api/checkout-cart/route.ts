@@ -156,7 +156,19 @@ export async function POST(req: NextRequest) {
       if (!MATERIALS.has(item.material as StickerMaterial)) {
         return NextResponse.json({ error: "Invalid sticker material" }, { status: 400 });
       }
-      if (!STICKER_SIZES.has(item.size as StickerSize)) {
+      if (item.size === "custom") {
+        // Custom size carries width/height instead of a preset key — the
+        // price calc + label code below already handle it; just sanity-check
+        // the dimensions are positive.
+        const w = Number(item.customWidth);
+        const h = Number(item.customHeight);
+        if (!Number.isFinite(w) || w <= 0 || !Number.isFinite(h) || h <= 0) {
+          return NextResponse.json(
+            { error: "Custom size requires a positive width and height" },
+            { status: 400 },
+          );
+        }
+      } else if (!STICKER_SIZES.has(item.size as StickerSize)) {
         return NextResponse.json({ error: "Invalid sticker size" }, { status: 400 });
       }
 

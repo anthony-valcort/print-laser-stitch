@@ -3,7 +3,8 @@
     "allow": [
       "Bash(node -e ' *)",
       "Bash(echo \"---tsc done \\(exit $?\\)--- building...\")",
-      "Bash(PW=123456Valcourt@ node -e ' *)"
+      "Bash(PW=123456Valcourt@ node -e ' *)",
+      "Bash(grep -n -A6 'waitForInvoiceReady\\(data.draft_order.invoice_url\\)' src/app/api/__TRACKED_VAR__/route.ts)"
     ]
   }
 }

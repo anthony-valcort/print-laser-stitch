@@ -997,11 +997,25 @@ function NumberField({
   label,
   value,
   onChange,
+  min = 0.5,
 }: {
   label: string;
   value: number;
   onChange: (v: number) => void;
+  min?: number;
 }) {
+  // Keep the raw text locally so the user can fully clear the field (empty
+  // string) and type freely. We only push a valid number up to the parent;
+  // on blur an empty/invalid value falls back to the last good number.
+  const [text, setText] = useState<string>(String(value));
+  const focused = useRef(false);
+
+  // Sync when the value changes from outside (e.g. a popular-size preset),
+  // but never while the user is actively typing in this field.
+  useEffect(() => {
+    if (!focused.current) setText(String(value));
+  }, [value]);
+
   return (
     <label className="block">
       <span className="mb-1 block font-headline text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
@@ -1009,12 +1023,30 @@ function NumberField({
       </span>
       <input
         type="number"
-        min={0.5}
+        inputMode="decimal"
+        min={min}
         step={0.25}
-        value={value}
+        value={text}
+        onFocus={() => {
+          focused.current = true;
+        }}
         onChange={(e) => {
-          const v = Number(e.target.value);
-          onChange(Number.isFinite(v) && v > 0 ? v : 0);
+          const raw = e.target.value;
+          setText(raw);
+          const v = Number(raw);
+          if (raw !== "" && Number.isFinite(v) && v > 0) onChange(v);
+        }}
+        onBlur={() => {
+          focused.current = false;
+          const v = Number(text);
+          if (text.trim() === "" || !Number.isFinite(v) || v <= 0) {
+            const fallback =
+              Number.isFinite(value) && value > 0 ? value : min;
+            setText(String(fallback));
+            onChange(fallback);
+          } else {
+            setText(String(v));
+          }
         }}
         className="w-full rounded-lg border border-border-soft bg-white/[0.04] px-3 py-2 text-sm text-foreground outline-none ring-[#d9f000]/30 focus:ring-2"
       />

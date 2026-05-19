@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { gidToNumericId, shopifyAdminFetch } from "@/lib/shopify";
 import { requireCustomerOr401 } from "@/lib/customer-session";
-import { waitForInvoiceReady } from "@/lib/shopify-checkout";
+import { normalizeInvoiceUrl, waitForInvoiceReady } from "@/lib/shopify-checkout";
 
 type CheckoutRequest = {
   variantId: string;
@@ -186,10 +186,11 @@ export async function POST(req: NextRequest) {
     draft_order: { id: number; invoice_url: string };
   };
 
-  await waitForInvoiceReady(data.draft_order.invoice_url);
+  const invoiceUrl = normalizeInvoiceUrl(data.draft_order.invoice_url);
+  await waitForInvoiceReady(invoiceUrl);
 
   return NextResponse.json({
-    invoiceUrl: data.draft_order.invoice_url,
+    invoiceUrl,
     draftOrderId: data.draft_order.id,
     quantity: qty,
     perUnit: variantPrice,

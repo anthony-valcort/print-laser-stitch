@@ -11,6 +11,28 @@
  * Falls through silently if the timeout hits — better to redirect a possibly-
  * not-ready URL than to block forever.
  */
+/**
+ * Shopify generates the draft-order invoice URL on the store's *primary*
+ * domain. In this headless setup that domain (www.printlaserstitch.com)
+ * resolves to Vercel — which has no Shopify checkout/invoice pages, so the
+ * customer hits a 404. Rewrite the host to the myshopify domain, which
+ * Shopify always serves checkout & invoices on regardless of the storefront's
+ * primary domain.
+ */
+export function normalizeInvoiceUrl(invoiceUrl: string): string {
+  const storeDomain = process.env.SHOPIFY_STORE_DOMAIN;
+  if (!storeDomain) return invoiceUrl;
+  try {
+    const u = new URL(invoiceUrl);
+    if (u.host === storeDomain) return invoiceUrl;
+    u.protocol = "https:";
+    u.host = storeDomain;
+    return u.toString();
+  } catch {
+    return invoiceUrl;
+  }
+}
+
 export async function waitForInvoiceReady(invoiceUrl: string): Promise<void> {
   const startedAt = Date.now();
   const maxWaitMs = 5000;

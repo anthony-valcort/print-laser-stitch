@@ -12,21 +12,26 @@
  * not-ready URL than to block forever.
  */
 /**
- * Shopify generates the draft-order invoice URL on the store's *primary*
- * domain. In this headless setup that domain (www.printlaserstitch.com)
- * resolves to Vercel — which has no Shopify checkout/invoice pages, so the
- * customer hits a 404. Rewrite the host to the myshopify domain, which
- * Shopify always serves checkout & invoices on regardless of the storefront's
- * primary domain.
+ * Force the draft-order invoice/checkout onto the Shopify checkout domain.
+ *
+ * Architecture: `www.printlaserstitch.com` serves the headless storefront
+ * (Vercel), while the apex `printlaserstitch.com` points to Shopify and is
+ * the store's primary domain. Shopify-native accelerated wallets (Apple Pay,
+ * Shop Pay) are registered/verified against that primary domain, so checkout
+ * must run there — not on `www` (Vercel → 404) and not on `*.myshopify.com`
+ * (works for cards but Apple Pay/Shop Pay fail off the verified domain).
+ *
+ * Override with SHOPIFY_CHECKOUT_DOMAIN if the primary domain ever changes.
  */
+const CHECKOUT_DOMAIN =
+  process.env.SHOPIFY_CHECKOUT_DOMAIN || "printlaserstitch.com";
+
 export function normalizeInvoiceUrl(invoiceUrl: string): string {
-  const storeDomain = process.env.SHOPIFY_STORE_DOMAIN;
-  if (!storeDomain) return invoiceUrl;
   try {
     const u = new URL(invoiceUrl);
-    if (u.host === storeDomain) return invoiceUrl;
+    if (u.host === CHECKOUT_DOMAIN) return invoiceUrl;
     u.protocol = "https:";
-    u.host = storeDomain;
+    u.host = CHECKOUT_DOMAIN;
     return u.toString();
   } catch {
     return invoiceUrl;

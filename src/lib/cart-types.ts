@@ -68,6 +68,9 @@ export interface TShirtSizeLine {
   size: string;
   quantity: number;
   unitPrice: number;
+  /** Set when the product has a Shopify Color option and the customer mixes
+   * colors within one order (per-color size matrix). */
+  color?: string;
 }
 
 export interface TShirtCartItem extends CartItemBase {

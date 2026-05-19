@@ -299,15 +299,32 @@ export async function POST(req: NextRequest) {
         }
         const qty = Math.max(1, Math.floor(Number(sv.quantity) || 0));
         if (qty === 0) continue;
+        // When the customer mixed colors, the color is per line (not shared).
+        // The variant itself already encodes it, but an explicit property
+        // makes it obvious on Anthony's order screen.
+        const lineProperties = sv.color
+          ? [...sharedProperties, { name: "Color", value: String(sv.color) }]
+          : sharedProperties;
         lineItems.push({
           variant_id: Number(gidToNumericId(sv.variantId)),
           quantity: qty,
           price: lookup.price.toFixed(2),
-          properties: sharedProperties,
+          properties: lineProperties,
         });
         totalShirts += qty;
       }
-      noteParts.push(`${item.productTitle} × ${totalShirts}`);
+      const colorsUsed = Array.from(
+        new Set(
+          item.sizeVariants
+            .map((sv) => sv.color)
+            .filter((c): c is string => !!c),
+        ),
+      );
+      noteParts.push(
+        `${item.productTitle} × ${totalShirts}${
+          colorsUsed.length ? ` (${colorsUsed.join(", ")})` : ""
+        }`,
+      );
     } else if (item.kind === "product") {
       const lookup = variantPrices.get(item.variantId);
       if (!lookup) {

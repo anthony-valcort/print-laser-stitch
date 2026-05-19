@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useCart } from "@/lib/cart-store";
 
 export default function CartIcon() {
-  const { itemCount, isHydrated } = useCart();
-  const showBadge = isHydrated && itemCount > 0;
+  const { lineCount, isHydrated } = useCart();
+  const showBadge = isHydrated && lineCount > 0;
 
   return (
     <Link
       href="/cart"
-      aria-label={`Cart (${itemCount} items)`}
+      aria-label={`Cart (${lineCount} ${lineCount === 1 ? "product" : "products"})`}
       className="relative rounded-full border border-border-soft bg-white/5 p-2 text-foreground hover:bg-white/10"
     >
       <svg
@@ -29,7 +29,7 @@ export default function CartIcon() {
       </svg>
       {showBadge && (
         <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full accent-gradient px-1 text-[10px] font-bold text-black">
-          {itemCount}
+          {lineCount}
         </span>
       )}
     </Link>

@@ -17,7 +17,10 @@ type CartContextValue = {
   /** True once we've read from localStorage on the client; until then count is 0. */
   isHydrated: boolean;
   items: CartItem[];
+  /** Total pieces across all lines (sum of every quantity). */
   itemCount: number;
+  /** Number of distinct products/lines in the cart. */
+  lineCount: number;
   subtotal: number;
   addItem: (item: Omit<CartItem, "id" | "addedAt"> & Partial<Pick<CartItem, "id" | "addedAt">>) => void;
   removeItem: (id: string) => void;
@@ -143,6 +146,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [items],
   );
 
+  const lineCount = items.length;
+
   const subtotal = useMemo(
     () => items.reduce((sum, i) => sum + (i.totalPrice || 0), 0),
     [items],
@@ -153,13 +158,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       isHydrated,
       items,
       itemCount,
+      lineCount,
       subtotal,
       addItem,
       removeItem,
       updateQty,
       clearCart,
     }),
-    [isHydrated, items, itemCount, subtotal, addItem, removeItem, updateQty, clearCart],
+    [isHydrated, items, itemCount, lineCount, subtotal, addItem, removeItem, updateQty, clearCart],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

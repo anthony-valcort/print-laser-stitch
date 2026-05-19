@@ -6,7 +6,7 @@ import { useCart } from "@/lib/cart-store";
 import type { CartItem } from "@/lib/cart-types";
 
 export default function CartView() {
-  const { isHydrated, items, itemCount, subtotal, removeItem, updateQty, clearCart } =
+  const { isHydrated, items, itemCount, lineCount, subtotal, removeItem, updateQty, clearCart } =
     useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,8 +99,8 @@ export default function CartView() {
             Your items
           </h1>
           <p className="mt-1 text-sm text-foreground-muted">
-            {itemCount} {itemCount === 1 ? "item" : "items"} · {items.length}{" "}
-            {items.length === 1 ? "line" : "lines"}
+            {lineCount} {lineCount === 1 ? "product" : "products"} ·{" "}
+            {itemCount} {itemCount === 1 ? "piece" : "pieces"} total
           </p>
         </div>
         <button

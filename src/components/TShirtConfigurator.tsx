@@ -68,21 +68,30 @@ export default function TShirtConfigurator({
   // quantity matrix instead of a single picker.
   const sizeOption = product.options.find((o) => isSizeOption(o.name));
   const nonSizeOptions = product.options.filter((o) => !isSizeOption(o.name));
+  // When Shopify exposes Color as a real variant option, the customer can mix
+  // colors in one order (different qty per color per size). Color is then
+  // handled by the per-color matrix; the remaining options (Fabric, Sleeve…)
+  // stay single-pick.
+  const colorOption =
+    nonSizeOptions.find((o) => isColorOption(o.name)) ?? null;
+  const multiColor = !!colorOption;
+  const pickerOptions = nonSizeOptions.filter((o) => !isColorOption(o.name));
 
   const firstAvailable =
     product.variants.find((v) => v.availableForSale) ?? product.variants[0];
 
-  // Non-size selectedOptions (Fabric, Sleeve Type, etc.).
+  // Single-pick non-size options (Fabric, Sleeve Type, …). Color is excluded
+  // here when it's a multi-color matrix.
   const initialNonSizeOpts: Record<string, string> = useMemo(() => {
     const init: Record<string, string> = {};
-    for (const opt of nonSizeOptions) {
+    for (const opt of pickerOptions) {
       const fromVariant = firstAvailable?.selectedOptions.find(
         (o) => o.name === opt.name,
       )?.value;
       init[opt.name] = fromVariant ?? opt.values[0];
     }
     return init;
-  }, [nonSizeOptions, firstAvailable]);
+  }, [pickerOptions, firstAvailable]);
 
   const [selectedOptions, setSelectedOptions] = useState<
     Record<string, string>
@@ -108,8 +117,44 @@ export default function TShirtConfigurator({
     setSizeQuantities((prev) => ({ ...prev, [size]: Math.max(0, n) }));
   };
 
-  // If Shopify already exposes Color as an option, hide the frontend picker.
-  const hasShopifyColor = product.options.some((o) => isColorOption(o.name));
+  // Multi-color matrix: color → (size → qty). `openColors` controls which
+  // color blocks are visible (customer adds the colors they want).
+  const [openColors, setOpenColors] = useState<string[]>([]);
+  const [colorSizeQty, setColorSizeQty] = useState<
+    Record<string, Record<string, number>>
+  >({});
+
+  const addColor = (color: string) => {
+    setOpenColors((prev) => (prev.includes(color) ? prev : [...prev, color]));
+    setColorSizeQty((prev) =>
+      prev[color]
+        ? prev
+        : {
+            ...prev,
+            [color]: Object.fromEntries(
+              (sizeOption?.values ?? []).map((s) => [s, 0]),
+            ),
+          },
+    );
+  };
+  const removeColor = (color: string) => {
+    setOpenColors((prev) => prev.filter((c) => c !== color));
+    setColorSizeQty((prev) => {
+      const next = { ...prev };
+      delete next[color];
+      return next;
+    });
+  };
+  const setColorSize = (color: string, size: string, n: number) => {
+    setColorSizeQty((prev) => ({
+      ...prev,
+      [color]: { ...(prev[color] ?? {}), [size]: Math.max(0, n) },
+    }));
+  };
+
+  // If Shopify already exposes Color as an option, the frontend fallback
+  // color picker is hidden and the per-color matrix takes over.
+  const hasShopifyColor = multiColor;
 
   const [printLocation, setPrintLocation] = useState<PrintLocationKey>("front");
   const [instructions, setInstructions] = useState<string>("");
@@ -123,20 +168,34 @@ export default function TShirtConfigurator({
   const [galleryIdx, setGalleryIdx] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
 
-  // Find variant for a specific size, given the current non-size selection.
-  function variantForSize(sizeName: string) {
+  // Find the variant for a given (color, size) and the current single-pick
+  // selections (Fabric, …). `color` is null for single-color products.
+  function findVariant(color: string | null, sizeName: string) {
     return product.variants.find((v) =>
       v.selectedOptions.every((opt) => {
         if (sizeOption && opt.name === sizeOption.name) {
           return opt.value === sizeName;
+        }
+        if (colorOption && opt.name === colorOption.name) {
+          return color != null && opt.value === color;
         }
         return selectedOptions[opt.name] === opt.value;
       }),
     );
   }
 
-  // Reference variant (non-size match) — used for gallery image, per-shirt
-  // price display, and reacting to fabric/sleeve changes.
+  // Single-color helper kept for the non-multi-color UI/summary paths.
+  function variantForSize(sizeName: string) {
+    return findVariant(null, sizeName);
+  }
+
+  // In multi-color mode the gallery/price reference follows the first opened
+  // color (or the first color value); otherwise it follows the single-pick
+  // selection only.
+  const referenceColor = multiColor
+    ? openColors[0] ?? colorOption?.values[0] ?? null
+    : null;
+
   const referenceVariant = useMemo(() => {
     return (
       product.variants.find(
@@ -144,22 +203,48 @@ export default function TShirtConfigurator({
           v.availableForSale &&
           v.selectedOptions.every((opt) => {
             if (sizeOption && opt.name === sizeOption.name) return true;
+            if (colorOption && opt.name === colorOption.name) {
+              return referenceColor == null || opt.value === referenceColor;
+            }
             return selectedOptions[opt.name] === opt.value;
           }),
       ) ?? product.variants[0]
     );
-  }, [product.variants, sizeOption, selectedOptions]);
+  }, [product.variants, sizeOption, colorOption, referenceColor, selectedOptions]);
 
   const perShirtPrice = referenceVariant ? Number(referenceVariant.price) : 0;
 
-  // Total quantity across all sizes.
-  const totalQuantity = useMemo(
-    () => Object.values(sizeQuantities).reduce((a, b) => a + b, 0),
-    [sizeQuantities],
-  );
+  // Flattened (color, size, qty, variant) lines for the multi-color matrix.
+  const colorLines = useMemo(() => {
+    if (!multiColor) return [];
+    const lines: Array<{
+      color: string;
+      size: string;
+      qty: number;
+      price: number;
+    }> = [];
+    for (const [color, sizes] of Object.entries(colorSizeQty)) {
+      for (const [size, qty] of Object.entries(sizes)) {
+        if (qty <= 0) continue;
+        const v = findVariant(color, size);
+        lines.push({ color, size, qty, price: v ? Number(v.price) : 0 });
+      }
+    }
+    return lines;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [multiColor, colorSizeQty, selectedOptions, product.variants]);
 
-  // Total price = sum of (qty × variant_price) per size with qty > 0.
+  // Total quantity — across all sizes (single) or all color×size (multi).
+  const totalQuantity = useMemo(() => {
+    if (multiColor) return colorLines.reduce((a, l) => a + l.qty, 0);
+    return Object.values(sizeQuantities).reduce((a, b) => a + b, 0);
+  }, [multiColor, colorLines, sizeQuantities]);
+
+  // Total price = sum of (qty × variant_price) for every line with qty > 0.
   const totalPrice = useMemo(() => {
+    if (multiColor) {
+      return colorLines.reduce((a, l) => a + l.price * l.qty, 0);
+    }
     let total = 0;
     for (const [size, qty] of Object.entries(sizeQuantities)) {
       if (qty <= 0) continue;
@@ -168,7 +253,7 @@ export default function TShirtConfigurator({
     }
     return total;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sizeQuantities, selectedOptions, product.variants]);
+  }, [multiColor, colorLines, sizeQuantities, selectedOptions, product.variants]);
 
   // Build gallery: reference variant image first, then product images, dedup'd.
   const galleryImages = useMemo<ShopifyImage[]>(() => {
@@ -224,25 +309,47 @@ export default function TShirtConfigurator({
   function handleAddToCart() {
     if (!canCheckout) return;
 
-    // Build per-size lines from the qty matrix, with the variant price snapshot
+    // Build line items from the qty matrix, with the variant price snapshot
     // we'll display in cart. The server re-fetches live prices at checkout —
     // these client values are display-only.
     const sizeVariants: TShirtSizeLine[] = [];
-    for (const [size, qty] of Object.entries(sizeQuantities)) {
-      if (qty <= 0) continue;
-      const v = variantForSize(size);
-      if (!v) {
-        setToast(
-          `No variant found for ${size} with the selected fabric/sleeve combination.`,
-        );
-        return;
+    if (multiColor) {
+      for (const [color, sizes] of Object.entries(colorSizeQty)) {
+        for (const [size, qty] of Object.entries(sizes)) {
+          if (qty <= 0) continue;
+          const v = findVariant(color, size);
+          if (!v) {
+            setToast(
+              `No variant found for ${color} / ${size} with the selected options.`,
+            );
+            return;
+          }
+          sizeVariants.push({
+            variantId: v.id,
+            size,
+            quantity: qty,
+            unitPrice: Number(v.price),
+            color,
+          });
+        }
       }
-      sizeVariants.push({
-        variantId: v.id,
-        size,
-        quantity: qty,
-        unitPrice: Number(v.price),
-      });
+    } else {
+      for (const [size, qty] of Object.entries(sizeQuantities)) {
+        if (qty <= 0) continue;
+        const v = variantForSize(size);
+        if (!v) {
+          setToast(
+            `No variant found for ${size} with the selected fabric/sleeve combination.`,
+          );
+          return;
+        }
+        sizeVariants.push({
+          variantId: v.id,
+          size,
+          quantity: qty,
+          unitPrice: Number(v.price),
+        });
+      }
     }
     if (sizeVariants.length === 0) {
       setToast("Please enter quantities for at least one size.");
@@ -252,14 +359,28 @@ export default function TShirtConfigurator({
     setIsCheckingOut(true);
     setToast(null);
 
-    const sizeBreakdown = sizeVariants
-      .map((sv) => `${sv.quantity} × ${sv.size}`)
-      .join(", ");
     const optsSummary = Object.values(selectedOptions).join(" · ");
     const subtitleParts: string[] = [];
     if (optsSummary) subtitleParts.push(optsSummary);
-    if (!hasShopifyColor && shirtColor) subtitleParts.push(shirtColor);
-    subtitleParts.push(sizeBreakdown);
+    if (multiColor) {
+      // Group as "Black 2S/3L · Red 4L" so the cart line stays compact.
+      const byColor = new Map<string, string[]>();
+      for (const sv of sizeVariants) {
+        const arr = byColor.get(sv.color!) ?? [];
+        arr.push(`${sv.quantity}${sv.size}`);
+        byColor.set(sv.color!, arr);
+      }
+      subtitleParts.push(
+        Array.from(byColor.entries())
+          .map(([c, parts]) => `${c} ${parts.join("/")}`)
+          .join(" · "),
+      );
+    } else {
+      if (!hasShopifyColor && shirtColor) subtitleParts.push(shirtColor);
+      subtitleParts.push(
+        sizeVariants.map((sv) => `${sv.quantity} × ${sv.size}`).join(", "),
+      );
+    }
 
     const cartItem: Omit<TShirtCartItem, "id" | "addedAt"> = {
       kind: "tshirt",
@@ -270,7 +391,15 @@ export default function TShirtConfigurator({
         product.featuredImage?.url ??
         product.images[0]?.url ??
         "👕",
-      unitLabel: `${totalQuantity} pcs · ${sizeVariants.length} ${sizeVariants.length === 1 ? "size" : "sizes"}`,
+      unitLabel: multiColor
+        ? `${totalQuantity} pcs · ${
+            new Set(sizeVariants.map((sv) => sv.color)).size
+          } ${
+            new Set(sizeVariants.map((sv) => sv.color)).size === 1
+              ? "color"
+              : "colors"
+          }`
+        : `${totalQuantity} pcs · ${sizeVariants.length} ${sizeVariants.length === 1 ? "size" : "sizes"}`,
       totalPrice,
       quantity: totalQuantity,
       productTitle: product.title,
@@ -360,8 +489,9 @@ export default function TShirtConfigurator({
               />
             )}
 
-            {/* Non-size product options (Fabric, Sleeve Type, Color, …) */}
-            {nonSizeOptions.map((opt) => {
+            {/* Single-pick non-size options (Fabric, Sleeve Type, …). Color,
+                when present, is handled by the per-color matrix below. */}
+            {pickerOptions.map((opt) => {
               const value = selectedOptions[opt.name];
               if (isColorOption(opt.name)) {
                 return (
@@ -412,8 +542,8 @@ export default function TShirtConfigurator({
               );
             })}
 
-            {/* Size matrix — qty per size, total ≥ minQuantity */}
-            {sizeOption && (
+            {/* Single-color size matrix — qty per size, total ≥ minQuantity */}
+            {sizeOption && !multiColor && (
               <Section
                 title={`${sizeOption.name} & quantity`}
                 value={`${totalQuantity} / min ${minQuantity}`}
@@ -456,6 +586,129 @@ export default function TShirtConfigurator({
                     );
                   })}
                 </div>
+                {totalQuantity > 0 && totalQuantity < minQuantity && (
+                  <p className="mt-2 text-[11px] text-amber-300">
+                    Add {minQuantity - totalQuantity} more to reach the
+                    minimum order of {minQuantity}.
+                  </p>
+                )}
+              </Section>
+            )}
+
+            {/* Multi-color matrix — pick colors, set qty per size for each.
+                Total across every color must be ≥ minQuantity. */}
+            {sizeOption && multiColor && colorOption && (
+              <Section
+                title="Colors & quantity"
+                value={`${totalQuantity} / min ${minQuantity}`}
+                icon={
+                  totalQuantity >= minQuantity ? (
+                    <span className="text-emerald-400">✓</span>
+                  ) : (
+                    <span className="text-amber-400">!</span>
+                  )
+                }
+              >
+                <p className="mb-2 text-[11px] text-foreground-muted">
+                  Add the colors you want — each opens its own size row. You
+                  can mix different colors and sizes in one order.
+                </p>
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {colorOption.values.map((c) => {
+                    const open = openColors.includes(c);
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => (open ? removeColor(c) : addColor(c))}
+                        className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                          open
+                            ? "border-highlight bg-highlight-soft"
+                            : "border-border-soft bg-white/3 hover:bg-white/6"
+                        }`}
+                      >
+                        <span
+                          className="h-3.5 w-3.5 rounded-full border border-white/20"
+                          style={{ background: colorHex(c) ?? "#888" }}
+                        />
+                        {c}
+                        <span className="text-foreground-muted">
+                          {open ? "✕" : "+"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {openColors.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-border-soft bg-white/3 px-4 py-6 text-center text-xs text-foreground-muted">
+                    Add one or more colors above, then set the quantity per
+                    size for each.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {openColors.map((color) => {
+                      const colorTotal = Object.values(
+                        colorSizeQty[color] ?? {},
+                      ).reduce((a, b) => a + b, 0);
+                      return (
+                        <div
+                          key={color}
+                          className="overflow-hidden rounded-xl border border-border-soft bg-white/3"
+                        >
+                          <div className="flex items-center justify-between gap-3 border-b border-border-soft px-4 py-2.5">
+                            <div className="flex items-center gap-2">
+                              <span
+                                className="h-4 w-4 rounded-full border border-white/20"
+                                style={{ background: colorHex(color) ?? "#888" }}
+                              />
+                              <span className="text-sm font-bold">{color}</span>
+                              {colorTotal > 0 && (
+                                <span className="text-[11px] text-foreground-muted">
+                                  {colorTotal} pcs
+                                </span>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeColor(color)}
+                              className="text-[11px] font-medium text-foreground-muted hover:text-red-300"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 px-4 py-3 sm:grid-cols-3">
+                            {sizeOption.values.map((sz) => {
+                              const v = findVariant(color, sz);
+                              const soldOut = v && !v.availableForSale;
+                              const qty = colorSizeQty[color]?.[sz] ?? 0;
+                              return (
+                                <div
+                                  key={sz}
+                                  className={`flex items-center justify-between gap-2 ${
+                                    soldOut ? "opacity-50" : ""
+                                  }`}
+                                >
+                                  <span className="text-sm font-semibold text-foreground">
+                                    {sz}
+                                  </span>
+                                  <SizeQtyStepper
+                                    value={qty}
+                                    disabled={!!soldOut}
+                                    onChange={(n) =>
+                                      setColorSize(color, sz, n)
+                                    }
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
                 {totalQuantity > 0 && totalQuantity < minQuantity && (
                   <p className="mt-2 text-[11px] text-amber-300">
                     Add {minQuantity - totalQuantity} more to reach the
@@ -583,25 +836,39 @@ export default function TShirtConfigurator({
             <div className="overflow-hidden rounded-2xl total-gradient p-5">
               {totalQuantity > 0 && (
                 <div className="mb-3 space-y-1 border-b border-white/15 pb-3 text-xs font-medium text-white/85">
-                  {Object.entries(sizeQuantities)
-                    .filter(([, q]) => q > 0)
-                    .map(([size, qty]) => {
-                      const v = variantForSize(size);
-                      const lineTotal = v ? Number(v.price) * qty : 0;
-                      return (
+                  {multiColor
+                    ? colorLines.map((l) => (
                         <div
-                          key={size}
+                          key={`${l.color}-${l.size}`}
                           className="flex items-baseline justify-between gap-2"
                         >
                           <span>
-                            {qty} × {size}
+                            {l.qty} × {l.color} {l.size}
                           </span>
                           <span className="font-semibold">
-                            ${lineTotal.toFixed(2)}
+                            ${(l.price * l.qty).toFixed(2)}
                           </span>
                         </div>
-                      );
-                    })}
+                      ))
+                    : Object.entries(sizeQuantities)
+                        .filter(([, q]) => q > 0)
+                        .map(([size, qty]) => {
+                          const v = variantForSize(size);
+                          const lineTotal = v ? Number(v.price) * qty : 0;
+                          return (
+                            <div
+                              key={size}
+                              className="flex items-baseline justify-between gap-2"
+                            >
+                              <span>
+                                {qty} × {size}
+                              </span>
+                              <span className="font-semibold">
+                                ${lineTotal.toFixed(2)}
+                              </span>
+                            </div>
+                          );
+                        })}
                 </div>
               )}
               <div className="flex items-baseline justify-between gap-2">

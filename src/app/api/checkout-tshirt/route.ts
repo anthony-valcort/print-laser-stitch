@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { gidToNumericId, shopifyAdminFetch } from "@/lib/shopify";
+import { detectMinQuantityFromTitle } from "@/lib/shopify-products";
 import { requireCustomerOr401 } from "@/lib/customer-session";
 import { waitForInvoiceReady } from "@/lib/shopify-checkout";
 import {
@@ -110,12 +111,9 @@ export async function POST(req: NextRequest) {
     (a, b) => a + Number(b.quantity),
     0,
   );
-  if (totalQty < TSHIRT_MIN_QUANTITY) {
-    return NextResponse.json(
-      { error: `Minimum order quantity is ${TSHIRT_MIN_QUANTITY}` },
-      { status: 400 },
-    );
-  }
+  // The per-product minimum is enforced after the variant lookup below,
+  // once we know the real Shopify product title (the source of truth for
+  // the min — never trust a client-sent value).
 
   // Print location only required when explicitly provided (T-shirt). For
   // embroidered apparel (polo) we skip the location entirely.
@@ -193,6 +191,18 @@ export async function POST(req: NextRequest) {
           err instanceof Error ? err.message : "Variant lookup on Shopify failed",
       },
       { status: 502 },
+    );
+  }
+
+  // Enforce the per-product minimum. Anthony encodes it in the product title
+  // (e.g. "… – 6 Piece Minimum"); if the title has none, fall back to the
+  // T-shirt default of 12. productTitle came from Shopify above, so it can't
+  // be spoofed by the client.
+  const minQty = detectMinQuantityFromTitle(productTitle) ?? TSHIRT_MIN_QUANTITY;
+  if (totalQty < minQty) {
+    return NextResponse.json(
+      { error: `Minimum order quantity is ${minQty}` },
+      { status: 400 },
     );
   }
 

@@ -103,8 +103,12 @@ export function detectMinQuantityFromTitle(title: string): number | null {
     const n = Number(a[1]);
     if (Number.isFinite(n) && n > 1) return n;
   }
-  // "12 Min", "12 Minimum", "12 Minimum purchase"
-  const b = title.match(/\b(\d+)\s+min(?:imum)?(?:\s+purchase)?/i);
+  // "12 Min", "12 Minimum", "12 Minimum purchase",
+  // "6 Piece Minimum", "6 pcs minimum", "6-unit minimum" — i.e. a number
+  // optionally followed by a unit word (piece/pcs/unit/pack/qty) then "min".
+  const b = title.match(
+    /\b(\d+)[-\s]+(?:pcs?|pieces?|units?|packs?|qty)?[-\s]*min(?:imum)?(?:\s+purchase)?/i,
+  );
   if (b) {
     const n = Number(b[1]);
     if (Number.isFinite(n) && n > 1) return n;

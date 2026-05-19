@@ -21,11 +21,13 @@ export default function AuthForm({ mode }: { mode: Mode }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+    setNeedsPasswordSetup(false);
     setSubmitting(true);
 
     try {
@@ -58,11 +60,13 @@ export default function AuthForm({ mode }: { mode: Mode }) {
         ok?: boolean;
         error?: string;
         requiresManualLogin?: boolean;
+        mayNeedPasswordSetup?: boolean;
         message?: string;
       };
 
       if (!resp.ok || !data.ok) {
         setError(data.error ?? "Something went wrong");
+        if (data.mayNeedPasswordSetup) setNeedsPasswordSetup(true);
         return;
       }
 
@@ -247,7 +251,15 @@ export default function AuthForm({ mode }: { mode: Mode }) {
 
         {error && (
           <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-            {error}
+            <p>{error}</p>
+            {needsPasswordSetup && (
+              <Link
+                href={`/forgot-password${redirect !== "/account" ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-md bg-red-500/20 px-3 py-1.5 text-xs font-semibold text-red-100 hover:bg-red-500/30"
+              >
+                Set / reset my password →
+              </Link>
+            )}
           </div>
         )}
         {success && (

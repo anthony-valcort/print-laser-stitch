@@ -43,10 +43,16 @@ export async function POST(req: NextRequest) {
 
     const errors = data.customerAccessTokenCreate.customerUserErrors;
     if (errors.length || !data.customerAccessTokenCreate.customerAccessToken) {
+      // Shopify returns the same generic error for a wrong password AND for
+      // accounts that exist but have no password yet — i.e. customers who
+      // ordered as guests, were imported, or came from the old site and never
+      // activated an account. Those can't password-log-in until they set one.
+      // Surface an actionable message + a flag so the form shows the reset CTA.
       return NextResponse.json(
         {
           error:
-            errors[0]?.message ?? "Invalid email or password",
+            "We couldn't sign you in. If you've ordered with us before but never created a password (e.g. you checked out as a guest, or had an account on the old site), use “Forgot password?” to set one — then log in.",
+          mayNeedPasswordSetup: true,
         },
         { status: 401 },
       );

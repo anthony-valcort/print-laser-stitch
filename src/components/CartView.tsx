@@ -5,11 +5,18 @@ import { useState } from "react";
 import { useCart } from "@/lib/cart-store";
 import type { CartItem } from "@/lib/cart-types";
 
-export default function CartView() {
+export default function CartView({
+  customerEmail = null,
+}: {
+  customerEmail?: string | null;
+}) {
   const { isHydrated, items, itemCount, lineCount, subtotal, removeItem, updateQty, clearCart } =
     useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Guest checkout: when there's no logged-in customer we ask for an email
+  // here. If the user is logged in, this stays in sync with their account.
+  const [guestEmail, setGuestEmail] = useState<string>(customerEmail ?? "");
 
   // Avoid SSR/CSR mismatch — show empty until hydrated.
   if (!isHydrated) {
@@ -55,19 +62,29 @@ export default function CartView() {
   }
 
   async function handleCheckout() {
-    setIsCheckingOut(true);
     setError(null);
+
+    // For guests we need a usable email — Shopify draft orders are keyed by it.
+    if (!customerEmail) {
+      const email = guestEmail.trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setError("Please enter a valid email address to continue.");
+        return;
+      }
+    }
+
+    setIsCheckingOut(true);
     try {
       const resp = await fetch("/api/checkout-cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({
+          items,
+          // Always send the email — for logged-in customers the server uses
+          // their account email; for guests it uses what we send here.
+          email: customerEmail ?? guestEmail.trim(),
+        }),
       });
-
-      if (resp.status === 401) {
-        window.location.href = `/login?redirect=${encodeURIComponent("/cart")}`;
-        return;
-      }
 
       const data = (await resp.json()) as {
         invoiceUrl?: string;
@@ -156,6 +173,46 @@ export default function CartView() {
                   ${subtotal.toFixed(2)}
                 </span>
               </div>
+            </div>
+
+            {/* Guest checkout: ask for an email up-front. Logged-in
+                customers see their account email here (read-only). */}
+            <div className="mt-5">
+              <label className="block text-xs font-medium text-foreground/80">
+                Email for your order
+                <span className="ml-0.5 text-red-400">*</span>
+              </label>
+              {customerEmail ? (
+                <div className="mt-1.5 flex items-center justify-between gap-3 rounded-xl border border-border-soft bg-white/4 px-3 py-2 text-sm">
+                  <span className="truncate">{customerEmail}</span>
+                  <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
+                    Logged in
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <input
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={guestEmail}
+                    onChange={(e) => setGuestEmail(e.target.value)}
+                    className="mt-1.5 w-full rounded-xl border border-border-soft bg-white/4 px-3 py-2 text-sm outline-none focus:border-[#d9f000]/60"
+                    suppressHydrationWarning
+                  />
+                  <p className="mt-1.5 text-[11px] text-foreground-muted">
+                    Have an account?{" "}
+                    <Link
+                      href={`/login?redirect=${encodeURIComponent("/cart")}`}
+                      className="font-semibold text-accent hover:underline"
+                    >
+                      Log in
+                    </Link>{" "}
+                    — optional, you can also check out as a guest.
+                  </p>
+                </>
+              )}
             </div>
 
             {error && (

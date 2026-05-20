@@ -16,7 +16,7 @@
 
 import { type NextRequest, NextResponse } from "next/server";
 import { gidToNumericId, shopifyAdminFetch } from "@/lib/shopify";
-import { requireCustomerOr401 } from "@/lib/customer-session";
+import { getCurrentCustomer } from "@/lib/customer-session";
 import { normalizeInvoiceUrl, waitForInvoiceReady } from "@/lib/shopify-checkout";
 import {
   QUANTITY_OPTIONS,
@@ -93,19 +93,32 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const customerOr401 = await requireCustomerOr401();
-  if (customerOr401 instanceof NextResponse) return customerOr401;
-  const customer = customerOr401;
+  // Login is optional — guests can check out by providing an email in the body.
+  const customer = await getCurrentCustomer();
 
-  let body: { items: CartItem[] };
+  let body: { items: CartItem[]; email?: string };
   try {
-    body = (await req.json()) as { items: CartItem[] };
+    body = (await req.json()) as { items: CartItem[]; email?: string };
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
   if (!Array.isArray(body.items) || body.items.length === 0) {
     return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
+  }
+
+  // Determine the email used for the draft order. Logged-in customer's
+  // account email always wins; otherwise we require a valid one from the body.
+  const guestEmail = (body.email ?? "").trim().toLowerCase();
+  const orderEmail = customer?.email ?? guestEmail;
+  if (
+    !customer &&
+    (!guestEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail))
+  ) {
+    return NextResponse.json(
+      { error: "A valid email is required to check out." },
+      { status: 400 },
+    );
   }
 
   // Pre-collect every variant GID we need to look up so we batch one Shopify
@@ -173,6 +186,15 @@ export async function POST(req: NextRequest) {
       }
 
       const tierQty = snapToTier(item.tierQty);
+      // Actual number of stickers in the order — comes from the configurator.
+      // In tier mode this equals tierQty; in custom mode it's whatever the
+      // customer typed. Floor it and enforce the minimum on the server too —
+      // never trust the client value.
+      const VINYL_MIN_QTY = 25;
+      const orderQty = Math.max(
+        VINYL_MIN_QTY,
+        Math.floor(Number(item.quantity) || 0),
+      );
       const price = calcStickerPrice({
         size: item.size as StickerSize,
         qty: tierQty,
@@ -246,12 +268,12 @@ export async function POST(req: NextRequest) {
       lineItems.push({
         title: `Custom Vinyl Stickers · ${sizeLabel} · ${item.shape}`,
         price: price.perUnit.toFixed(2),
-        quantity: tierQty,
+        quantity: orderQty,
         requires_shipping: true,
         taxable: true,
         properties,
       });
-      noteParts.push(`Stickers ${sizeLabel} × ${tierQty}`);
+      noteParts.push(`Stickers ${sizeLabel} × ${orderQty}`);
     } else if (item.kind === "tshirt") {
       if (!Array.isArray(item.sizeVariants) || item.sizeVariants.length === 0) {
         return NextResponse.json(
@@ -556,7 +578,7 @@ export async function POST(req: NextRequest) {
 
   const draftOrder = {
     draft_order: {
-      email: customer.email,
+      email: orderEmail,
       line_items: lineItems,
       tags: "cart-checkout,custom-configurator",
       note: `Cart checkout · ${noteParts.join(" + ")}`,

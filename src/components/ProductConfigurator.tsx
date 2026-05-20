@@ -52,6 +52,10 @@ const SIZE_ICON: Record<SizeKey, string> = {
 
 const CUSTOM_SIZE_ICON = "/custom_size-removebg-preview.png";
 
+/** Minimum quantity the customer can order when picking "Custom" — tiers
+ * start at 50, but Anthony lets people order down to 25 with custom qty. */
+const MIN_CUSTOM_QTY = 25;
+
 const SIZE_HOVER_TEXT: Record<SizeKey, string> = {
   "2x2": "About the size of an Oreo",
   "3x3": "About the size of a Post-It",
@@ -113,6 +117,15 @@ export default function ProductConfigurator() {
       );
       return closest;
     }
+    return quantity;
+  }, [quantity, customQty]);
+
+  // The *actual* number of stickers the customer is ordering. In tier mode
+  // that's the chosen tier; in custom mode it's whatever number they typed,
+  // clamped to the minimum. `effectiveQty` above stays as the snapped tier —
+  // it's only used as the pricing reference (per-unit at nearest tier rate).
+  const orderQty = useMemo(() => {
+    if (quantity === "custom") return Math.max(MIN_CUSTOM_QTY, customQty);
     return quantity;
   }, [quantity, customQty]);
 
@@ -298,8 +311,8 @@ export default function ProductConfigurator() {
       subtitle: `${sizeLabel} · ${shapeLabel} · ${materialLabel}`,
       thumbnail: "/logo.avif",
       unitLabel: `$${price.perUnit.toFixed(2)} / sticker`,
-      totalPrice: price.total,
-      quantity: tierQty,
+      totalPrice: Math.round(price.perUnit * orderQty * 100) / 100,
+      quantity: orderQty,
       shape,
       material,
       size,
@@ -730,19 +743,24 @@ export default function ProductConfigurator() {
                 >
                   <span className="font-medium">Custom</span>
                   {quantity === "custom" && (
-                    <input
-                      type="number"
-                      min={1}
-                      value={customQty}
-                      onChange={(e) => {
-                        const v = Number(e.target.value);
-                        setCustomQty(Number.isFinite(v) && v > 0 ? v : 1);
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      className="w-20 rounded-md border border-border-soft bg-white/5 px-2 py-1 text-right text-xs outline-none"
-                    />
+                    <span className="text-xs font-semibold text-foreground-muted tabular-nums">
+                      {orderQty.toLocaleString()} pcs · $
+                      {(price.perUnit * orderQty).toFixed(2)}
+                    </span>
                   )}
                 </button>
+                {quantity === "custom" && (
+                  <div className="px-1 pt-1">
+                    <NumberField
+                      label={`Custom quantity (min ${MIN_CUSTOM_QTY})`}
+                      value={customQty}
+                      onChange={setCustomQty}
+                      min={MIN_CUSTOM_QTY}
+                      step={1}
+                      integer
+                    />
+                  </div>
+                )}
 
                 {tierPrices.map(({ qty, total, savingsPercent }) => {
                   const active = quantity === qty;
@@ -780,7 +798,7 @@ export default function ProductConfigurator() {
                     Total
                   </span>
                   <span className="font-display text-3xl font-black text-white tabular-nums">
-                    ${price.total.toFixed(2)}
+                    ${(price.perUnit * orderQty).toFixed(2)}
                   </span>
                 </div>
                 <div className="mt-1 text-right text-xs font-medium text-white/80">
@@ -998,11 +1016,15 @@ function NumberField({
   value,
   onChange,
   min = 0.5,
+  step = 0.25,
+  integer = false,
 }: {
   label: string;
   value: number;
   onChange: (v: number) => void;
   min?: number;
+  step?: number;
+  integer?: boolean;
 }) {
   // Keep the raw text locally so the user can fully clear the field (empty
   // string) and type freely. We only push a valid number up to the parent;
@@ -1023,9 +1045,9 @@ function NumberField({
       </span>
       <input
         type="number"
-        inputMode="decimal"
+        inputMode={integer ? "numeric" : "decimal"}
         min={min}
-        step={0.25}
+        step={step}
         value={text}
         onFocus={() => {
           focused.current = true;
@@ -1034,18 +1056,24 @@ function NumberField({
           const raw = e.target.value;
           setText(raw);
           const v = Number(raw);
-          if (raw !== "" && Number.isFinite(v) && v > 0) onChange(v);
+          if (raw !== "" && Number.isFinite(v) && v > 0) {
+            onChange(integer ? Math.floor(v) : v);
+          }
         }}
         onBlur={() => {
           focused.current = false;
-          const v = Number(text);
-          if (text.trim() === "" || !Number.isFinite(v) || v <= 0) {
+          const raw = Number(text);
+          const v = integer ? Math.floor(raw) : raw;
+          if (text.trim() === "" || !Number.isFinite(v) || v < min) {
+            // Empty or below the minimum on blur — snap back to the last
+            // valid value (or the minimum if there isn't one yet).
             const fallback =
-              Number.isFinite(value) && value > 0 ? value : min;
+              Number.isFinite(value) && value >= min ? value : min;
             setText(String(fallback));
             onChange(fallback);
           } else {
             setText(String(v));
+            if (v !== raw) onChange(v);
           }
         }}
         className="w-full rounded-lg border border-border-soft bg-white/[0.04] px-3 py-2 text-sm text-foreground outline-none ring-[#d9f000]/30 focus:ring-2"

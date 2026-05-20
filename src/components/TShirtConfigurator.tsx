@@ -74,7 +74,15 @@ export default function TShirtConfigurator({
   // stay single-pick.
   const colorOption =
     nonSizeOptions.find((o) => isColorOption(o.name)) ?? null;
-  const multiColor = !!colorOption;
+  // Customer's color choices: Shopify Color variant values when the product
+  // exposes them, otherwise the frontend fallback list. Any sized product
+  // gets the multi-color matrix — when color isn't a real Shopify variant
+  // option (e.g. our cotton t-shirt has only Fabric/Sleeve/Size), the chosen
+  // color is attached as a per-line order property on each line instead.
+  const colorChoices: readonly string[] = colorOption
+    ? (colorOption.values as readonly string[])
+    : fallbackColors;
+  const multiColor = !!sizeOption && colorChoices.length > 0;
   const pickerOptions = nonSizeOptions.filter((o) => !isColorOption(o.name));
 
   const firstAvailable =
@@ -154,7 +162,10 @@ export default function TShirtConfigurator({
 
   // If Shopify already exposes Color as an option, the frontend fallback
   // color picker is hidden and the per-color matrix takes over.
-  const hasShopifyColor = multiColor;
+  // Kept as the *true* "Shopify exposes Color as a variant?" signal — the
+  // multi-color matrix path doesn't depend on it any more, but legacy single-
+  // mode branches still read it.
+  const hasShopifyColor = !!colorOption;
 
   const [printLocation, setPrintLocation] = useState<PrintLocationKey>("front");
   const [instructions, setInstructions] = useState<string>("");
@@ -193,7 +204,7 @@ export default function TShirtConfigurator({
   // color (or the first color value); otherwise it follows the single-pick
   // selection only.
   const referenceColor = multiColor
-    ? openColors[0] ?? colorOption?.values[0] ?? null
+    ? openColors[0] ?? colorChoices[0] ?? null
     : null;
 
   const referenceVariant = useMemo(() => {
@@ -597,7 +608,7 @@ export default function TShirtConfigurator({
 
             {/* Multi-color matrix — pick colors, set qty per size for each.
                 Total across every color must be ≥ minQuantity. */}
-            {sizeOption && multiColor && colorOption && (
+            {sizeOption && multiColor && (
               <Section
                 title="Colors & quantity"
                 value={`${totalQuantity} / min ${minQuantity}`}
@@ -614,7 +625,7 @@ export default function TShirtConfigurator({
                   can mix different colors and sizes in one order.
                 </p>
                 <div className="mb-3 flex flex-wrap gap-2">
-                  {colorOption.values.map((c) => {
+                  {colorChoices.map((c) => {
                     const open = openColors.includes(c);
                     return (
                       <button
@@ -718,30 +729,6 @@ export default function TShirtConfigurator({
               </Section>
             )}
 
-            {/* Frontend-only color picker (when Shopify product has no Color option) */}
-            {!hasShopifyColor && (
-              <Section
-                title="Shirt color"
-                value={shirtColor}
-                icon={
-                  <span
-                    className="h-4 w-4 rounded-full border border-white/20"
-                    style={{ background: colorHex(shirtColor) ?? "#888" }}
-                  />
-                }
-              >
-                <div className="flex flex-wrap gap-2.5">
-                  {fallbackColors.map((c) => (
-                    <ColorSwatch
-                      key={c}
-                      name={c}
-                      active={c === shirtColor}
-                      onClick={() => setShirtColor(c)}
-                    />
-                  ))}
-                </div>
-              </Section>
-            )}
 
             {/* Print location (only shown for products that have it) */}
             {showPrintLocations && (

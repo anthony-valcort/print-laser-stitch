@@ -148,13 +148,13 @@ export default async function Home() {
                   <Arrow />
                 </span>
               </div>
-              <div className="relative hidden lg:block">
-                <div className="relative aspect-square overflow-hidden rounded-2xl border border-border-soft bg-background/60 shadow-2xl shadow-black/40 backdrop-blur transition group-hover:scale-105">
+              <div className="relative">
+                <div className="relative mx-auto aspect-square max-w-xs overflow-hidden rounded-2xl border border-border-soft bg-background/60 shadow-2xl shadow-black/40 backdrop-blur transition group-hover:scale-105 lg:max-w-none">
                   <Image
                     src="/vinyl-sticker-logo.jpeg"
                     alt="Custom vinyl stickers"
                     fill
-                    sizes="(max-width: 1024px) 0vw, 33vw"
+                    sizes="(max-width: 1024px) 80vw, 33vw"
                     className="object-cover"
                   />
                 </div>

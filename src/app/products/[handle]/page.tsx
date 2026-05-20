@@ -87,12 +87,15 @@ export default async function DynamicProductPage({
 
   if (!product) notFound();
 
-  // Auto-detect bulk-apparel: title encodes a min qty AND product has a Size
-  // option. Switch to the size-matrix configurator (TShirtConfigurator) so
-  // customers fill in qty per size and total ≥ detected min.
+  // Any product with a Size option is treated as bulk apparel and gets the
+  // size-matrix configurator (TShirtConfigurator). When the title encodes a
+  // minimum (e.g. "6 Piece Minimum" on the polo) we use that; otherwise we
+  // default to 12 — Anthony's standard apparel minimum. Products without a
+  // Size option keep the single-variant generic configurator.
   const detectedMinQty = detectMinQuantityFromTitle(product.title);
   const hasSizeOption = product.options.some((o) => isSizeOption(o.name));
-  const useSizeMatrix = !!detectedMinQty && hasSizeOption;
+  const useSizeMatrix = hasSizeOption;
+  const minQty = detectedMinQty ?? 12;
 
   return (
     <>
@@ -101,8 +104,8 @@ export default async function DynamicProductPage({
         {useSizeMatrix ? (
           <TShirtConfigurator
             product={product}
-            badge={`Bulk apparel · min ${detectedMinQty} pcs`}
-            minQuantity={detectedMinQty}
+            badge={`Bulk apparel · min ${minQty} pcs`}
+            minQuantity={minQty}
             showPrintLocations={false}
             singleUploadLabel="Design Artwork"
           />

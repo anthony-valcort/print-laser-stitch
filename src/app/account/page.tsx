@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LogoutButton from "@/components/LogoutButton";
+import EditableProfile from "@/components/EditableProfile";
 import {
   getCurrentCustomer,
   getCurrentCustomerOrders,
@@ -46,16 +47,15 @@ export default async function AccountPage() {
           <LogoutButton />
         </div>
 
-        {/* Profile card */}
-        <section className="mt-10">
-          <h2 className="mb-4 text-lg font-semibold">Profile</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <ProfileField label="First name" value={customer.firstName} />
-            <ProfileField label="Last name" value={customer.lastName} />
-            <ProfileField label="Email" value={customer.email} />
-            <ProfileField label="Phone" value={customer.phone} />
-          </div>
-        </section>
+        {/* Profile card — inline editable */}
+        <EditableProfile
+          initial={{
+            firstName: customer.firstName,
+            lastName: customer.lastName,
+            email: customer.email,
+            phone: customer.phone,
+          }}
+        />
 
         {/* Orders */}
         <section className="mt-12">
@@ -155,23 +155,6 @@ export default async function AccountPage() {
       </main>
       <Footer />
     </>
-  );
-}
-
-function ProfileField({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | null | undefined;
-}) {
-  return (
-    <div className="rounded-xl border border-border-soft bg-surface px-4 py-3">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-foreground-muted">
-        {label}
-      </div>
-      <div className="mt-0.5 text-sm">{value || "—"}</div>
-    </div>
   );
 }
 

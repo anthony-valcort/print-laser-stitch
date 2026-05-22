@@ -32,6 +32,12 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
+  if (!firstName) {
+    return NextResponse.json(
+      { error: "First name is required" },
+      { status: 400 },
+    );
+  }
   if (password.length < 8) {
     return NextResponse.json(
       { error: "Password must be at least 8 characters" },

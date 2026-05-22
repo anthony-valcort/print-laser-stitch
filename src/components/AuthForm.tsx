@@ -117,11 +117,12 @@ export default function AuthForm({ mode }: { mode: Mode }) {
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         {isSignup && (
           <div className="grid grid-cols-2 gap-3">
-            <Field label="First name">
+            <Field label="First name" required>
               <input
                 type="text"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
+                required
                 className="input"
                 autoComplete="given-name"
                 suppressHydrationWarning

@@ -192,6 +192,24 @@ export async function getCurrentCustomerOrders(): Promise<CustomerOrder[]> {
   }
 }
 
+/**
+ * For API route handlers that need to call Shopify on behalf of the customer
+ * (e.g. customerUpdate). Returns the access token from the session cookie,
+ * or null if no valid session.
+ */
+export async function getCurrentSessionToken(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const raw = cookieStore.get(SESSION_COOKIE)?.value;
+  if (!raw) return null;
+  try {
+    const session = JSON.parse(raw) as CustomerSession;
+    if (!session.token || new Date(session.expiresAt) < new Date()) return null;
+    return session.token;
+  } catch {
+    return null;
+  }
+}
+
 /** Set the session cookie. Called from API route handlers after a successful
  * login/signup. */
 export async function setCustomerSession(session: CustomerSession): Promise<void> {

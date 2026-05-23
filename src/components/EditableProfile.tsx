@@ -42,6 +42,25 @@ export default function EditableProfile({ initial }: { initial: Profile }) {
       return;
     }
 
+    // Shopify stores phone numbers in E.164 format — they must start with a
+    // `+` and country code. We let the customer leave the field blank, but
+    // if they entered something it must be a valid international format.
+    const trimmedPhone = phone.trim();
+    if (trimmedPhone) {
+      if (!trimmedPhone.startsWith("+")) {
+        setError(
+          "Phone must start with country code (e.g. +1 for US/Canada). Example: +1 555 123 4567.",
+        );
+        return;
+      }
+      // Strip spaces/dashes/parens for the digit count check.
+      const digits = trimmedPhone.replace(/[^\d]/g, "");
+      if (digits.length < 8 || digits.length > 15) {
+        setError("Phone number length looks off — please double-check it.");
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const resp = await fetch("/api/auth/update-profile", {
@@ -50,7 +69,7 @@ export default function EditableProfile({ initial }: { initial: Profile }) {
         body: JSON.stringify({
           firstName: firstName.trim(),
           lastName: lastName.trim(),
-          phone: phone.trim(),
+          phone: trimmedPhone,
         }),
       });
       const data = (await resp.json()) as { ok?: boolean; error?: string };
@@ -147,10 +166,14 @@ export default function EditableProfile({ initial }: { initial: Profile }) {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               autoComplete="tel"
-              placeholder="(555) 123-4567"
+              placeholder="+1 555 123 4567"
               suppressHydrationWarning
               className="w-full rounded-xl border border-border-soft bg-white/5 px-3 py-2 text-sm outline-none focus:border-accent"
             />
+            <span className="mt-1 block text-[11px] text-foreground-muted">
+              Must start with country code (e.g. <strong>+1</strong> for
+              US/Canada). Leave blank to skip.
+            </span>
           </label>
         </div>
 

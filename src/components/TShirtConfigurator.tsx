@@ -55,19 +55,27 @@ export default function TShirtConfigurator({
   // quantity matrix instead of a single picker.
   const sizeOption = product.options.find((o) => isSizeOption(o.name));
   const nonSizeOptions = product.options.filter((o) => !isSizeOption(o.name));
-  // Colour source — two paths, in priority order:
-  //   1. Shopify Color as a real variant option (best — per-colour SKUs,
-  //      per-colour images, per-colour inventory). We use the option values.
+  // Colour list — union of two Shopify sources, deduplicated:
+  //   1. Shopify Color as a real variant option (per-colour SKUs, per-colour
+  //      images, per-colour inventory).
   //   2. Shopify standard taxonomy `shopify.color-pattern` metafield (used
-  //      when Anthony already has 3 variant options like Fabric/Sleeve/Size
-  //      and can't add Color as a 4th). We use the metafield label list;
-  //      colour is attached as a per-line cart property at checkout.
-  // If neither is set, no colour picker is shown at all.
+  //      to offer extra colours beyond what variants cover, or as the only
+  //      source when the product has already used its 3 variant-option slots).
+  // Variant colours come first so the customer's primary picks map to real
+  // SKUs. Metafield-only colours fall back to a stand-in variant at the same
+  // size with the chosen colour attached as a per-line order property.
   const colorOption =
     nonSizeOptions.find((o) => isColorOption(o.name)) ?? null;
-  const colorChoices: readonly string[] = colorOption
-    ? (colorOption.values as readonly string[])
-    : product.taxonomyColors.map((c) => c.name);
+  const colorChoices: readonly string[] = useMemo(() => {
+    const variantColors = colorOption?.values ?? [];
+    const variantLower = new Set(
+      variantColors.map((c) => c.toLowerCase().trim()),
+    );
+    const extras = product.taxonomyColors
+      .map((c) => c.name)
+      .filter((n) => !variantLower.has(n.toLowerCase().trim()));
+    return [...variantColors, ...extras];
+  }, [colorOption, product.taxonomyColors]);
   const multiColor = !!sizeOption && colorChoices.length > 0;
   const pickerOptions = nonSizeOptions.filter((o) => !isColorOption(o.name));
 
@@ -173,8 +181,16 @@ export default function TShirtConfigurator({
 
   // Find the variant for a given (color, size) and the current single-pick
   // selections (Fabric, …). `color` is null for single-color products.
+  //
+  // Two-pass lookup:
+  //   1. Exact match — color × size × other selections must all line up. Used
+  //      for variant colours (real SKUs).
+  //   2. Fallback — ignore the Color axis and just match size + other
+  //      options. Used for metafield-only colours where no SKU exists yet;
+  //      Shopify still needs a variant_id to attach the line to and the
+  //      customer's chosen colour is sent as a per-line property.
   function findVariant(color: string | null, sizeName: string) {
-    return product.variants.find((v) =>
+    const exact = product.variants.find((v) =>
       v.selectedOptions.every((opt) => {
         if (sizeOption && opt.name === sizeOption.name) {
           return opt.value === sizeName;
@@ -185,6 +201,20 @@ export default function TShirtConfigurator({
         return selectedOptions[opt.name] === opt.value;
       }),
     );
+    if (exact) return exact;
+    if (!colorOption) return undefined;
+    // No SKU for this colour — accept any variant matching just the size and
+    // other picker options. (Prefer an available one.)
+    const looseMatches = product.variants.filter((v) =>
+      v.selectedOptions.every((opt) => {
+        if (sizeOption && opt.name === sizeOption.name) {
+          return opt.value === sizeName;
+        }
+        if (opt.name === colorOption.name) return true;
+        return selectedOptions[opt.name] === opt.value;
+      }),
+    );
+    return looseMatches.find((v) => v.availableForSale) ?? looseMatches[0];
   }
 
   // Single-color helper kept for the non-multi-color UI/summary paths.

@@ -1,10 +1,13 @@
 export const COLOR_HEX: Record<string, string> = {
   black: "#0b0b0b",
+  "jet black": "#0b0b0b",
   white: "#f7f7f7",
   navy: "#1c2940",
   "navy blue": "#1c2940",
   red: "#c93434",
+  "true red": "#c93434",
   "royal blue": "#1f4ec9",
+  royal: "#1f4ec9",
   blue: "#2563eb",
   "sky blue": "#7dd3fc",
   "light blue": "#bae6fd",
@@ -29,12 +32,35 @@ export const COLOR_HEX: Record<string, string> = {
   "charcoal grey": "#374151",
   "charcoal gray": "#374151",
   charcoal: "#374151",
+  graphite: "#3c4043",
   silver: "#cbd5e1",
   gold: "#d4af37",
+  multicolor: "#888888",
+  multicolour: "#888888",
 };
 
+/**
+ * Resolve a hex code for a colour name. We try, in order:
+ *   1. Exact lowercase match in the known palette (covers Anthony's common
+ *      apparel colour names — see COLOR_HEX above).
+ *   2. Substring match — a name like "Heather Royal Blue" picks up "royal
+ *      blue", "True Red" picks up "red", "Jet Black" picks up "black". We
+ *      prefer the longest substring that matches so "navy blue" beats
+ *      "blue", "kelly green" beats "green", etc.
+ * Returns null when nothing matches — callers fall back to a generic swatch.
+ */
 export function colorHex(name: string): string | null {
-  return COLOR_HEX[name.toLowerCase().trim()] ?? null;
+  const n = name.toLowerCase().trim();
+  if (n in COLOR_HEX) return COLOR_HEX[n];
+  // Fuzzy substring match — longest key wins so multi-word colours like
+  // "navy blue" beat the single-word "blue" inside "navy blue trim".
+  let best: { key: string; hex: string } | null = null;
+  for (const [key, hex] of Object.entries(COLOR_HEX)) {
+    if (n.includes(key) && (!best || key.length > best.key.length)) {
+      best = { key, hex };
+    }
+  }
+  return best?.hex ?? null;
 }
 
 /**

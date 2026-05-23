@@ -111,12 +111,16 @@ export async function lookupDiscountCode(
     );
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Could not look up code";
+    const isAccessIssue =
+      /access\s*denied/i.test(msg) ||
+      /permission/i.test(msg) ||
+      /read_discounts/i.test(msg) ||
+      /access scope/i.test(msg);
     return {
       ok: false,
-      error:
-        msg.includes("Access denied") || msg.includes("permission")
-          ? "Discount lookup is not enabled on the store. Ask the admin to grant read_discounts to the app."
-          : "Could not check that code right now. Try again in a moment.",
+      error: isAccessIssue
+        ? "Discount lookup isn't enabled on the store yet — Anthony needs to add the `read_discounts` scope to the Admin API app."
+        : "Could not check that code right now. Try again in a moment.",
       status: 502,
     };
   }

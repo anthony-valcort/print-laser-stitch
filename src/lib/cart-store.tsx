@@ -17,6 +17,20 @@ import {
 
 const STORAGE_KEY = "pls_cart";
 const DISCOUNT_KEY = "pls_discount";
+const PENDING_KEY = "pls_pending_checkout";
+
+/**
+ * Stored when the customer clicks Checkout — we hand them off to the
+ * Shopify-served invoice URL but keep their cart intact in case they hit
+ * back to tweak quantities. When they actually pay, the cart auto-clears
+ * on the next page load (cart-store polls /api/order-status).
+ */
+export type PendingCheckout = {
+  draftOrderId: number;
+  invoiceUrl: string;
+  /** ms since epoch — used to auto-expire stale entries (>24h). */
+  createdAt: number;
+};
 
 type CartContextValue = {
   /** True once we've read from localStorage on the client; until then count is 0. */
@@ -34,6 +48,8 @@ type CartContextValue = {
   discountAmount: number;
   /** subtotal − discountAmount, never negative. */
   total: number;
+  /** Currently-in-flight checkout, if any (cart left intact until paid). */
+  pendingCheckout: PendingCheckout | null;
   addItem: (item: Omit<CartItem, "id" | "addedAt"> & Partial<Pick<CartItem, "id" | "addedAt">>) => void;
   removeItem: (id: string) => void;
   updateQty: (id: string, newQty: number) => void;
@@ -41,6 +57,10 @@ type CartContextValue = {
   /** Replace the current discount (cleared when the cart empties or fails the minimum). */
   applyDiscount: (discount: CartDiscount) => void;
   clearDiscount: () => void;
+  /** Mark that a checkout is in progress — call after /api/checkout-cart succeeds. */
+  setPendingCheckout: (p: PendingCheckout) => void;
+  /** Drop the pending-checkout marker without touching the cart items. */
+  clearPendingCheckout: () => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -93,15 +113,53 @@ function safeWriteDiscount(d: CartDiscount | null) {
   }
 }
 
+function safeReadPending(): PendingCheckout | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(PENDING_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PendingCheckout;
+    if (!parsed?.draftOrderId || !parsed?.invoiceUrl) return null;
+    // Auto-expire after 24 hours so a long-abandoned cart eventually
+    // unblocks the customer.
+    if (Date.now() - parsed.createdAt > 24 * 60 * 60 * 1000) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function safeWritePending(p: PendingCheckout | null): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (p) {
+      window.localStorage.setItem(PENDING_KEY, JSON.stringify(p));
+    } else {
+      window.localStorage.removeItem(PENDING_KEY);
+    }
+  } catch {
+    // ignore
+  }
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [discount, setDiscount] = useState<CartDiscount | null>(null);
+  // Lazy-init from localStorage — runs synchronously on first mount, so
+  // there is NO "items briefly empty then populated" gap on client renders.
+  // On the server `typeof window === "undefined"`, so each `safe*` helper
+  // returns the empty value — the SSR HTML matches the !isHydrated branch
+  // (loading skeleton), avoiding any hydration mismatch.
+  const [items, setItems] = useState<CartItem[]>(() => safeRead());
+  const [discount, setDiscount] = useState<CartDiscount | null>(() =>
+    safeReadDiscount(),
+  );
+  const [pendingCheckout, setPendingCheckoutState] =
+    useState<PendingCheckout | null>(() => safeReadPending());
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Read from localStorage once mounted. Avoids SSR/CSR hydration mismatch.
+  // Flip hydrated → true after first client commit. Items are already
+  // populated from the lazy initializer above, so the very next render
+  // shows the cart immediately without an "empty" flash.
   useEffect(() => {
-    setItems(safeRead());
-    setDiscount(safeReadDiscount());
     setIsHydrated(true);
   }, []);
 
@@ -116,15 +174,74 @@ export function CartProvider({ children }: { children: ReactNode }) {
     safeWriteDiscount(discount);
   }, [discount, isHydrated]);
 
+  useEffect(() => {
+    if (!isHydrated) return;
+    safeWritePending(pendingCheckout);
+  }, [pendingCheckout, isHydrated]);
+
   // Sync across tabs.
   useEffect(() => {
     function onStorage(e: StorageEvent) {
       if (e.key === STORAGE_KEY) setItems(safeRead());
       if (e.key === DISCOUNT_KEY) setDiscount(safeReadDiscount());
+      if (e.key === PENDING_KEY) setPendingCheckoutState(safeReadPending());
     }
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
+
+  // Back-navigation re-sync — re-read localStorage whenever the browser
+  // brings our page back to life: pageshow (initial load + bfcache),
+  // visibilitychange (tab becomes visible again), and focus (window
+  // regains keyboard focus). Together these cover every realistic way the
+  // customer returns from the Shopify-served checkout page across all
+  // browsers, so the cart never lags behind localStorage.
+  useEffect(() => {
+    function resync() {
+      setItems(safeRead());
+      setDiscount(safeReadDiscount());
+      setPendingCheckoutState(safeReadPending());
+    }
+    function onPageShow() {
+      resync();
+    }
+    function onVisibility() {
+      if (document.visibilityState === "visible") resync();
+    }
+    function onFocus() {
+      resync();
+    }
+    window.addEventListener("pageshow", onPageShow);
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      window.removeEventListener("pageshow", onPageShow);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, []);
+
+  // Safety net — if React state ever ends up empty but localStorage still
+  // has items (out-of-sync edge cases: bfcache restore landing on stale
+  // state, devtools cleared React state, an aborted clearCart, etc.),
+  // restore the cart from localStorage. Without this, the customer would
+  // have to manually refresh to recover.
+  useEffect(() => {
+    if (!isHydrated) return;
+    if (items.length === 0) {
+      const localItems = safeRead();
+      if (localItems.length > 0) {
+        setItems(localItems);
+      }
+    }
+  }, [items, isHydrated]);
+
+  // We deliberately don't poll Shopify on cart-page mount any more — the
+  // earlier "auto-clear if paid" check caused the cart to flash empty
+  // whenever the customer hit Back from the checkout without paying. The
+  // only place we now auto-clear the cart on payment success is the
+  // /order/[id] page (OrderClearCartOnPaid), where the customer has
+  // explicitly landed to verify their order.
 
   const addItem = useCallback<CartContextValue["addItem"]>((item) => {
     setItems((prev) => {
@@ -188,6 +305,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = useCallback(() => {
     setItems([]);
     setDiscount(null);
+    setPendingCheckoutState(null);
   }, []);
 
   const applyDiscount = useCallback((d: CartDiscount) => {
@@ -196,6 +314,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearDiscount = useCallback(() => {
     setDiscount(null);
+  }, []);
+
+  const setPendingCheckout = useCallback((p: PendingCheckout) => {
+    setPendingCheckoutState(p);
+  }, []);
+
+  const clearPendingCheckout = useCallback(() => {
+    setPendingCheckoutState(null);
   }, []);
 
   const itemCount = useMemo(
@@ -243,12 +369,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       discount,
       discountAmount,
       total,
+      pendingCheckout,
       addItem,
       removeItem,
       updateQty,
       clearCart,
       applyDiscount,
       clearDiscount,
+      setPendingCheckout,
+      clearPendingCheckout,
     }),
     [
       isHydrated,
@@ -259,12 +388,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       discount,
       discountAmount,
       total,
+      pendingCheckout,
       addItem,
       removeItem,
       updateQty,
       clearCart,
       applyDiscount,
       clearDiscount,
+      setPendingCheckout,
+      clearPendingCheckout,
     ],
   );
 

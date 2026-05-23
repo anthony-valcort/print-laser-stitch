@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart-store";
 import type { CartItem } from "@/lib/cart-types";
 import type { CartDiscount } from "@/lib/discount-types";
@@ -25,12 +25,31 @@ export default function CartView({
     clearCart,
     applyDiscount,
     clearDiscount,
+    setPendingCheckout,
   } = useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Guest checkout: when there's no logged-in customer we ask for an email
   // here. If the user is logged in, this stays in sync with their account.
   const [guestEmail, setGuestEmail] = useState<string>(customerEmail ?? "");
+
+  // When the customer hits Back from the Shopify-served checkout page, the
+  // browser may restore us from bfcache with `isCheckingOut: true` still
+  // set — that disables the button and shows "Preparing checkout…", which
+  // looks like the page is frozen. Reset the transient checkout UI state
+  // on every pageshow so the cart is interactive again. Cart items
+  // themselves are now always fresh from localStorage (cart-store uses a
+  // lazy `useState` initializer + storage/pageshow re-sync), so we don't
+  // need a hard reload here.
+  useEffect(() => {
+    function onPageShow(e: PageTransitionEvent) {
+      if (!e.persisted) return;
+      setIsCheckingOut(false);
+      setError(null);
+    }
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
 
   // Avoid SSR/CSR mismatch — show empty until hydrated.
   if (!isHydrated) {
@@ -135,9 +154,14 @@ export default function CartView({
         });
       }
 
-      // Cart contents are now committed to a Shopify draft order. Clear the
-      // local cart so the user doesn't double-submit if they navigate back.
-      clearCart();
+      // Keep the cart intact so the customer can hit back to tweak
+      // quantities — `pendingCheckout` marks "checkout in flight", and the
+      // cart store auto-clears once Shopify reports the draft as paid.
+      setPendingCheckout({
+        draftOrderId: data.order!.draftOrderId,
+        invoiceUrl: data.invoiceUrl,
+        createdAt: Date.now(),
+      });
       window.location.href = data.invoiceUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Checkout failed");
@@ -147,6 +171,7 @@ export default function CartView({
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+
       <div className="mb-8 flex items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-accent">

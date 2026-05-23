@@ -72,7 +72,11 @@ export async function shopifyAdminFetch<T>(
 
   const json = (await resp.json()) as GraphQLResponse<T>;
   if (json.errors?.length) {
-    throw new ShopifyError("Shopify GraphQL error", 502, json.errors);
+    // Surface the first error's message — callers (e.g. lookupDiscountCode)
+    // pattern-match on "Access denied" / "permission" to render a more
+    // actionable message than a generic 502.
+    const firstMsg = json.errors[0]?.message ?? "Shopify GraphQL error";
+    throw new ShopifyError(firstMsg, 502, json.errors);
   }
   if (!json.data) {
     throw new ShopifyError("Shopify GraphQL returned no data", 502);

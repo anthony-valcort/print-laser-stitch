@@ -147,13 +147,10 @@ export default function EditableProfile({ initial }: { initial: Profile }) {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               autoComplete="tel"
-              placeholder="+1 555 123 4567"
+              placeholder="(555) 123-4567"
               suppressHydrationWarning
               className="w-full rounded-xl border border-border-soft bg-white/5 px-3 py-2 text-sm outline-none focus:border-accent"
             />
-            <span className="mt-1 block text-[11px] text-foreground-muted">
-              Include country code, e.g. +1 555 123 4567 (or leave blank).
-            </span>
           </label>
         </div>
 

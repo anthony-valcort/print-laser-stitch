@@ -38,23 +38,9 @@ export async function POST(req: NextRequest) {
 
   const firstName = body.firstName?.trim() ?? "";
   const lastName = body.lastName?.trim() ?? "";
-  const phoneRaw = body.phone?.trim() ?? "";
-  // Shopify requires E.164 format for phone; empty string clears it.
-  const phone = phoneRaw === ""
-    ? ""
-    : phoneRaw.startsWith("+")
-      ? phoneRaw
-      : null;
-
-  if (phone === null) {
-    return NextResponse.json(
-      {
-        error:
-          "Phone must start with country code (e.g. +1 555 123 4567), or leave it blank.",
-      },
-      { status: 400 },
-    );
-  }
+  // Phone is passed through as-typed. Shopify itself will reject malformed
+  // numbers via `customerUserErrors`, which we surface back to the customer.
+  const phone = body.phone?.trim() ?? "";
 
   if (!firstName) {
     return NextResponse.json(

@@ -29,16 +29,6 @@ import {
 import { SizeQtyStepper } from "@/components/configurator/QuantityStepper";
 import { ExpandableDescription } from "@/components/configurator/ExpandableDescription";
 
-// Frontend-only color fallback when Shopify hasn't exposed Color as a variant
-// option. Skipped automatically when Shopify already has Color.
-const DEFAULT_FALLBACK_COLORS = [
-  "White",
-  "Black",
-  "Gray",
-  "Red",
-  "Navy",
-] as const;
-
 export type ApparelConfiguratorProps = {
   product: ShopifyProduct;
   /** Override the badge shown above the title. */
@@ -49,8 +39,6 @@ export type ApparelConfiguratorProps = {
   showPrintLocations?: boolean;
   /** Single-design upload label when print location is hidden (e.g. "Embroidery Artwork"). */
   singleUploadLabel?: string;
-  /** Frontend-only color list (used only when Shopify has no Color option). */
-  fallbackColors?: readonly string[];
 };
 
 export default function TShirtConfigurator({
@@ -59,7 +47,6 @@ export default function TShirtConfigurator({
   minQuantity: minQuantityProp,
   showPrintLocations = true,
   singleUploadLabel = "Design",
-  fallbackColors = DEFAULT_FALLBACK_COLORS,
 }: ApparelConfiguratorProps) {
   const router = useRouter();
   const { addItem } = useCart();
@@ -68,22 +55,35 @@ export default function TShirtConfigurator({
   // quantity matrix instead of a single picker.
   const sizeOption = product.options.find((o) => isSizeOption(o.name));
   const nonSizeOptions = product.options.filter((o) => !isSizeOption(o.name));
-  // When Shopify exposes Color as a real variant option, the customer can mix
-  // colors in one order (different qty per color per size). Color is then
-  // handled by the per-color matrix; the remaining options (Fabric, Sleeve…)
-  // stay single-pick.
+  // Colour source — two paths, in priority order:
+  //   1. Shopify Color as a real variant option (best — per-colour SKUs,
+  //      per-colour images, per-colour inventory). We use the option values.
+  //   2. Shopify standard taxonomy `shopify.color-pattern` metafield (used
+  //      when Anthony already has 3 variant options like Fabric/Sleeve/Size
+  //      and can't add Color as a 4th). We use the metafield label list;
+  //      colour is attached as a per-line cart property at checkout.
+  // If neither is set, no colour picker is shown at all.
   const colorOption =
     nonSizeOptions.find((o) => isColorOption(o.name)) ?? null;
-  // Customer's color choices: Shopify Color variant values when the product
-  // exposes them, otherwise the frontend fallback list. Any sized product
-  // gets the multi-color matrix — when color isn't a real Shopify variant
-  // option (e.g. our cotton t-shirt has only Fabric/Sleeve/Size), the chosen
-  // color is attached as a per-line order property on each line instead.
   const colorChoices: readonly string[] = colorOption
     ? (colorOption.values as readonly string[])
-    : fallbackColors;
+    : product.taxonomyColors.map((c) => c.name);
   const multiColor = !!sizeOption && colorChoices.length > 0;
   const pickerOptions = nonSizeOptions.filter((o) => !isColorOption(o.name));
+
+  // Hex lookup for swatches: prefer Shopify-provided hex from the taxonomy
+  // metafield (always accurate, even for unusual colour names like
+  // "Graphite"); fall back to our static COLOR_HEX map for products whose
+  // Color variant doesn't carry a hex code.
+  const taxonomyHexMap = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of product.taxonomyColors) {
+      if (c.hex) m.set(c.name.toLowerCase(), c.hex);
+    }
+    return m;
+  }, [product.taxonomyColors]);
+  const swatchHex = (name: string) =>
+    taxonomyHexMap.get(name.toLowerCase()) ?? colorHex(name) ?? "#888";
 
   const firstAvailable =
     product.variants.find((v) => v.availableForSale) ?? product.variants[0];
@@ -160,17 +160,9 @@ export default function TShirtConfigurator({
     }));
   };
 
-  // If Shopify already exposes Color as an option, the frontend fallback
-  // color picker is hidden and the per-color matrix takes over.
-  // Kept as the *true* "Shopify exposes Color as a variant?" signal — the
-  // multi-color matrix path doesn't depend on it any more, but legacy single-
-  // mode branches still read it.
-  const hasShopifyColor = !!colorOption;
-
   const [printLocation, setPrintLocation] = useState<PrintLocationKey>("front");
   const [instructions, setInstructions] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
-  const [shirtColor, setShirtColor] = useState<string>(fallbackColors[0]);
 
   const [frontUpload, setFrontUpload] = useState<UploadSlot>(EMPTY_UPLOAD_SLOT);
   const [backUpload, setBackUpload] = useState<UploadSlot>(EMPTY_UPLOAD_SLOT);
@@ -387,7 +379,6 @@ export default function TShirtConfigurator({
           .join(" · "),
       );
     } else {
-      if (!hasShopifyColor && shirtColor) subtitleParts.push(shirtColor);
       subtitleParts.push(
         sizeVariants.map((sv) => `${sv.quantity} × ${sv.size}`).join(", "),
       );
@@ -417,7 +408,6 @@ export default function TShirtConfigurator({
       selectedOptions,
       printLocation: showPrintLocations ? printLocation : undefined,
       uploadLabel: showPrintLocations ? undefined : singleUploadLabel,
-      shirtColor: hasShopifyColor ? undefined : shirtColor,
       sizeVariants,
       frontFileUrl: frontUpload.fileUrl ?? undefined,
       frontFileName: frontUpload.file?.name,
@@ -513,7 +503,7 @@ export default function TShirtConfigurator({
                     icon={
                       <span
                         className="h-4 w-4 rounded-full border border-white/20"
-                        style={{ background: colorHex(value) ?? "#888" }}
+                        style={{ background: swatchHex(value) }}
                       />
                     }
                   >
@@ -640,7 +630,7 @@ export default function TShirtConfigurator({
                       >
                         <span
                           className="h-3.5 w-3.5 rounded-full border border-white/20"
-                          style={{ background: colorHex(c) ?? "#888" }}
+                          style={{ background: swatchHex(c) }}
                         />
                         {c}
                         <span className="text-foreground-muted">
@@ -671,7 +661,7 @@ export default function TShirtConfigurator({
                             <div className="flex items-center gap-2">
                               <span
                                 className="h-4 w-4 rounded-full border border-white/20"
-                                style={{ background: colorHex(color) ?? "#888" }}
+                                style={{ background: swatchHex(color) }}
                               />
                               <span className="text-sm font-bold">{color}</span>
                               {colorTotal > 0 && (

@@ -4,14 +4,28 @@ import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/lib/cart-store";
 import type { CartItem } from "@/lib/cart-types";
+import type { CartDiscount } from "@/lib/discount-types";
 
 export default function CartView({
   customerEmail = null,
 }: {
   customerEmail?: string | null;
 }) {
-  const { isHydrated, items, itemCount, lineCount, subtotal, removeItem, updateQty, clearCart } =
-    useCart();
+  const {
+    isHydrated,
+    items,
+    itemCount,
+    lineCount,
+    subtotal,
+    discount,
+    discountAmount,
+    total,
+    removeItem,
+    updateQty,
+    clearCart,
+    applyDiscount,
+    clearDiscount,
+  } = useCart();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Guest checkout: when there's no logged-in customer we ask for an email
@@ -83,16 +97,42 @@ export default function CartView({
           // Always send the email — for logged-in customers the server uses
           // their account email; for guests it uses what we send here.
           email: customerEmail ?? guestEmail.trim(),
+          // Forward the applied discount so the server can re-validate it and
+          // attach it to the draft order (Shopify applies it to the invoice).
+          discountCode: discount?.code ?? null,
         }),
       });
 
       const data = (await resp.json()) as {
         invoiceUrl?: string;
         error?: string;
+        order?: {
+          draftOrderId: number;
+          email: string;
+          total: number;
+          items: Array<{ title: string; quantity: number }>;
+          invoiceUrl: string;
+        };
       };
 
       if (!resp.ok || !data.invoiceUrl) {
         throw new Error(data.error ?? "Checkout failed");
+      }
+
+      // Stash the order locally so guests can find it on the account page
+      // (and so logged-in buyers see it immediately while Shopify catches up).
+      // Migration to the customer record happens automatically on next login.
+      if (data.order) {
+        const { addGuestOrder } = await import("@/lib/guest-orders");
+        addGuestOrder({
+          draftOrderId: data.order.draftOrderId,
+          email: data.order.email,
+          total: data.order.total,
+          items: data.order.items,
+          invoiceUrl: data.order.invoiceUrl,
+          createdAt: Date.now(),
+          migrated: false,
+        });
       }
 
       // Cart contents are now committed to a Shopify draft order. Clear the
@@ -153,6 +193,28 @@ export default function CartView({
                 <dt className="text-foreground-muted">Subtotal</dt>
                 <dd className="font-medium">${subtotal.toFixed(2)}</dd>
               </div>
+              {discount && discountAmount > 0 && (
+                <div className="flex items-center justify-between text-emerald-300">
+                  <dt>
+                    Discount{" "}
+                    <span className="ml-1 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-semibold">
+                      {discount.code}
+                    </span>
+                  </dt>
+                  <dd className="font-medium">−${discountAmount.toFixed(2)}</dd>
+                </div>
+              )}
+              {discount && discount.valueType === "shipping" && (
+                <div className="flex items-center justify-between text-emerald-300">
+                  <dt>
+                    Free shipping{" "}
+                    <span className="ml-1 rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-semibold">
+                      {discount.code}
+                    </span>
+                  </dt>
+                  <dd className="text-xs font-medium">Applied at checkout</dd>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <dt className="text-foreground-muted">Shipping</dt>
                 <dd className="text-xs text-foreground-muted">
@@ -166,11 +228,20 @@ export default function CartView({
                 </dd>
               </div>
             </dl>
+
+            {/* Discount code input */}
+            <DiscountCodeSection
+              subtotal={subtotal}
+              discount={discount}
+              applyDiscount={applyDiscount}
+              clearDiscount={clearDiscount}
+            />
+
             <div className="mt-4 border-t border-border-soft pt-4">
               <div className="flex items-center justify-between text-base">
                 <span className="font-semibold">Estimated total</span>
                 <span className="text-xl font-bold">
-                  ${subtotal.toFixed(2)}
+                  ${total.toFixed(2)}
                 </span>
               </div>
             </div>
@@ -229,7 +300,7 @@ export default function CartView({
             >
               {isCheckingOut
                 ? "Preparing checkout…"
-                : `Checkout · $${subtotal.toFixed(2)}`}
+                : `Checkout · $${total.toFixed(2)}`}
             </button>
             <Link
               href="/"
@@ -241,6 +312,134 @@ export default function CartView({
         </aside>
       </div>
     </section>
+  );
+}
+
+function DiscountCodeSection({
+  subtotal,
+  discount,
+  applyDiscount,
+  clearDiscount,
+}: {
+  subtotal: number;
+  discount: CartDiscount | null;
+  applyDiscount: (d: CartDiscount) => void;
+  clearDiscount: () => void;
+}) {
+  const [code, setCode] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleApply() {
+    setError(null);
+    const trimmed = code.trim();
+    if (!trimmed) {
+      setError("Enter a code first.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const resp = await fetch("/api/discount/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: trimmed, subtotal }),
+      });
+      const data = (await resp.json()) as {
+        ok?: boolean;
+        discount?: CartDiscount;
+        error?: string;
+      };
+      if (!resp.ok || !data.ok || !data.discount) {
+        setError(data.error ?? "Could not apply that code.");
+        return;
+      }
+      applyDiscount(data.discount);
+      setCode("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Network error");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (discount) {
+    return (
+      <div className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-emerald-300"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span className="truncate text-sm font-semibold text-emerald-200">
+                {discount.code}
+              </span>
+            </div>
+            <div className="mt-0.5 text-[11px] text-emerald-300/80">
+              {discount.valueType === "percentage"
+                ? `${discount.value}% off applied`
+                : discount.valueType === "fixed_amount"
+                  ? `$${discount.value.toFixed(2)} off applied`
+                  : "Free shipping applied"}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={clearDiscount}
+            className="shrink-0 rounded-md px-2 py-1 text-[11px] font-semibold text-emerald-200 hover:bg-emerald-500/15"
+          >
+            Remove
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4">
+      <label className="block text-xs font-medium text-foreground/80">
+        Discount code
+      </label>
+      <div className="mt-1.5 flex items-stretch gap-2">
+        <input
+          type="text"
+          value={code}
+          onChange={(e) => setCode(e.target.value.toUpperCase())}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleApply();
+            }
+          }}
+          placeholder="e.g. WELCOME10"
+          disabled={submitting}
+          autoComplete="off"
+          suppressHydrationWarning
+          className="flex-1 rounded-xl border border-border-soft bg-white/4 px-3 py-2 text-sm uppercase tracking-wider outline-none focus:border-[#d9f000]/60 disabled:opacity-60"
+        />
+        <button
+          type="button"
+          onClick={handleApply}
+          disabled={submitting || !code.trim()}
+          className="rounded-xl border border-border-soft bg-white/5 px-4 text-xs font-semibold uppercase tracking-wider hover:bg-white/10 disabled:opacity-50"
+        >
+          {submitting ? "…" : "Apply"}
+        </button>
+      </div>
+      {error && (
+        <p className="mt-1.5 text-[11px] text-red-300">{error}</p>
+      )}
+    </div>
   );
 }
 

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LogoutButton from "@/components/LogoutButton";
 import EditableProfile from "@/components/EditableProfile";
+import GuestOrderMigrator from "@/components/GuestOrderMigrator";
+import GuestOrdersList from "@/components/GuestOrdersList";
 import {
   getCurrentCustomer,
   getCurrentCustomerOrders,
@@ -16,8 +18,46 @@ export const metadata: Metadata = {
 
 export default async function AccountPage() {
   const customer = await getCurrentCustomer();
+
+  // Guest view — no profile/Shopify orders, but they can still see anything
+  // saved locally on this device, with a clear migration CTA.
   if (!customer) {
-    redirect("/login?redirect=/account");
+    return (
+      <>
+        <Header />
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-12 sm:px-6 lg:px-8">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+              My Account
+            </p>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight">
+              You&apos;re shopping as a guest
+            </h1>
+            <p className="mt-2 max-w-xl text-sm text-foreground-muted">
+              Any orders you placed on this device are shown below.{" "}
+              <Link
+                href="/login?redirect=/account"
+                className="font-semibold text-accent hover:underline"
+              >
+                Log in
+              </Link>{" "}
+              or{" "}
+              <Link
+                href="/signup?redirect=/account"
+                className="font-semibold text-accent hover:underline"
+              >
+                create an account
+              </Link>{" "}
+              with the same email to keep them in your history forever and
+              access them from any device.
+            </p>
+          </div>
+
+          <GuestOrdersList filterByEmail={null} />
+        </main>
+        <Footer />
+      </>
+    );
   }
 
   const orders = await getCurrentCustomerOrders();
@@ -31,6 +71,11 @@ export default async function AccountPage() {
     <>
       <Header />
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-12 sm:px-6 lg:px-8">
+        {/* Side-effect only: links any guest orders saved locally on this
+            device whose email matches the customer's, to their Shopify
+            record. Renders nothing. */}
+        <GuestOrderMigrator customerEmail={customer.email} />
+
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-accent">
@@ -56,6 +101,11 @@ export default async function AccountPage() {
             phone: customer.phone,
           }}
         />
+
+        {/* Recent local activity — drafts not yet appearing in Shopify's
+            customer.orders (paid orders only). Filtered to this customer's
+            email so a shared device doesn't leak other accounts' orders. */}
+        <GuestOrdersList filterByEmail={customer.email} />
 
         {/* Orders */}
         <section className="mt-12">

@@ -37,10 +37,20 @@ export function colorHex(name: string): string | null {
   return COLOR_HEX[name.toLowerCase().trim()] ?? null;
 }
 
+/**
+ * Detect a Shopify product option that represents a colour choice.
+ *
+ * Anthony sometimes names this option just "Color" / "Colour", but other
+ * times prefixes it with the product type ("Shirt Color", "T-Shirt Color",
+ * "Apparel Colour", "Primary Color"). We match anything that contains the
+ * word "color" or "colour" as a token so dynamic colour swatches always come
+ * from Shopify variant data instead of falling back to a static list.
+ */
 export function isColorOption(name: string): boolean {
-  return name.toLowerCase() === "color" || name.toLowerCase() === "colour";
+  return /\bcolou?r\b/i.test(name);
 }
 
 export function isSizeOption(name: string): boolean {
-  return name.toLowerCase() === "size";
+  const n = name.toLowerCase().trim();
+  return n === "size" || /\bsize\b/i.test(n);
 }

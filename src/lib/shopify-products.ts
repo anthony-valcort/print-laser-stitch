@@ -29,6 +29,20 @@ export type ShopifyOption = {
   values: string[];
 };
 
+/**
+ * Colours pulled from Shopify's standard product taxonomy metafield
+ * (`shopify.color-pattern`). Anthony populates these in the product's
+ * "Category metafields" section. We surface them as a fallback colour
+ * picker for apparel products that hit Shopify's 3-options-per-product
+ * limit and therefore can't add Color as a real variant option.
+ */
+export type TaxonomyColor = {
+  /** Display name, e.g. "Royal Blue". */
+  name: string;
+  /** Shopify-provided hex like "#005BD3", or null if not set. */
+  hex: string | null;
+};
+
 export type ShopifyProduct = {
   id: string;
   handle: string;
@@ -38,6 +52,8 @@ export type ShopifyProduct = {
   images: ShopifyImage[];
   options: ShopifyOption[];
   variants: ShopifyVariant[];
+  /** Colours from `shopify.color-pattern` metafield — empty if not set. */
+  taxonomyColors: TaxonomyColor[];
 };
 
 const PRODUCT_BY_HANDLE = `
@@ -116,14 +132,76 @@ export function detectMinQuantityFromTitle(title: string): number | null {
   return null;
 }
 
+// Storefront-only — the Admin API returns null when resolving
+// `shopify.color-pattern` references (those metaobjects live in Shopify's
+// standard taxonomy and the Admin token can't read them), but the
+// Storefront API can. We use this as a *separate* lookup so the main
+// Admin query stays untouched.
+const PRODUCT_COLOR_METAFIELD_STOREFRONT = `
+  query GetProductColorMetafield($handle: String!) {
+    product(handle: $handle) {
+      colorMeta: metafield(namespace: "shopify", key: "color-pattern") {
+        references(first: 50) {
+          nodes {
+            ... on Metaobject {
+              type
+              fields { key value }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+type RawColorMetafieldResp = {
+  product: {
+    colorMeta: {
+      references: {
+        nodes: Array<{
+          type: string;
+          fields: Array<{ key: string; value: string }>;
+        } | null>;
+      };
+    } | null;
+  } | null;
+};
+
+async function fetchTaxonomyColors(handle: string): Promise<TaxonomyColor[]> {
+  try {
+    const data = await shopifyStorefrontFetch<RawColorMetafieldResp>(
+      PRODUCT_COLOR_METAFIELD_STOREFRONT,
+      { handle },
+    );
+    const nodes = data.product?.colorMeta?.references.nodes ?? [];
+    const colors: TaxonomyColor[] = [];
+    for (const node of nodes) {
+      if (!node || node.type !== "shopify--color-pattern") continue;
+      const label = node.fields.find((f) => f.key === "label")?.value;
+      const hex = node.fields.find((f) => f.key === "color")?.value ?? null;
+      if (label) colors.push({ name: label, hex });
+    }
+    return colors;
+  } catch {
+    // Metafield missing or scope issue — degrade silently to "no colours".
+    return [];
+  }
+}
+
 export async function getProductByHandle(
   handle: string,
 ): Promise<ShopifyProduct | null> {
-  const data = await shopifyAdminFetch<RawProductByHandleResp>(
-    PRODUCT_BY_HANDLE,
-    { handle },
-    { tags: [`product:${handle}`], revalidate: 300 },
-  );
+  // Run the full Admin product query and the Storefront colour-metafield
+  // resolve in parallel — the colour fallback adds zero latency unless the
+  // Storefront call is the slower of the two.
+  const [data, taxonomyColors] = await Promise.all([
+    shopifyAdminFetch<RawProductByHandleResp>(
+      PRODUCT_BY_HANDLE,
+      { handle },
+      { tags: [`product:${handle}`], revalidate: 300 },
+    ),
+    fetchTaxonomyColors(handle),
+  ]);
 
   const p = data.productByHandle;
   if (!p) return null;
@@ -137,6 +215,7 @@ export async function getProductByHandle(
     images: p.images.nodes,
     options: p.options,
     variants: p.variants.nodes,
+    taxonomyColors,
   };
 }
 

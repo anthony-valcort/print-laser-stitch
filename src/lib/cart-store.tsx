@@ -10,8 +10,13 @@ import {
   type ReactNode,
 } from "react";
 import type { CartItem } from "./cart-types";
+import {
+  computeDiscountAmount,
+  type CartDiscount,
+} from "./discount-types";
 
 const STORAGE_KEY = "pls_cart";
+const DISCOUNT_KEY = "pls_discount";
 
 type CartContextValue = {
   /** True once we've read from localStorage on the client; until then count is 0. */
@@ -21,11 +26,21 @@ type CartContextValue = {
   itemCount: number;
   /** Number of distinct products/lines in the cart. */
   lineCount: number;
+  /** Sum of every line's totalPrice — before discount. */
   subtotal: number;
+  /** Currently-applied discount rule (from Shopify Admin API), or null. */
+  discount: CartDiscount | null;
+  /** Dollar amount the customer saves with `discount` at the current subtotal. */
+  discountAmount: number;
+  /** subtotal − discountAmount, never negative. */
+  total: number;
   addItem: (item: Omit<CartItem, "id" | "addedAt"> & Partial<Pick<CartItem, "id" | "addedAt">>) => void;
   removeItem: (id: string) => void;
   updateQty: (id: string, newQty: number) => void;
   clearCart: () => void;
+  /** Replace the current discount (cleared when the cart empties or fails the minimum). */
+  applyDiscount: (discount: CartDiscount) => void;
+  clearDiscount: () => void;
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -52,13 +67,41 @@ function safeWrite(items: CartItem[]) {
   }
 }
 
+function safeReadDiscount(): CartDiscount | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(DISCOUNT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as CartDiscount;
+    if (!parsed?.code || !parsed?.valueType) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function safeWriteDiscount(d: CartDiscount | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (d) {
+      window.localStorage.setItem(DISCOUNT_KEY, JSON.stringify(d));
+    } else {
+      window.localStorage.removeItem(DISCOUNT_KEY);
+    }
+  } catch {
+    // ignore
+  }
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [discount, setDiscount] = useState<CartDiscount | null>(null);
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Read from localStorage once mounted. Avoids SSR/CSR hydration mismatch.
   useEffect(() => {
     setItems(safeRead());
+    setDiscount(safeReadDiscount());
     setIsHydrated(true);
   }, []);
 
@@ -68,11 +111,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     safeWrite(items);
   }, [items, isHydrated]);
 
+  useEffect(() => {
+    if (!isHydrated) return;
+    safeWriteDiscount(discount);
+  }, [discount, isHydrated]);
+
   // Sync across tabs.
   useEffect(() => {
     function onStorage(e: StorageEvent) {
-      if (e.key !== STORAGE_KEY) return;
-      setItems(safeRead());
+      if (e.key === STORAGE_KEY) setItems(safeRead());
+      if (e.key === DISCOUNT_KEY) setDiscount(safeReadDiscount());
     }
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
@@ -139,6 +187,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = useCallback(() => {
     setItems([]);
+    setDiscount(null);
+  }, []);
+
+  const applyDiscount = useCallback((d: CartDiscount) => {
+    setDiscount(d);
+  }, []);
+
+  const clearDiscount = useCallback(() => {
+    setDiscount(null);
   }, []);
 
   const itemCount = useMemo(
@@ -153,6 +210,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [items],
   );
 
+  // If the cart no longer meets the applied discount's minimum, drop it so the
+  // customer isn't confused at checkout.
+  useEffect(() => {
+    if (!isHydrated || !discount) return;
+    if (
+      typeof discount.minimumSubtotal === "number" &&
+      subtotal > 0 &&
+      subtotal < discount.minimumSubtotal
+    ) {
+      setDiscount(null);
+    }
+  }, [subtotal, discount, isHydrated]);
+
+  const discountAmount = useMemo(
+    () => computeDiscountAmount(discount, subtotal),
+    [discount, subtotal],
+  );
+
+  const total = useMemo(
+    () => Math.max(0, Math.round((subtotal - discountAmount) * 100) / 100),
+    [subtotal, discountAmount],
+  );
+
   const value: CartContextValue = useMemo(
     () => ({
       isHydrated,
@@ -160,12 +240,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
       itemCount,
       lineCount,
       subtotal,
+      discount,
+      discountAmount,
+      total,
       addItem,
       removeItem,
       updateQty,
       clearCart,
+      applyDiscount,
+      clearDiscount,
     }),
-    [isHydrated, items, itemCount, lineCount, subtotal, addItem, removeItem, updateQty, clearCart],
+    [
+      isHydrated,
+      items,
+      itemCount,
+      lineCount,
+      subtotal,
+      discount,
+      discountAmount,
+      total,
+      addItem,
+      removeItem,
+      updateQty,
+      clearCart,
+      applyDiscount,
+      clearDiscount,
+    ],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

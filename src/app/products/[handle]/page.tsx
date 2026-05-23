@@ -14,6 +14,16 @@ import { ShopifyError } from "@/lib/shopify";
 import { isSizeOption } from "@/components/configurator/colors";
 
 /**
+ * Does this Size option's values look like garment sizes (apparel) vs
+ * dimensional sizes (banners, posters, DTF transfers)? Apparel uses
+ * letter-coded sizes; print products use formats like "4x6" or "12 x 18".
+ */
+const APPAREL_SIZE_PATTERN = /^(xxs|xs|s|m|l|xl|xxl|xxxl|\d+xl|small|medium|large|extra\s+(small|large))$/i;
+function hasApparelSizes(values: readonly string[]): boolean {
+  return values.some((v) => APPAREL_SIZE_PATTERN.test(v.trim()));
+}
+
+/**
  * Dynamic catch-all product page. Any Shopify product handle Anthony adds in
  * his store automatically becomes available at /products/{handle} — no code
  * change required.
@@ -87,15 +97,30 @@ export default async function DynamicProductPage({
 
   if (!product) notFound();
 
-  // Any product with a Size option is treated as bulk apparel and gets the
-  // size-matrix configurator (TShirtConfigurator). When the title encodes a
-  // minimum (e.g. "6 Piece Minimum" on the polo) we use that; otherwise we
-  // default to 12 — Anthony's standard apparel minimum. Products without a
-  // Size option keep the single-variant generic configurator.
+  // We use the size-matrix configurator (TShirtConfigurator) only for true
+  // apparel — products whose Size option lists garment sizes like S / M / L /
+  // XL / 2XL. Print products like Banners (3x2, 4x2), DTF Transfers (2x2,
+  // 4x4) and Posters (12x18) also carry a Size option but with dimensions
+  // instead — those get the single-variant generic configurator with its own
+  // double-sided detection. When the title encodes a minimum (e.g. "6 Piece
+  // Minimum" on the polo) we use that; otherwise default to Anthony's bulk
+  // apparel minimum of 12.
   const detectedMinQty = detectMinQuantityFromTitle(product.title);
-  const hasSizeOption = product.options.some((o) => isSizeOption(o.name));
-  const useSizeMatrix = hasSizeOption;
+  const sizeOption = product.options.find((o) => isSizeOption(o.name));
+  const useSizeMatrix = sizeOption ? hasApparelSizes(sizeOption.values) : false;
   const minQty = detectedMinQty ?? 12;
+
+  // Embroidered apparel (polos, embroidered tees) typically takes a single
+  // logo file; we hide the front/back picker and label the upload
+  // "Embroidery Artwork". For all other sized apparel (t-shirts, hoodies,
+  // sweatshirts, tanks…), the customer can pick Front, Back, or both, and
+  // each side gets its own upload box.
+  const apparelHaystack = `${product.title} ${product.handle}`.toLowerCase();
+  const isEmbroidered = /embroider|polo/.test(apparelHaystack);
+  const apparelShowPrintLocations = !isEmbroidered;
+  const apparelSingleUploadLabel = isEmbroidered
+    ? "Embroidery Artwork"
+    : "Design Artwork";
 
   return (
     <>
@@ -104,10 +129,10 @@ export default async function DynamicProductPage({
         {useSizeMatrix ? (
           <TShirtConfigurator
             product={product}
-            badge={`Bulk apparel · min ${minQty} pcs`}
+            badge={`${isEmbroidered ? "Embroidered apparel" : "Bulk apparel"} · min ${minQty} pcs`}
             minQuantity={minQty}
-            showPrintLocations={false}
-            singleUploadLabel="Design Artwork"
+            showPrintLocations={apparelShowPrintLocations}
+            singleUploadLabel={apparelSingleUploadLabel}
           />
         ) : (
           <GenericProductConfigurator product={product} />

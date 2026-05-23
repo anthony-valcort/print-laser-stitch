@@ -18,6 +18,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { gidToNumericId, shopifyAdminFetch } from "@/lib/shopify";
 import { getCurrentCustomer } from "@/lib/customer-session";
 import { normalizeInvoiceUrl, waitForInvoiceReady } from "@/lib/shopify-checkout";
+import { lookupDiscountCode } from "@/lib/discount-lookup";
 import {
   QUANTITY_OPTIONS,
   calcPrice as calcStickerPrice,
@@ -83,6 +84,14 @@ type DraftLineItem = {
   properties?: { name: string; value: string }[];
 };
 
+type DraftAppliedDiscount = {
+  description: string;
+  value_type: "percentage" | "fixed_amount";
+  value: string;
+  amount?: string;
+  title: string;
+};
+
 export async function POST(req: NextRequest) {
   const STORE = process.env.SHOPIFY_STORE_DOMAIN;
   const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN;
@@ -96,9 +105,17 @@ export async function POST(req: NextRequest) {
   // Login is optional — guests can check out by providing an email in the body.
   const customer = await getCurrentCustomer();
 
-  let body: { items: CartItem[]; email?: string };
+  let body: {
+    items: CartItem[];
+    email?: string;
+    discountCode?: string | null;
+  };
   try {
-    body = (await req.json()) as { items: CartItem[]; email?: string };
+    body = (await req.json()) as {
+      items: CartItem[];
+      email?: string;
+      discountCode?: string | null;
+    };
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
@@ -576,12 +593,63 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Re-validate any discount code server-side before applying it. We don't
+  // trust the client's stored value — a malicious user could otherwise forge
+  // a 100% percentage. We pass the line-item subtotal so Shopify's minimum
+  // requirement check uses an accurate, server-computed amount.
+  let appliedDiscount: DraftAppliedDiscount | null = null;
+  const discountCode = body.discountCode?.trim();
+  if (discountCode) {
+    const itemsSubtotal = lineItems.reduce((sum, li) => {
+      // For variant_id lines we don't have the resolved price here; look it
+      // up from variantPrices using the variant_id we just stamped. For
+      // custom-title lines, `price` is already the per-unit dollar string.
+      if (li.variant_id) {
+        // Find matching variantPrices entry by numeric id → GID conversion.
+        const match = Array.from(variantPrices.entries()).find(([gid]) =>
+          gid.endsWith(`/${li.variant_id}`),
+        );
+        const unit = match ? match[1].price : Number(li.price || 0);
+        return sum + unit * li.quantity;
+      }
+      return sum + Number(li.price || 0) * li.quantity;
+    }, 0);
+
+    const result = await lookupDiscountCode(discountCode, itemsSubtotal);
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
+    }
+    const d = result.discount;
+    if (d.valueType === "percentage") {
+      appliedDiscount = {
+        description: d.code,
+        title: d.title,
+        value_type: "percentage",
+        value: d.value.toString(),
+      };
+    } else if (d.valueType === "fixed_amount") {
+      appliedDiscount = {
+        description: d.code,
+        title: d.title,
+        value_type: "fixed_amount",
+        // Cap fixed amount to the subtotal so Shopify doesn't error.
+        value: Math.min(d.value, itemsSubtotal).toFixed(2),
+      };
+    }
+    // Free-shipping codes don't go in applied_discount — Shopify's checkout
+    // handles those automatically once the code is also added to the order
+    // note so Anthony sees which code applied.
+  }
+
   const draftOrder = {
     draft_order: {
       email: orderEmail,
       line_items: lineItems,
       tags: "cart-checkout,custom-configurator",
-      note: `Cart checkout · ${noteParts.join(" + ")}`,
+      note: discountCode
+        ? `Cart checkout · ${noteParts.join(" + ")} · Discount: ${discountCode.toUpperCase()}`
+        : `Cart checkout · ${noteParts.join(" + ")}`,
+      ...(appliedDiscount ? { applied_discount: appliedDiscount } : {}),
     },
   };
 
@@ -614,14 +682,33 @@ export async function POST(req: NextRequest) {
   }
 
   const data = (await shopifyResp.json()) as {
-    draft_order: { id: number; invoice_url: string };
+    draft_order: {
+      id: number;
+      invoice_url: string;
+      total_price: string;
+      line_items: Array<{ title: string; quantity: number }>;
+    };
   };
 
   const invoiceUrl = normalizeInvoiceUrl(data.draft_order.invoice_url);
   await waitForInvoiceReady(invoiceUrl);
 
+  // Build a compact summary the client can persist for guest order history
+  // (localStorage) or pass straight to the account page.
+  const orderSummary = {
+    draftOrderId: data.draft_order.id,
+    email: orderEmail,
+    total: Number(data.draft_order.total_price),
+    items: (data.draft_order.line_items || []).map((li) => ({
+      title: li.title,
+      quantity: li.quantity,
+    })),
+    invoiceUrl,
+  };
+
   return NextResponse.json({
     invoiceUrl,
     draftOrderId: data.draft_order.id,
+    order: orderSummary,
   });
 }

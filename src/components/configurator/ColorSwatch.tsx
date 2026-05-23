@@ -4,12 +4,15 @@ export function ColorSwatch({
   name,
   active,
   onClick,
+  hex: hexOverride,
 }: {
   name: string;
   active: boolean;
   onClick: () => void;
+  /** Optional explicit hex (used when colour comes from Shopify metafield). */
+  hex?: string | null;
 }) {
-  const hex = colorHex(name);
+  const hex = hexOverride ?? colorHex(name);
   return (
     <button
       type="button"

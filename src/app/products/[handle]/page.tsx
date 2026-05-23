@@ -110,14 +110,14 @@ export default async function DynamicProductPage({
   const useSizeMatrix = sizeOption ? hasApparelSizes(sizeOption.values) : false;
   const minQty = detectedMinQty ?? 12;
 
-  // Embroidered apparel (polos, embroidered tees) typically takes a single
-  // logo file; we hide the front/back picker and label the upload
-  // "Embroidery Artwork". For all other sized apparel (t-shirts, hoodies,
-  // sweatshirts, tanks…), the customer can pick Front, Back, or both, and
-  // each side gets its own upload box.
+  // All sized apparel (t-shirts, hoodies, sweatshirts, polos, embroidered
+  // tees…) now lets the customer pick Front, Back, or both — each side
+  // gets its own upload box. We still detect embroidered/polo products
+  // just to label the badge accurately ("Embroidered apparel" vs "Bulk
+  // apparel") and to keep the single-upload fallback labelled
+  // "Embroidery Artwork" if a future product opts out of print locations.
   const apparelHaystack = `${product.title} ${product.handle}`.toLowerCase();
   const isEmbroidered = /embroider|polo/.test(apparelHaystack);
-  const apparelShowPrintLocations = !isEmbroidered;
   const apparelSingleUploadLabel = isEmbroidered
     ? "Embroidery Artwork"
     : "Design Artwork";
@@ -131,7 +131,7 @@ export default async function DynamicProductPage({
             product={product}
             badge={`${isEmbroidered ? "Embroidered apparel" : "Bulk apparel"} · min ${minQty} pcs`}
             minQuantity={minQty}
-            showPrintLocations={apparelShowPrintLocations}
+            showPrintLocations={true}
             singleUploadLabel={apparelSingleUploadLabel}
           />
         ) : (

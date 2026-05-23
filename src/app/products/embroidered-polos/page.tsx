@@ -42,7 +42,7 @@ export default async function EmbroideredPolosPage() {
             product={product}
             badge={`Embroidered apparel · min ${POLO_MIN_QUANTITY} pcs`}
             minQuantity={POLO_MIN_QUANTITY}
-            showPrintLocations={false}
+            showPrintLocations={true}
             singleUploadLabel="Embroidery Artwork"
           />
         ) : (

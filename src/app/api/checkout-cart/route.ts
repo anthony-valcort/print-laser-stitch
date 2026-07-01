@@ -471,6 +471,23 @@ export async function POST(req: NextRequest) {
       noteParts.push(
         `Decal Signage ${plan.label} ${recomputed.totalAreaSqFt.toFixed(2)} sqft`,
       );
+    } else if (item.kind === "vehicle-sticker") {
+      lineItems.push({
+        title: `Vehicle Sticker Kit — ${item.year} ${item.make} ${item.model} · ${item.partLabel}`,
+        price: item.totalPrice.toFixed(2),
+        quantity: 1,
+        requires_shipping: true,
+        taxable: true,
+        properties: [
+          { name: "Make", value: item.make },
+          { name: "Model", value: item.model },
+          { name: "Year", value: String(item.year) },
+          { name: "Set", value: item.partLabel },
+        ],
+      });
+      noteParts.push(
+        `${item.year} ${item.make} ${item.model} — ${item.partLabel}`,
+      );
     } else if (item.kind === "decal") {
       // Quick Quote — multi-panel + material, 7% Martin County tax on top.
       const mat = DECAL_MATERIALS.find(

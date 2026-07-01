@@ -3,9 +3,53 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getAllCollections } from "@/lib/shopify-collections";
-import { getBestSellingProducts } from "@/lib/shopify-products";
 
 export const revalidate = 300;
+
+const WRAP_SERVICES = [
+  {
+    icon: "🚗",
+    title: "Full Vehicle Wraps",
+    desc: "Complete color-change wraps using premium 3M & Avery cast vinyl. Matte, gloss, satin or chrome finishes.",
+    accent: "yellow" as const,
+    href: "/collections",
+  },
+  {
+    icon: "🎨",
+    title: "Partial Wraps & Decals",
+    desc: "Hood wraps, roof wraps, door graphics and custom accent decals — stand out without a full wrap.",
+    accent: "cyan" as const,
+    href: "/collections",
+  },
+  {
+    icon: "🛡️",
+    title: "Paint Protection Film",
+    desc: "Invisible PPF shields your paint from rock chips, scratches and UV fade. Self-healing gloss or matte finish.",
+    accent: "magenta" as const,
+    href: "/collections",
+  },
+  {
+    icon: "🪟",
+    title: "Window Tinting",
+    desc: "Ceramic and carbon window film for heat rejection, UV blocking and privacy — with a clean OEM look.",
+    accent: "yellow" as const,
+    href: "/collections",
+  },
+  {
+    icon: "🚚",
+    title: "Fleet & Commercial Graphics",
+    desc: "Brand your entire fleet with consistent, professional vehicle graphics that turn every drive into an ad.",
+    accent: "cyan" as const,
+    href: "/collections",
+  },
+  {
+    icon: "✨",
+    title: "Color Change Wraps",
+    desc: "Forged carbon, camo, brushed metal and custom-printed designs — transform your ride inside a day.",
+    accent: "magenta" as const,
+    href: "/collections",
+  },
+];
 
 /**
  * Cycles through the three brand neons so the category grid stays on-brand
@@ -31,14 +75,8 @@ const ACCENTS = [
 
 export default async function Home() {
   let productCategories: Awaited<ReturnType<typeof getAllCollections>> = [];
-  let bestSellers: Awaited<ReturnType<typeof getBestSellingProducts>> = [];
-  // Each call is independent — one failing must not blank the home page.
-  const [cats, best] = await Promise.allSettled([
-    getAllCollections(),
-    getBestSellingProducts(4),
-  ]);
-  if (cats.status === "fulfilled") productCategories = cats.value;
-  if (best.status === "fulfilled") bestSellers = best.value;
+  const result = await getAllCollections().catch(() => []);
+  productCategories = result;
 
   return (
     <>
@@ -163,6 +201,8 @@ export default async function Home() {
           </Link>
         </section>
 
+
+
         {/* Make your selection — image-driven product grid */}
         <section
           id="categories"
@@ -257,59 +297,69 @@ export default async function Home() {
           )}
         </section>
 
-        {/* Best Sellers — compact strip (Shopify Storefront ranking) */}
-        {bestSellers.length > 0 && (
-          <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-            <div className="mb-5 flex items-center justify-between gap-4">
-              <h2 className="font-display text-xl font-black uppercase tracking-tight sm:text-2xl">
-                Best <span className="accent-gradient-text">sellers</span>
-              </h2>
-              <Link
-                href="/collections"
-                className="inline-flex items-center gap-1.5 font-headline text-[11px] font-bold uppercase tracking-wider text-foreground-muted transition hover:text-[#18d3e8]"
-              >
-                View all
-                <Arrow size={13} />
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4">
-              {bestSellers.map((p) => (
-                <Link
-                  key={p.handle}
-                  href={`/products/${p.handle}`}
-                  className="group flex flex-col overflow-hidden rounded-xl border border-border-soft bg-surface transition hover:border-[#d94cb3]/40 hover:shadow-[0_0_30px_rgba(217,76,179,0.15)]"
-                >
-                  <div className="relative aspect-square w-full overflow-hidden bg-white/5">
-                    {p.featuredImage?.url ? (
-                      <Image
-                        src={p.featuredImage.url}
-                        alt={p.featuredImage.altText ?? p.title}
-                        fill
-                        sizes="(max-width: 640px) 50vw, 25vw"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 grid place-items-center">
-                        <span className="text-4xl">📦</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-1 items-center justify-between gap-2 px-3 py-2.5">
-                    <div className="min-w-0 truncate font-headline text-xs font-semibold leading-snug">
-                      {p.title}
-                    </div>
-                    {p.minPrice && (
-                      <span className="shrink-0 font-headline text-xs font-bold text-[#18d3e8]">
-                        ${Number(p.minPrice).toFixed(2)}
+        {/* Vehicle Sticker Kits — find decals for your exact vehicle */}
+        <section className="mx-auto max-w-7xl px-4 pb-4 pt-2 sm:px-6 lg:px-8">
+          <Link
+            href="/vehicle-stickers"
+            className="group relative block overflow-hidden rounded-3xl border border-[#18d3e8]/30 bg-linear-to-br from-[#18d3e8]/10 via-surface to-[#d9f000]/10 p-8 transition hover:border-[#18d3e8]/50 sm:p-12"
+          >
+            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#18d3e8]/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#d9f000]/15 blur-3xl" />
+            <div className="relative grid items-center gap-8 lg:grid-cols-[1.4fr_1fr]">
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#18d3e8]/40 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />
+                  Vehicle-specific decal kits
+                </span>
+                <h2 className="mt-4 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
+                  Custom Vehicle{" "}
+                  <span className="bg-linear-to-r from-[#18d3e8] to-[#d9f000] bg-clip-text text-transparent">
+                    Sticker Kits
+                  </span>
+                </h2>
+                <p className="mt-4 max-w-xl text-base text-foreground-muted">
+                  Pick your make, model and year — see decal sets cut perfectly
+                  for{" "}
+                  <span className="text-foreground">your exact vehicle</span>.
+                  Hood sets, bedsides, full kits and more.
+                </p>
+                <ul className="mt-6 grid gap-2 text-sm text-foreground/85 sm:grid-cols-2">
+                  <li className="flex items-center gap-2">
+                    <CheckIcon /> Hood Set
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckIcon /> Bedside Decals
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckIcon /> Full Vehicle Set
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckIcon /> Top / Roof Wrap
+                  </li>
+                </ul>
+                <span className="mt-8 inline-flex items-center gap-2 rounded-md cyan-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#18d3e8]/30 transition group-hover:brightness-110">
+                  Find Your Vehicle
+                  <Arrow />
+                </span>
+              </div>
+              <div className="relative">
+                <div className="relative mx-auto grid aspect-square max-w-xs grid-cols-2 gap-2 overflow-hidden rounded-2xl border border-border-soft bg-background/60 p-4 shadow-2xl shadow-black/40 backdrop-blur transition group-hover:scale-105 lg:max-w-none">
+                  {["🚘 Hood Set", "🛻 Bedside", "✨ Full Set", "⬆️ Top"].map((label) => (
+                    <div
+                      key={label}
+                      className="flex flex-col items-center justify-center gap-1 rounded-xl bg-white/5 p-3 text-center"
+                    >
+                      <span className="text-2xl">{label.split(" ")[0]}</span>
+                      <span className="font-headline text-[10px] font-bold uppercase tracking-wide text-foreground-muted">
+                        {label.split(" ").slice(1).join(" ")}
                       </span>
-                    )}
-                  </div>
-                </Link>
-              ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </section>
-        )}
+          </Link>
+        </section>
 
         {/* Quick Quote (multi-panel + material) CTA */}
         <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">

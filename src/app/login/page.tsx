@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AuthForm from "@/components/AuthForm";
@@ -29,6 +30,16 @@ export default async function LoginPage() {
           <AuthForm mode="login" />
         </Suspense>
       </main>
+        {/* hidden admin entry — intentionally low visibility */}
+        <div className="pb-2 text-right">
+          <Link
+            href="/admin/login"
+            className="font-headline text-[10px] text-foreground/10 transition hover:text-foreground/20"
+            tabIndex={-1}
+          >
+            ·
+          </Link>
+        </div>
       <Footer />
     </>
   );

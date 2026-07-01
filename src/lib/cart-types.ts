@@ -9,7 +9,8 @@ export type CartItemKind =
   | "tshirt"
   | "product"
   | "signage"
-  | "decal";
+  | "decal"
+  | "vehicle-sticker";
 
 export interface CartItemBase {
   /** Unique cart-line id — used for remove/edit. */
@@ -155,9 +156,19 @@ export interface DecalCartItem extends CartItemBase {
   notes?: string;
 }
 
+export interface VehicleStickerCartItem extends CartItemBase {
+  kind: "vehicle-sticker";
+  make: string;
+  model: string;
+  year: number;
+  part: string;
+  partLabel: string;
+}
+
 export type CartItem =
   | VinylStickerCartItem
   | TShirtCartItem
   | ProductCartItem
   | SignageCartItem
-  | DecalCartItem;
+  | DecalCartItem
+  | VehicleStickerCartItem;

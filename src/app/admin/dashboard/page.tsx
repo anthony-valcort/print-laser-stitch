@@ -196,15 +196,6 @@ export default function AdminDashboard() {
     setPart(key, { imageUrls: p.imageUrls.filter((_, i) => i !== idx) });
   }
 
-  function addPartFile(key: PartKey, file: File) {
-    const p = form.parts[key] ?? emptyPart();
-    const preview = URL.createObjectURL(file);
-    setPart(key, {
-      pendingFiles: [...p.pendingFiles, file],
-      pendingPreviews: [...p.pendingPreviews, preview],
-    });
-  }
-
   function removePending(key: PartKey, idx: number) {
     const p = form.parts[key] ?? emptyPart();
     URL.revokeObjectURL(p.pendingPreviews[idx]);
@@ -716,7 +707,15 @@ export default function AdminDashboard() {
                                 Upload
                                 <input type="file" accept="image/*" multiple className="sr-only"
                                   onChange={(e) => {
-                                    Array.from(e.target.files ?? []).forEach((f) => addPartFile(key, f));
+                                    const files = Array.from(e.target.files ?? []);
+                                    if (!files.length) return;
+                                    const cur = form.parts[key] ?? emptyPart();
+                                    const newPreviews = files.map((f) => URL.createObjectURL(f));
+                                    setPart(key, {
+                                      pendingFiles: [...cur.pendingFiles, ...files],
+                                      pendingPreviews: [...cur.pendingPreviews, ...newPreviews],
+                                    });
+                                    e.target.value = "";
                                   }}
                                 />
                               </label>

@@ -37,7 +37,7 @@ export default async function LoginPage() {
             className="inline-flex items-center gap-1 rounded-md border border-border-soft px-2 py-1 font-headline text-[11px] text-foreground/40 transition hover:border-[#18d3e8]/40 hover:text-foreground/70"
             tabIndex={-1}
           >
-            ⚙ Admin
+            ⚙
           </Link>
         </div>
       <Footer />

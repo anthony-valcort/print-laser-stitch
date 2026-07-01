@@ -38,9 +38,7 @@ export async function POST(req: NextRequest) {
 
   const firstName = body.firstName?.trim() ?? "";
   const lastName = body.lastName?.trim() ?? "";
-  // Phone is passed through as-typed. Shopify itself will reject malformed
-  // numbers via `customerUserErrors`, which we surface back to the customer.
-  const phone = body.phone?.trim() ?? "";
+  const phoneRaw = body.phone?.trim() ?? "";
 
   if (!firstName) {
     return NextResponse.json(
@@ -48,6 +46,27 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
+
+  // Shopify requires E.164 format (`+<country><number>`). Blank phone is OK
+  // — we just clear the field. Otherwise we mirror the client-side check so
+  // a forged request still gets a friendly error.
+  if (phoneRaw && !phoneRaw.startsWith("+")) {
+    return NextResponse.json(
+      {
+        error:
+          "Phone must start with country code (e.g. +1 for US/Canada). Example: +1 555 123 4567.",
+      },
+      { status: 400 },
+    );
+  }
+  const phoneDigits = phoneRaw.replace(/[^\d]/g, "");
+  if (phoneRaw && (phoneDigits.length < 8 || phoneDigits.length > 15)) {
+    return NextResponse.json(
+      { error: "Phone number length looks off — please double-check it." },
+      { status: 400 },
+    );
+  }
+  const phone = phoneRaw;
 
   try {
     type Resp = {

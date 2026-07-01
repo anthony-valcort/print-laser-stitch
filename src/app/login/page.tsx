@@ -30,14 +30,14 @@ export default async function LoginPage() {
           <AuthForm mode="login" />
         </Suspense>
       </main>
-        {/* hidden admin entry — intentionally low visibility */}
-        <div className="pb-2 text-right">
+        {/* hidden admin entry */}
+        <div className="pb-4 pr-4 text-right">
           <Link
             href="/admin/login"
-            className="font-headline text-[10px] text-foreground/10 transition hover:text-foreground/20"
+            className="inline-flex items-center gap-1 rounded-md border border-border-soft px-2 py-1 font-headline text-[11px] text-foreground/40 transition hover:border-[#18d3e8]/40 hover:text-foreground/70"
             tabIndex={-1}
           >
-            ·
+            ⚙ Admin
           </Link>
         </div>
       <Footer />

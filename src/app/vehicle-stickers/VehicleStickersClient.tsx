@@ -374,15 +374,16 @@ export default function VehicleStickersClient({
         return (
           <div className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-4">
             <button className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={closeDetail} />
-            <div className="relative w-full max-w-2xl overflow-hidden rounded-t-3xl border border-border-soft bg-surface shadow-2xl sm:rounded-2xl">
+            <div className="relative flex w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border border-border-soft bg-surface shadow-2xl sm:rounded-2xl"
+              style={{ maxHeight: "90dvh" }}>
 
-              {/* Image gallery */}
-              <div className="relative bg-black">
+              {/* Image gallery — fixed height, never overflows */}
+              <div className="relative shrink-0 bg-black">
                 {imgs[imgIdx] ? (
                   <img src={imgs[imgIdx]} alt={PART_LABELS[detailPart]}
-                    className="h-64 w-full object-cover sm:h-80" />
+                    className="max-h-[45vh] w-full object-contain" />
                 ) : (
-                  <div className="flex h-64 items-center justify-center text-8xl sm:h-80">
+                  <div className="flex h-48 items-center justify-center text-8xl">
                     {PART_ICONS[detailPart]}
                   </div>
                 )}
@@ -411,49 +412,52 @@ export default function VehicleStickersClient({
                 </button>
               </div>
 
-              {/* Thumbnails */}
-              {imgs.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto border-b border-border-soft bg-background/60 px-4 py-3">
-                  {imgs.map((url, i) => (
-                    <button key={i} onClick={() => setImgIdx(i)}
-                      className={`h-14 w-20 shrink-0 overflow-hidden rounded-lg border-2 transition ${
-                        i === imgIdx ? "border-[#18d3e8]" : "border-transparent opacity-50 hover:opacity-100"
-                      }`}>
-                      <img src={url} alt="" className="h-full w-full object-cover" />
+              {/* Scrollable area: thumbnails + info + buttons */}
+              <div className="flex-1 overflow-y-auto">
+                {/* Thumbnails */}
+                {imgs.length > 1 && (
+                  <div className="flex gap-2 overflow-x-auto border-b border-border-soft bg-background/60 px-4 py-3">
+                    {imgs.map((url, i) => (
+                      <button key={i} onClick={() => setImgIdx(i)}
+                        className={`h-14 w-20 shrink-0 overflow-hidden rounded-lg border-2 transition ${
+                          i === imgIdx ? "border-[#18d3e8]" : "border-transparent opacity-50 hover:opacity-100"
+                        }`}>
+                        <img src={url} alt="" className="h-full w-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Info */}
+                <div className="p-6">
+                  <div className="font-headline text-xs font-bold uppercase tracking-widest text-foreground-muted">
+                    {selected.make} {selected.model} · {selectedYear}
+                  </div>
+                  <div className="mt-1 font-display text-2xl font-black uppercase">
+                    {PART_LABELS[detailPart]}
+                  </div>
+                  <div className="mt-1 font-headline text-3xl font-black text-[#d9f000]">
+                    ${info.price.toFixed(2)}
+                  </div>
+
+                  <div className="mt-5 flex gap-3">
+                    <button onClick={closeDetail}
+                      className="rounded-xl border border-border-soft px-5 py-3 font-headline text-sm text-foreground-muted transition hover:border-[#18d3e8] hover:text-[#18d3e8]">
+                      Back
                     </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Info */}
-              <div className="p-6">
-                <div className="font-headline text-xs font-bold uppercase tracking-widest text-foreground-muted">
-                  {selected.make} {selected.model} · {selectedYear}
-                </div>
-                <div className="mt-1 font-display text-2xl font-black uppercase">
-                  {PART_LABELS[detailPart]}
-                </div>
-                <div className="mt-1 font-headline text-3xl font-black text-[#d9f000]">
-                  ${info.price.toFixed(2)}
-                </div>
-
-                <div className="mt-5 flex gap-3">
-                  <button onClick={closeDetail}
-                    className="rounded-xl border border-border-soft px-5 py-3 font-headline text-sm text-foreground-muted transition hover:border-[#18d3e8] hover:text-[#18d3e8]">
-                    Back
-                  </button>
-                  <button
-                    onClick={() => { addToCart(detailPart); }}
-                    disabled={inCart}
-                    className={`flex-1 rounded-xl py-3 font-headline text-sm font-black uppercase tracking-wider transition ${
-                      inCart
-                        ? "cursor-default bg-[#18d3e8]/15 text-[#18d3e8]"
-                        : justAddedThis
-                        ? "bg-[#18d3e8] text-black"
-                        : "bg-[#d9f000] text-black hover:brightness-110 active:scale-[0.98]"
-                    }`}>
-                    {inCart ? "✓ Already in Cart" : justAddedThis ? "✓ Added to Cart!" : "Add to Cart"}
-                  </button>
+                    <button
+                      onClick={() => { addToCart(detailPart); }}
+                      disabled={inCart}
+                      className={`flex-1 rounded-xl py-3 font-headline text-sm font-black uppercase tracking-wider transition ${
+                        inCart
+                          ? "cursor-default bg-[#18d3e8]/15 text-[#18d3e8]"
+                          : justAddedThis
+                          ? "bg-[#18d3e8] text-black"
+                          : "bg-[#d9f000] text-black hover:brightness-110 active:scale-[0.98]"
+                      }`}>
+                      {inCart ? "✓ Already in Cart" : justAddedThis ? "✓ Added to Cart!" : "Add to Cart"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

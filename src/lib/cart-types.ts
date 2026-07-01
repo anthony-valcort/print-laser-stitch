@@ -172,3 +172,10 @@ export type CartItem =
   | SignageCartItem
   | DecalCartItem
   | VehicleStickerCartItem;
+
+// Distributive Omit — correctly narrows each union member separately.
+// `Omit<CartItem, K>` collapses the union to only shared properties,
+// which is why `make`, `model`, etc. disappear. This preserves the full union.
+type DistributiveOmit<T, K extends keyof any> = T extends T ? Omit<T, K> : never;
+export type NewCartItem = DistributiveOmit<CartItem, "id" | "addedAt"> &
+  Partial<Pick<CartItemBase, "id" | "addedAt">>;

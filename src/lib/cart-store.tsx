@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { CartItem } from "./cart-types";
+import type { CartItem, NewCartItem } from "./cart-types";
 import {
   computeDiscountAmount,
   type CartDiscount,
@@ -50,7 +50,7 @@ type CartContextValue = {
   total: number;
   /** Currently-in-flight checkout, if any (cart left intact until paid). */
   pendingCheckout: PendingCheckout | null;
-  addItem: (item: Omit<CartItem, "id" | "addedAt"> & Partial<Pick<CartItem, "id" | "addedAt">>) => void;
+  addItem: (item: NewCartItem) => void;
   removeItem: (id: string) => void;
   updateQty: (id: string, newQty: number) => void;
   clearCart: () => void;

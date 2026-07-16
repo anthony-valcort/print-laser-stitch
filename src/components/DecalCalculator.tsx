@@ -36,6 +36,7 @@ export default function DecalCalculator() {
   const [panels, setPanels] = useState<Panel[]>([]);
   const [form, setForm] = useState(EMPTY_PANEL_FORM);
   const [material, setMaterial] = useState<MaterialKey>("perforated-film");
+  const [customPricePerSqFt, setCustomPricePerSqFt] = useState<string>("");
   const [discountPercent, setDiscountPercent] = useState<string>("0");
   const [notes, setNotes] = useState("");
   const [toast, setToast] = useState<string | null>(null);
@@ -54,8 +55,9 @@ export default function DecalCalculator() {
         })),
         material,
         discountPercent: Number(discountPercent) || 0,
+        customPricePerSqFt: Number(customPricePerSqFt) || 0,
       }),
-    [panels, material, discountPercent],
+    [panels, material, discountPercent, customPricePerSqFt],
   );
 
   function addPanel() {
@@ -90,7 +92,7 @@ export default function DecalCalculator() {
     }
     if (result.quoteOnly) {
       setToast(
-        "Special Vinyl needs a custom quote — please call (772) 985-2854.",
+        "Enter your quoted price per sq ft, or call (772) 985-2854 for a custom quote.",
       );
       return;
     }
@@ -226,6 +228,29 @@ export default function DecalCalculator() {
                 );
               })}
             </div>
+
+            {currentMaterial.quoteOnly && (
+              <div className="mt-4 rounded-xl border border-rose-400/30 bg-rose-500/10 p-4">
+                <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-rose-200">
+                  Your quoted price ($ / sq ft)
+                </label>
+                <input
+                  type="number"
+                  value={customPricePerSqFt}
+                  onChange={(e) => setCustomPricePerSqFt(e.target.value)}
+                  min={0}
+                  step="0.01"
+                  placeholder="e.g., 20.00"
+                  className="w-full rounded-xl border border-rose-400/40 bg-white/4 px-4 py-2.5 text-sm placeholder:text-foreground-muted/60 outline-none ring-rose-400/40 focus:ring-2 sm:w-64"
+                  suppressHydrationWarning
+                />
+                <p className="mt-1.5 text-[11px] text-rose-200/80">
+                  Special Vinyl is priced per job. Enter the rate we quoted
+                  you to add it to your cart, or call (772) 985-2854 if you
+                  don&apos;t have one yet.
+                </p>
+              </div>
+            )}
           </section>
 
           {/* Add Panel */}
@@ -301,8 +326,7 @@ export default function DecalCalculator() {
                   const w = Number(p.width) || 0;
                   const h = Number(p.height) || 0;
                   const sqft = (w * h) / 144;
-                  const panelPrice =
-                    sqft * currentMaterial.pricePerSqFt;
+                  const panelPrice = sqft * result.pricePerSqFt;
                   return (
                     <li
                       key={p.id}
@@ -350,7 +374,7 @@ export default function DecalCalculator() {
                           <div className="font-mono">{sqft.toFixed(2)} sq ft</div>
                         </div>
                       </div>
-                      {!currentMaterial.quoteOnly && (
+                      {!result.quoteOnly && (
                         <div className="mt-2 flex items-center justify-between border-t border-border-soft pt-2">
                           <span className="text-[11px] text-foreground-muted">
                             Price
@@ -385,9 +409,9 @@ export default function DecalCalculator() {
                     <span className="font-semibold text-cyan-200">
                       Material: {currentMaterial.label}
                     </span>
-                    {!currentMaterial.quoteOnly && (
+                    {!result.quoteOnly && (
                       <span className="font-mono font-bold text-cyan-300">
-                        ${currentMaterial.pricePerSqFt.toFixed(2)}/sq ft
+                        ${result.pricePerSqFt.toFixed(2)}/sq ft
                       </span>
                     )}
                   </div>

@@ -57,10 +57,10 @@ const CUSTOM_SIZE_ICON = "/custom_size-removebg-preview.png";
 const MIN_CUSTOM_QTY = 25;
 
 const SIZE_HOVER_TEXT: Record<SizeKey, string> = {
-  "2x2": "About the size of an Oreo",
-  "3x3": "About the size of a Post-It",
-  "4x4": "About the size of bread",
-  "5x5": "About the size of a CD",
+  "2x2": "About the size of a lime",
+  "3x3": "About the size of a baseball",
+  "4x4": "About the size of a coffee coaster",
+  "5x5": "About the size of a dollar bill",
 };
 
 const POPULAR_SIZES: { label: string; w: number; h: number }[] = [

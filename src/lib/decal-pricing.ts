@@ -88,6 +88,8 @@ export type DecalPriceInput = {
   material: MaterialKey;
   /** Percentage 0–100. */
   discountPercent: number;
+  /** User-entered $/sqft for quote-only materials (e.g. Special Vinyl). */
+  customPricePerSqFt?: number;
 };
 
 export type DecalPriceResult = {
@@ -113,7 +115,11 @@ export function calcDecalPrice(input: DecalPriceInput): DecalPriceResult {
     return sum + (w * h) / 144;
   }, 0);
 
-  const pricePerSqFt = material.pricePerSqFt;
+  // Special Vinyl (and any other quote-only material) has no fixed rate —
+  // the customer enters the $/sqft they were quoted instead.
+  const pricePerSqFt = material.quoteOnly
+    ? Math.max(0, Number(input.customPricePerSqFt) || 0)
+    : material.pricePerSqFt;
   const subtotal = round2(pricePerSqFt * totalAreaSqFt);
 
   const discountPct = Math.max(
@@ -133,7 +139,10 @@ export function calcDecalPrice(input: DecalPriceInput): DecalPriceResult {
     afterDiscount,
     taxAmount,
     total,
-    quoteOnly: Boolean(material.quoteOnly),
+    // Only still "blocked" if this is a quote-only material and no price has
+    // been entered yet — once the customer fills in their quoted rate, normal
+    // pricing/checkout applies.
+    quoteOnly: Boolean(material.quoteOnly) && pricePerSqFt <= 0,
   };
 }
 

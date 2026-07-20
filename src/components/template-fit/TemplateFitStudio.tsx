@@ -628,6 +628,13 @@ export default function TemplateFitStudio({
               style={{
                 width: imgWidthPx,
                 height: imgHeightPx,
+                // Override Tailwind's preflight `img { max-width: 100% }` —
+                // otherwise the browser clamps the rendered width whenever
+                // the image is zoomed/filled beyond the board's own size,
+                // desyncing the on-screen preview from the flattened export
+                // (which draws via canvas and isn't subject to this CSS rule).
+                maxWidth: "none",
+                maxHeight: "none",
                 transform: `translate3d(${imgLeftPx}px, ${imgTopPx}px, 0) scale(${current.flipX ? -1 : 1}, ${current.flipY ? -1 : 1})`,
               }}
             />

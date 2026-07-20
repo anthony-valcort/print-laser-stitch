@@ -110,53 +110,55 @@ export default function CategoryGrid({
           <Link
             key={c.id}
             href={`/collections/${c.handle}`}
-            className={`group relative isolate flex flex-col overflow-hidden rounded-2xl shadow-lg shadow-black/20 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/30 sm:min-h-46 sm:flex-row ${theme.base}`}
+            className={`group relative isolate flex min-h-40 flex-row overflow-hidden rounded-2xl shadow-lg shadow-black/20 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/30 sm:min-h-46 ${theme.base}`}
           >
             {/* Diagonal two-tone split — mirrors the client mockups */}
             <div
               aria-hidden
-              className={`pointer-events-none absolute inset-0 hidden sm:block ${theme.diagonal}`}
+              className={`pointer-events-none absolute inset-0 ${theme.diagonal}`}
               style={{
                 clipPath: "polygon(38% 0, 100% 0, 100% 100%, 12% 100%)",
               }}
             />
 
             {/* Text side */}
-            <div className="relative z-10 flex flex-1 flex-col justify-center gap-2 p-5 sm:max-w-[54%] sm:p-6">
+            <div className="relative z-10 flex max-w-[54%] flex-1 flex-col justify-center gap-1.5 p-4 sm:gap-2 sm:p-6">
               <h3
-                className={`font-display text-xl font-black uppercase leading-[0.95] tracking-tight sm:text-2xl ${theme.heading}`}
+                className={`font-display text-lg font-black uppercase leading-[0.95] tracking-tight sm:text-2xl ${theme.heading}`}
               >
                 {c.title}
               </h3>
               {c.description && (
                 <p
-                  className={`line-clamp-2 text-xs leading-relaxed sm:text-sm ${theme.desc}`}
+                  className={`line-clamp-2 text-[11px] leading-relaxed sm:text-sm ${theme.desc}`}
                 >
                   {c.description}
                 </p>
               )}
-              <span className="mt-1 inline-flex w-fit items-center gap-2 rounded-full shop-now-gradient px-5 py-2 font-headline text-xs font-extrabold uppercase tracking-wide text-white shadow-lg shadow-black/25 transition group-hover:brightness-110">
+              <span className="mt-1 inline-flex w-fit items-center gap-2 rounded-full shop-now-gradient px-4 py-1.5 font-headline text-[11px] font-extrabold uppercase tracking-wide text-white shadow-lg shadow-black/25 transition group-hover:brightness-110 sm:px-5 sm:py-2 sm:text-xs">
                 Shop Now
               </span>
             </div>
 
-            {/* Image side — Shopify collection image, dynamic */}
-            <div className="relative z-10 order-first aspect-square w-full sm:order-0 sm:aspect-auto sm:min-h-0 sm:w-auto sm:flex-1">
-              {c.image?.url ? (
-                <Image
-                  src={c.image.url}
-                  alt={c.image.altText ?? c.title}
-                  fill
-                  sizes="(max-width: 640px) 100vw, 28vw"
-                  className="rounded-xl object-contain object-center p-2 transition-transform duration-500 group-hover:scale-105 sm:rounded-none sm:p-3 sm:object-right"
-                />
-              ) : (
-                <div className="grid h-full place-items-center">
-                  <span className="text-5xl drop-shadow-2xl sm:text-6xl">
-                    🗂️
-                  </span>
-                </div>
-              )}
+            {/* Image side — Shopify collection image, dynamic, in a white rectangle tile */}
+            <div className="relative z-10 flex-1 p-3">
+              <div className="relative h-full w-full overflow-hidden rounded-xl bg-white/95">
+                {c.image?.url ? (
+                  <Image
+                    src={c.image.url}
+                    alt={c.image.altText ?? c.title}
+                    fill
+                    sizes="(max-width: 640px) 46vw, 28vw"
+                    className="object-contain object-center p-2 transition-transform duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="grid h-full place-items-center">
+                    <span className="text-4xl drop-shadow-2xl sm:text-6xl">
+                      🗂️
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </Link>
         );

@@ -100,6 +100,11 @@ body {
   background-image: linear-gradient(135deg, #18d3e8 0%, #d94cb3 100%);
 }
 
+/* Category banner CTA — glossy green pill (client-approved category mockups) */
+@utility shop-now-gradient {
+  background-image: linear-gradient(180deg, #7ed957 0%, #3fa34d 65%, #2c8a3e 100%);
+}
+
 @utility brand-glow-yellow {
   box-shadow: 0 0 40px rgba(217, 240, 0, 0.35);
 }

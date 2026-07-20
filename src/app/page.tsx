@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import CategoryGrid from "@/components/CategoryGrid";
 import { getAllCollections } from "@/lib/shopify-collections";
 
 export const revalidate = 300;
@@ -48,28 +49,6 @@ const WRAP_SERVICES = [
     desc: "Forged carbon, camo, brushed metal and custom-printed designs — transform your ride inside a day.",
     accent: "magenta" as const,
     href: "/collections",
-  },
-];
-
-/**
- * Cycles through the three brand neons so the category grid stays on-brand
- * without monotony. Yellow = primary, Cyan = secondary, Magenta = tertiary.
- */
-const ACCENTS = [
-  {
-    gradient: "from-[#d9f000] to-[#b8cc00]",
-    glow: "shadow-[0_0_40px_rgba(217,240,0,0.25)]",
-    text: "text-[#d9f000]",
-  },
-  {
-    gradient: "from-[#18d3e8] to-[#14b8ce]",
-    glow: "shadow-[0_0_40px_rgba(24,211,232,0.25)]",
-    text: "text-[#18d3e8]",
-  },
-  {
-    gradient: "from-[#d94cb3] to-[#b83a96]",
-    glow: "shadow-[0_0_40px_rgba(217,76,179,0.25)]",
-    text: "text-[#d94cb3]",
   },
 ];
 
@@ -231,69 +210,7 @@ export default async function Home() {
               </p>
             </div>
           ) : (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {productCategories.map((c, i) => {
-                const accent = ACCENTS[i % ACCENTS.length];
-                return (
-                  <Link
-                    key={c.id}
-                    href={`/collections/${c.handle}`}
-                    className={`group relative overflow-hidden rounded-2xl border border-border-soft bg-surface transition hover:-translate-y-1 hover:border-[#d9f000]/40 hover:${accent.glow}`}
-                  >
-                    {/* Hero image area — Shopify collection image */}
-                    <div
-                      className={`relative aspect-[4/3] w-full overflow-hidden bg-linear-to-br ${accent.gradient}`}
-                    >
-                      {c.image?.url ? (
-                        <Image
-                          src={c.image.url}
-                          alt={c.image.altText ?? c.title}
-                          fill
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      ) : (
-                        <>
-                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.25),transparent_60%)]" />
-                          <div className="absolute inset-0 grid place-items-center">
-                            <span className="text-7xl drop-shadow-2xl sm:text-8xl">
-                              🗂️
-                            </span>
-                          </div>
-                        </>
-                      )}
-                      {/* shimmer overlay on hover */}
-                      <div className="pointer-events-none absolute -inset-full bg-linear-to-r from-transparent via-white/20 to-transparent opacity-0 transition-all duration-700 group-hover:left-full group-hover:opacity-100" />
-                    </div>
-
-                    {/* Card body */}
-                    <div className="p-5">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="font-headline text-lg font-semibold leading-tight">
-                            {c.title}
-                          </div>
-                          <div
-                            className={`mt-0.5 font-headline text-[11px] uppercase tracking-[0.2em] ${accent.text}`}
-                          >
-                            {c.productsCount}{" "}
-                            {c.productsCount === 1 ? "product" : "products"}
-                          </div>
-                        </div>
-                        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/5 text-foreground/70 transition group-hover:bg-[#d9f000] group-hover:text-black">
-                          <Arrow size={14} />
-                        </span>
-                      </div>
-                      {c.description && (
-                        <p className="mt-3 line-clamp-2 text-sm text-foreground-muted">
-                          {c.description}
-                        </p>
-                      )}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
+            <CategoryGrid categories={productCategories} />
           )}
         </section>
 

@@ -124,57 +124,58 @@ export default async function Home() {
         <section className="mx-auto max-w-7xl px-4 pb-4 pt-2 sm:px-6 lg:px-8">
           <Link
             href="/products/vinyl-stickers"
-            className="group relative block overflow-hidden rounded-3xl border border-[#d9f000]/30 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#d94cb3]/10 p-8 transition hover:border-[#d9f000]/50 sm:p-12"
+            className="group relative isolate flex min-h-40 flex-row overflow-hidden rounded-2xl bg-[#9adfc4] shadow-lg shadow-black/20 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/30 sm:min-h-0"
           >
-            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#d9f000]/20 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#d94cb3]/15 blur-3xl" />
-            <div className="relative grid items-center gap-8 lg:grid-cols-[1.4fr_1fr]">
-              <div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#d9f000]/40 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#d9f000]" />
-                  Design it yourself
-                </span>
-                <h2 className="mt-4 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
-                  Custom{" "}
-                  <span className="accent-gradient-text">Vinyl Stickers</span>
-                </h2>
-                <p className="mt-4 max-w-xl text-base text-foreground-muted">
-                  Upload your artwork, pick a shape, size and finish, then see
-                  an{" "}
-                  <span className="text-foreground">
-                    instant proof with a die-cut preview
-                  </span>{" "}
-                  — before you ever check out.
-                </p>
-                <ul className="mt-6 grid gap-2 text-sm text-foreground/85 sm:grid-cols-2">
-                  <li className="flex items-center gap-2">
-                    <CheckIcon /> Instant preflight proof
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckIcon /> Auto die-cut &amp; white border
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckIcon /> Background remover built in
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckIcon /> Waterproof premium vinyl
-                  </li>
-                </ul>
-                <span className="mt-8 inline-flex items-center gap-2 rounded-md accent-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 transition group-hover:brightness-110">
-                  Start Designing
-                  <Arrow />
-                </span>
-              </div>
-              <div className="relative">
-                <div className="relative mx-auto aspect-square max-w-xs overflow-hidden rounded-2xl border border-border-soft bg-background/60 shadow-2xl shadow-black/40 backdrop-blur transition group-hover:scale-105 lg:max-w-none">
-                  <Image
-                    src="/vinyl-sticker-logo.jpeg"
-                    alt="Custom vinyl stickers"
-                    fill
-                    sizes="(max-width: 1024px) 80vw, 33vw"
-                    className="object-cover"
-                  />
-                </div>
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-[#5fae8d]"
+              style={{
+                clipPath: "polygon(38% 0, 100% 0, 100% 100%, 12% 100%)",
+              }}
+            />
+
+            <div className="relative z-10 flex max-w-[54%] flex-1 flex-col justify-center gap-2 p-5 sm:max-w-none sm:gap-3 sm:p-10 lg:p-12">
+              <span className="hidden w-fit items-center gap-2 rounded-full border border-black/10 bg-white/40 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#1c6b52] sm:inline-flex">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#1c6b52]" />
+                Design it yourself
+              </span>
+              <h2 className="font-display text-lg font-black uppercase leading-[0.95] tracking-tight text-[#1c6b52] sm:text-4xl">
+                Custom Vinyl Stickers
+              </h2>
+              <p className="line-clamp-2 text-[11px] leading-relaxed text-[#256b52] sm:line-clamp-none sm:max-w-xl sm:text-base">
+                Upload your artwork, pick a shape, size and finish, then see
+                an instant proof with a die-cut preview — before you ever
+                check out.
+              </p>
+              <ul className="hidden gap-2 text-sm text-[#256b52] sm:grid sm:grid-cols-2">
+                <li className="flex items-center gap-2">
+                  <StickerCheckIcon /> Instant preflight proof
+                </li>
+                <li className="flex items-center gap-2">
+                  <StickerCheckIcon /> Auto die-cut &amp; white border
+                </li>
+                <li className="flex items-center gap-2">
+                  <StickerCheckIcon /> Background remover built in
+                </li>
+                <li className="flex items-center gap-2">
+                  <StickerCheckIcon /> Waterproof premium vinyl
+                </li>
+              </ul>
+              <span className="mt-1 inline-flex w-fit items-center gap-2 rounded-full shop-now-gradient px-4 py-1.5 font-headline text-[11px] font-extrabold uppercase tracking-wide text-white shadow-lg shadow-black/25 transition group-hover:brightness-110 sm:mt-4 sm:px-6 sm:py-3 sm:text-sm">
+                Start Designing
+                <Arrow />
+              </span>
+            </div>
+
+            <div className="relative z-10 flex-1 px-3 py-2 sm:px-6 sm:py-4">
+              <div className="relative h-full w-full overflow-hidden rounded-2xl shadow-lg shadow-black/20">
+                <Image
+                  src="/vinyl-sticker-logo.jpeg"
+                  alt="Custom vinyl stickers"
+                  fill
+                  sizes="(max-width: 640px) 46vw, 40vw"
+                  className="object-contain transition-transform duration-500 group-hover:scale-105"
+                />
               </div>
             </div>
           </Link>
@@ -525,6 +526,25 @@ function Arrow({ size = 16 }: { size?: number }) {
 function CheckIcon() {
   return (
     <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#d9f000]/20 text-[#d9f000]">
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    </span>
+  );
+}
+
+function StickerCheckIcon() {
+  return (
+    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#1c6b52]/15 text-[#1c6b52]">
       <svg
         width="12"
         height="12"

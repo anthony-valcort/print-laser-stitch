@@ -14,7 +14,7 @@ const BADGES = [
         <polyline points="12 6 12 12 16 14" />
       </svg>
     ),
-    title: "Printed in 24-48 hours",
+    title: "5–12 Business Day Turnaround",
   },
   {
     icon: (

@@ -480,7 +480,7 @@ export default async function Home() {
               <PromiseItem
                 num="02"
                 title="Fast turnaround"
-                text="Most orders printed within 24–48 hours."
+                text="Most orders printed within 5–12 business days."
                 accent="cyan"
               />
               <PromiseItem

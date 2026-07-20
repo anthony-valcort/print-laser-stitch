@@ -7,7 +7,7 @@ import ProductPageShell from "@/components/ProductPageShell";
 export const metadata: Metadata = {
   title: "Custom Posters & Photo Printing · Print Laser Stitch",
   description:
-    "High-resolution poster and photo printing in standard and oversize formats. Upload your design — printed in 24–48 hours.",
+    "High-resolution poster and photo printing in standard and oversize formats. Upload your design — 5–12 business days.",
 };
 
 export const revalidate = 300;
@@ -19,7 +19,7 @@ export default function PostersPage() {
       <main className="flex-1">
         <ProductPageShell
           handle="posters"
-          badge="Custom posters · printed in 24–48h"
+          badge="Custom posters · 5–12 business days"
           minQuantity={1}
           uploadMode="single"
           uploadLabel="Poster Design"

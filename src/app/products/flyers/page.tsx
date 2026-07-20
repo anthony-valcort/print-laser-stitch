@@ -19,10 +19,11 @@ export default function FlyersPage() {
       <main className="flex-1">
         <ProductPageShell
           handle="flyers"
-          badge="Bulk flyers · printed in 24–48h"
+          badge="Bulk flyers · 5–12 business days"
           minQuantity={1}
           uploadMode="auto"
           fallbackEmoji="📄"
+          howToOrderVideoId="iSvRIeYYNl4"
         />
         <FAQSection />
       </main>

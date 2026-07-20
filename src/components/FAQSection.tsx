@@ -9,7 +9,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "How fast will my order arrive?",
-    a: "Most jobs are produced in 24–48 hours, then handed to the carrier — typically 2–4 business days in transit depending on where you are.",
+    a: "Most orders take 5–12 business days from order to delivery. Need it sooner? Email info@printlaserstitch.com about rush options.",
   },
   {
     q: "Are there bulk discounts?",

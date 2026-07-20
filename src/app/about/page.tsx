@@ -239,7 +239,7 @@ export default function AboutPage() {
             <ValueCard
               icon="⚡"
               title="Fast turnaround"
-              text="24–48 hour production for most orders. Tight deadline? We'll figure it out."
+              text="5–12 business days for most orders. Need it sooner? Email info@printlaserstitch.com for rush options."
             />
             <ValueCard
               icon="🤝"

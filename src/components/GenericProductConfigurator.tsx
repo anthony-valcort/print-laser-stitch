@@ -40,6 +40,8 @@ export type GenericProductConfiguratorProps = {
   fallbackEmoji?: string;
   /** Extra info banner shown above options (e.g. shipping address for engraved-cups). */
   notice?: React.ReactNode;
+  /** YouTube video ID for a "How to Order" clip shown below the gallery. */
+  howToOrderVideoId?: string;
 };
 
 // Detect a Shopify option that controls print sides — Flyers calls it
@@ -90,6 +92,7 @@ export default function GenericProductConfigurator({
   uploadLabel = "Design",
   fallbackEmoji = "📦",
   notice,
+  howToOrderVideoId,
 }: GenericProductConfiguratorProps) {
   const router = useRouter();
   const { addItem } = useCart();
@@ -325,6 +328,23 @@ export default function GenericProductConfigurator({
               title={product.title}
               fallbackEmoji={fallbackEmoji}
             />
+
+            {howToOrderVideoId && (
+              <div className="mt-6">
+                <h2 className="font-display text-xl font-black uppercase tracking-tight text-[#d9f000]">
+                  How to Order
+                </h2>
+                <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${howToOrderVideoId}`}
+                    title="How to order — Print Laser Stitch"
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* RIGHT: Configurator */}
@@ -533,7 +553,8 @@ export default function GenericProductConfigurator({
                 </span>
               </div>
               <div className="mt-1 text-right text-xs font-medium text-white/80">
-                Free online proofs · Printed in 24–48h
+                5-12 business days, for rush orders please contact
+                info@printlaserstitch.com
               </div>
             </div>
 

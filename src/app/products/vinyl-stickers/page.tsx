@@ -8,7 +8,7 @@ import AlreadyCustomerCTA from "@/components/AlreadyCustomerCTA";
 export const metadata: Metadata = {
   title: "Custom Vinyl Stickers · Print Laser Stitch",
   description:
-    "Premium custom vinyl stickers — waterproof, UV-protected, printed in 24–48 hours. Build your order with our live pricing calculator.",
+    "Premium custom vinyl stickers — waterproof, UV-protected, 5–12 business days. Build your order with our live pricing calculator.",
 };
 
 export default function VinylStickersPage() {

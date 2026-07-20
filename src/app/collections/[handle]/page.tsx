@@ -111,19 +111,38 @@ export default async function CollectionPage({
         </div>
 
         <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <h1 className="font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
-              {collection.title}
-            </h1>
-            {description && (
-              <p className="mt-3 max-w-2xl text-sm text-foreground-muted">
-                {description}
+          <div className="mb-8 flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h1 className="font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
+                {collection.title}
+              </h1>
+              {description && (
+                <p className="mt-3 max-w-2xl text-sm text-foreground-muted">
+                  {description}
+                </p>
+              )}
+              <p className="mt-2 font-headline text-[11px] uppercase tracking-[0.2em] text-[#d9f000]">
+                {collection.products.length}{" "}
+                {collection.products.length === 1 ? "product" : "products"}
               </p>
+            </div>
+
+            {collection.handle === "business-printing" && (
+              <div className="w-full shrink-0 lg:w-105">
+                <h2 className="font-display text-2xl font-black uppercase tracking-tight text-[#d9f000] sm:text-3xl">
+                  How to Order
+                </h2>
+                <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
+                  <iframe
+                    src="https://www.youtube-nocookie.com/embed/iSvRIeYYNl4"
+                    title="How to order — Print Laser Stitch"
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
             )}
-            <p className="mt-2 font-headline text-[11px] uppercase tracking-[0.2em] text-[#d9f000]">
-              {collection.products.length}{" "}
-              {collection.products.length === 1 ? "product" : "products"}
-            </p>
           </div>
 
           {collection.products.length === 0 ? (

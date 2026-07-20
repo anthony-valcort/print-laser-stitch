@@ -10,7 +10,7 @@ import { ShopifyError } from "@/lib/shopify";
 export const metadata: Metadata = {
   title: "Custom T-Shirts · Print Laser Stitch",
   description:
-    "Soft-touch DTG and screen-printed cotton tees in every color and size. Upload your design — printed in 24–48 hours.",
+    "Soft-touch DTG and screen-printed cotton tees in every color and size. Upload your design — 5–12 business days.",
 };
 
 // Page is statically rendered and refreshed in the background every 5 minutes.

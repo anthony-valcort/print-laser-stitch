@@ -887,7 +887,8 @@ export default function TShirtConfigurator({
                 </span>
               </div>
               <div className="mt-1 text-right text-xs font-medium text-white/80">
-                Free online proofs · Printed in 24–48h
+                5-12 business days, for rush orders please contact
+                info@printlaserstitch.com
               </div>
             </div>
 

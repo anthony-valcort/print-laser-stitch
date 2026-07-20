@@ -141,14 +141,14 @@ export default function CategoryGrid({
             </div>
 
             {/* Image side — Shopify collection image, dynamic */}
-            <div className="relative z-10 min-h-36 flex-1 sm:min-h-0">
+            <div className="relative z-10 order-first aspect-square w-full sm:order-0 sm:aspect-auto sm:min-h-0 sm:w-auto sm:flex-1">
               {c.image?.url ? (
                 <Image
                   src={c.image.url}
                   alt={c.image.altText ?? c.title}
                   fill
                   sizes="(max-width: 640px) 100vw, 28vw"
-                  className="object-contain object-center p-3 transition-transform duration-500 group-hover:scale-105 sm:object-right"
+                  className="rounded-xl object-contain object-center p-2 transition-transform duration-500 group-hover:scale-105 sm:rounded-none sm:p-3 sm:object-right"
                 />
               ) : (
                 <div className="grid h-full place-items-center">

@@ -288,7 +288,7 @@ export default function ProofModal({
               >
                 −
               </button>
-              <div className="aspect-square min-w-0 flex-1 overflow-hidden rounded-2xl border border-border-soft bg-white/[0.02]">
+              <div className="aspect-square min-w-0 flex-1 overflow-hidden rounded-2xl border border-border-soft bg-white/2">
                 {previewUrl && !busy ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img

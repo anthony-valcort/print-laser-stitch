@@ -39,11 +39,24 @@ export type CustomerOrder = {
   financialStatus: string | null;
   fulfillmentStatus: string | null;
   totalPrice: { amount: string; currencyCode: string };
+  subtotalPrice: { amount: string; currencyCode: string } | null;
+  totalTax: { amount: string; currencyCode: string } | null;
+  totalShippingPrice: { amount: string; currencyCode: string } | null;
+  shippingAddress: {
+    name: string | null;
+    address1: string | null;
+    address2: string | null;
+    city: string | null;
+    province: string | null;
+    zip: string | null;
+    country: string | null;
+  } | null;
   statusUrl: string;
   lineItems: Array<{
     title: string;
     quantity: number;
     variantTitle: string | null;
+    originalTotalPrice: { amount: string; currencyCode: string };
   }>;
 };
 
@@ -116,6 +129,7 @@ export async function getCurrentCustomerOrders(): Promise<CustomerOrder[]> {
   if (!session.token) return [];
 
   try {
+    type Money = { amount: string; currencyCode: string };
     type Resp = {
       customer: {
         orders: {
@@ -126,7 +140,19 @@ export async function getCurrentCustomerOrders(): Promise<CustomerOrder[]> {
               processedAt: string;
               financialStatus: string | null;
               fulfillmentStatus: string | null;
-              totalPrice: { amount: string; currencyCode: string };
+              totalPrice: Money;
+              subtotalPrice: Money | null;
+              totalTax: Money | null;
+              totalShippingPrice: Money | null;
+              shippingAddress: {
+                name: string | null;
+                address1: string | null;
+                address2: string | null;
+                city: string | null;
+                province: string | null;
+                zip: string | null;
+                country: string | null;
+              } | null;
               statusUrl: string;
               lineItems: {
                 edges: Array<{
@@ -134,6 +160,7 @@ export async function getCurrentCustomerOrders(): Promise<CustomerOrder[]> {
                     title: string;
                     quantity: number;
                     variantTitle: string | null;
+                    originalTotalPrice: Money;
                   };
                 }>;
               };
@@ -154,6 +181,18 @@ export async function getCurrentCustomerOrders(): Promise<CustomerOrder[]> {
                 financialStatus
                 fulfillmentStatus
                 totalPrice { amount currencyCode }
+                subtotalPrice { amount currencyCode }
+                totalTax { amount currencyCode }
+                totalShippingPrice { amount currencyCode }
+                shippingAddress {
+                  name
+                  address1
+                  address2
+                  city
+                  province
+                  zip
+                  country
+                }
                 statusUrl
                 lineItems(first: 25) {
                   edges {
@@ -161,6 +200,7 @@ export async function getCurrentCustomerOrders(): Promise<CustomerOrder[]> {
                       title
                       quantity
                       variantTitle
+                      originalTotalPrice { amount currencyCode }
                     }
                   }
                 }
@@ -180,11 +220,16 @@ export async function getCurrentCustomerOrders(): Promise<CustomerOrder[]> {
       financialStatus: e.node.financialStatus,
       fulfillmentStatus: e.node.fulfillmentStatus,
       totalPrice: e.node.totalPrice,
+      subtotalPrice: e.node.subtotalPrice,
+      totalTax: e.node.totalTax,
+      totalShippingPrice: e.node.totalShippingPrice,
+      shippingAddress: e.node.shippingAddress,
       statusUrl: e.node.statusUrl,
       lineItems: e.node.lineItems.edges.map((li) => ({
         title: li.node.title,
         quantity: li.node.quantity,
         variantTitle: li.node.variantTitle,
+        originalTotalPrice: li.node.originalTotalPrice,
       })),
     }));
   } catch {

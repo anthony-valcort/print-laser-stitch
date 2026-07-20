@@ -141,7 +141,7 @@ export default function Footer() {
             items={[
               { label: "Log in", href: "/login" },
               { label: "Sign up", href: "/signup" },
-              { label: "My Orders", href: "/account" },
+              { label: "My Orders", href: "/account/orders" },
               {
                 label: "Customer Portal",
                 href: "https://printlaserstitch.app/",

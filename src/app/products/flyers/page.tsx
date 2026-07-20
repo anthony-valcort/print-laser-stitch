@@ -24,6 +24,7 @@ export default function FlyersPage() {
           uploadMode="auto"
           fallbackEmoji="📄"
           howToOrderVideoId="iSvRIeYYNl4"
+          requiresTemplateFit
         />
         <FAQSection />
       </main>

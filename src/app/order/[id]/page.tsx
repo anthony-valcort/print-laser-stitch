@@ -195,7 +195,7 @@ export default async function OrderPage({ params }: { params: Params }) {
             ← Continue shopping
           </Link>
           <Link
-            href="/account"
+            href="/account/orders"
             className="rounded-md border border-border-soft bg-white/5 px-5 py-2.5 text-sm font-medium hover:bg-white/10"
           >
             View all orders

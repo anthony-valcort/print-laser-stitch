@@ -3,17 +3,14 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LogoutButton from "@/components/LogoutButton";
-import EditableProfile from "@/components/EditableProfile";
 import GuestOrderMigrator from "@/components/GuestOrderMigrator";
 import GuestOrdersList from "@/components/GuestOrdersList";
-import {
-  getCurrentCustomer,
-  getCurrentCustomerOrders,
-} from "@/lib/customer-session";
+import DashboardCard from "@/components/account/DashboardCard";
+import { getCurrentCustomer } from "@/lib/customer-session";
 
 export const metadata: Metadata = {
   title: "My Account · Print Laser Stitch",
-  description: "View your orders and account details.",
+  description: "Manage your profile, orders, and QR codes.",
 };
 
 export default async function AccountPage() {
@@ -60,8 +57,6 @@ export default async function AccountPage() {
     );
   }
 
-  const orders = await getCurrentCustomerOrders();
-
   const fullName =
     customer.displayName ||
     [customer.firstName, customer.lastName].filter(Boolean).join(" ") ||
@@ -76,7 +71,7 @@ export default async function AccountPage() {
             record. Renders nothing. */}
         <GuestOrderMigrator customerEmail={customer.email} />
 
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-accent">
               My Account
@@ -89,147 +84,69 @@ export default async function AccountPage() {
               {customer.phone ? ` · ${customer.phone}` : ""}
             </p>
           </div>
-          <LogoutButton />
+
+          {/* Top action row — My Profile / Change password / Logout */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center overflow-hidden rounded-xl border border-border-soft bg-surface text-sm">
+              <Link
+                href="/account/profile"
+                className="flex items-center gap-1.5 px-4 py-2.5 font-medium hover:bg-white/5"
+              >
+                <UserIcon />
+                My Profile
+              </Link>
+              <span className="h-5 w-px bg-border-soft" />
+              <Link
+                href="/account/change-password"
+                className="flex items-center gap-1.5 px-4 py-2.5 font-medium hover:bg-white/5"
+              >
+                <KeyIcon />
+                Change password
+              </Link>
+            </div>
+            <LogoutButton />
+          </div>
         </div>
 
-        {/* Profile card — inline editable */}
-        <EditableProfile
-          initial={{
-            firstName: customer.firstName,
-            lastName: customer.lastName,
-            email: customer.email,
-            phone: customer.phone,
-          }}
-        />
+        {/* Feature cards — Orders / Manage QR Code */}
+        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <DashboardCard
+            href="/account/orders"
+            icon="📦"
+            title="Orders"
+            description="Your complete order history with invoice download and order details."
+          />
+          <DashboardCard
+            href="/account/qr-codes"
+            icon="🔗"
+            title="Manage QR Code"
+            description="Create QR codes with different details and use them in your designs."
+          />
+        </div>
 
         {/* Recent local activity — drafts not yet appearing in Shopify's
             customer.orders (paid orders only). Filtered to this customer's
             email so a shared device doesn't leak other accounts' orders. */}
         <GuestOrdersList filterByEmail={customer.email} />
-
-        {/* Orders */}
-        <section className="mt-12">
-          <div className="mb-4 flex items-baseline justify-between">
-            <h2 className="text-lg font-semibold">Order history</h2>
-            <span className="text-sm text-foreground-muted">
-              {orders.length} {orders.length === 1 ? "order" : "orders"}
-            </span>
-          </div>
-
-          {orders.length === 0 ? (
-            <div className="rounded-2xl border border-border-soft bg-surface p-8 text-center">
-              <div className="text-4xl">🛒</div>
-              <p className="mt-3 text-sm text-foreground-muted">
-                You haven&apos;t placed any orders yet. Browse our products to
-                get started.
-              </p>
-              <a
-                href="/"
-                className="mt-4 inline-flex rounded-md accent-gradient px-5 py-2.5 font-headline text-sm font-bold uppercase tracking-wider text-black"
-              >
-                Browse products
-              </a>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {orders.map((o) => (
-                <article
-                  key={o.id}
-                  className="overflow-hidden rounded-2xl border border-border-soft bg-surface"
-                >
-                  <header className="flex flex-wrap items-center justify-between gap-3 border-b border-border-soft px-5 py-4">
-                    <div>
-                      <div className="text-sm font-semibold">
-                        Order #{o.orderNumber}
-                      </div>
-                      <div className="text-xs text-foreground-muted">
-                        {new Date(o.processedAt).toLocaleDateString(undefined, {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <StatusPill
-                        kind="financial"
-                        status={o.financialStatus}
-                      />
-                      <StatusPill
-                        kind="fulfillment"
-                        status={o.fulfillmentStatus}
-                      />
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm font-bold">
-                        ${parseFloat(o.totalPrice.amount).toFixed(2)}{" "}
-                        <span className="text-xs font-medium text-foreground-muted">
-                          {o.totalPrice.currencyCode}
-                        </span>
-                      </div>
-                      <a
-                        href={o.statusUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-1 inline-block text-xs font-semibold text-accent hover:underline"
-                      >
-                        View order →
-                      </a>
-                    </div>
-                  </header>
-                  <ul className="divide-y divide-border-soft">
-                    {o.lineItems.map((li, i) => (
-                      <li
-                        key={i}
-                        className="flex items-center justify-between gap-3 px-5 py-3 text-sm"
-                      >
-                        <div>
-                          <div className="font-medium">{li.title}</div>
-                          {li.variantTitle && (
-                            <div className="text-xs text-foreground-muted">
-                              {li.variantTitle}
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-foreground-muted">
-                          × {li.quantity}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
       </main>
       <Footer />
     </>
   );
 }
 
-function StatusPill({
-  kind,
-  status,
-}: {
-  kind: "financial" | "fulfillment";
-  status: string | null;
-}) {
-  if (!status) return null;
-  const label = status.replace(/_/g, " ").toLowerCase();
-  const palette =
-    kind === "financial"
-      ? status.toUpperCase() === "PAID"
-        ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
-        : "bg-amber-500/15 text-amber-300 border-amber-500/30"
-      : status.toUpperCase() === "FULFILLED"
-        ? "bg-cyan-500/15 text-cyan-300 border-cyan-500/30"
-        : "bg-slate-500/15 text-slate-300 border-slate-500/30";
+function UserIcon() {
   return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-medium capitalize ${palette}`}
-    >
-      {label}
-    </span>
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+function KeyIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+    </svg>
   );
 }

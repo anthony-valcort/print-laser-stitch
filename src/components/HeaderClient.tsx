@@ -168,7 +168,7 @@ export default function HeaderClient({
               alt=""
               width={18}
               height={18}
-              className="h-[18px] w-[18px] shrink-0 rounded-full object-cover ring-1 ring-[#d94cb3]/40"
+              className="h-4.5 w-4.5 shrink-0 rounded-full object-cover ring-1 ring-[#d94cb3]/40"
             />
             University
           </a>
@@ -232,6 +232,12 @@ export default function HeaderClient({
                     </div>
                     <Link
                       href="/account"
+                      className="block px-4 py-2.5 text-sm hover:bg-white/5"
+                    >
+                      My account
+                    </Link>
+                    <Link
+                      href="/account/orders"
                       className="block px-4 py-2.5 text-sm hover:bg-white/5"
                     >
                       My orders
@@ -412,6 +418,13 @@ export default function HeaderClient({
                 </div>
                 <Link
                   href="/account"
+                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
+                >
+                  My account
+                </Link>
+                <Link
+                  href="/account/orders"
                   onClick={() => setMobileOpen(false)}
                   className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
                 >

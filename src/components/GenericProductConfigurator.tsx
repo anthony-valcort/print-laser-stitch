@@ -18,6 +18,13 @@ import {
 } from "@/components/configurator/UploadBox";
 import { QuantityStepper } from "@/components/configurator/QuantityStepper";
 import { ExpandableDescription } from "@/components/configurator/ExpandableDescription";
+import {
+  findDimensionOption,
+  parseSizeInches,
+  selectedSizeInches,
+} from "@/lib/parse-size";
+import { saveTemplateFitPayload } from "@/lib/template-fit/session";
+import BlankTemplateDownload from "@/components/configurator/BlankTemplateDownload";
 
 export type GenericProductConfiguratorProps = {
   product: ShopifyProduct;
@@ -42,6 +49,14 @@ export type GenericProductConfiguratorProps = {
   notice?: React.ReactNode;
   /** YouTube video ID for a "How to Order" clip shown below the gallery. */
   howToOrderVideoId?: string;
+  /**
+   * When true, "Continue" hands the uploaded design(s) off to a template-fit
+   * page (`/products/{handle}/template-fit`) — where the customer positions
+   * their artwork against the print bleed/safe guides — instead of adding
+   * straight to cart. Falls back to the normal add-to-cart flow if the
+   * selected size can't be parsed as a WxH dimension.
+   */
+  requiresTemplateFit?: boolean;
 };
 
 // Detect a Shopify option that controls print sides — Flyers calls it
@@ -93,6 +108,7 @@ export default function GenericProductConfigurator({
   fallbackEmoji = "📦",
   notice,
   howToOrderVideoId,
+  requiresTemplateFit = false,
 }: GenericProductConfiguratorProps) {
   const router = useRouter();
   const { addItem } = useCart();
@@ -289,6 +305,81 @@ export default function GenericProductConfigurator({
     router.push("/cart");
   }
 
+  const sizeInches = requiresTemplateFit
+    ? selectedSizeInches(selectedOptions)
+    : null;
+  const willUseTemplateFit = requiresTemplateFit && !!sizeInches;
+
+  function handleContinueToTemplateFit() {
+    if (!canCheckout || !currentVariant || !sizeInches) return;
+
+    const extraProperties: Record<string, string> = {};
+    if (showSideSelector) {
+      extraProperties["Print Sides"] =
+        printSide === "both" ? "Front & Back" : "Front Only";
+    }
+    if (phone.trim()) extraProperties["Phone Number"] = phone.trim();
+    if (instructions.trim()) extraProperties["Instructions"] = instructions.trim();
+
+    const unitPrice = Number(currentVariant.price);
+
+    const sides: Record<
+      "front" | "back",
+      { fileUrl: string; fileName: string | null } | undefined
+    > = { front: undefined, back: undefined };
+    if (needsFront && frontUpload.fileUrl) {
+      sides.front = {
+        fileUrl: frontUpload.fileUrl,
+        fileName: frontUpload.file?.name ?? null,
+      };
+    }
+    if (needsBack && backUpload.fileUrl) {
+      sides.back = {
+        fileUrl: backUpload.fileUrl,
+        fileName: backUpload.file?.name ?? null,
+      };
+    }
+
+    const sizeOption = findDimensionOption(product.options);
+    const sizeChoices = sizeOption
+      ? sizeOption.values.filter((v) => parseSizeInches(v) !== null)
+      : [];
+
+    saveTemplateFitPayload({
+      productHandle: product.handle,
+      productTitle: product.title,
+      widthIn: sizeInches.width,
+      heightIn: sizeInches.height,
+      uploadLabel,
+      effectiveUploadMode:
+        effectiveUploadMode === "front-back" ? "front-back" : "single",
+      sides,
+      sizeOptionName: sizeOption?.name ?? null,
+      sizeChoices,
+      variants: product.variants.map((v) => ({
+        id: v.id,
+        price: v.price,
+        selectedOptions: Object.fromEntries(
+          v.selectedOptions.map((o) => [o.name, o.value]),
+        ),
+      })),
+      cartItem: {
+        title: product.title,
+        thumbnail:
+          product.images[0]?.url ?? product.featuredImage?.url ?? fallbackEmoji,
+        unitPrice,
+        qty: effectiveQty,
+        variantId: currentVariant.id,
+        productTitle: product.title,
+        selectedOptions,
+        extraProperties,
+        editHref: `/products/${product.handle}`,
+      },
+    });
+
+    router.push(`/products/${product.handle}/template-fit`);
+  }
+
   return (
     <section className="relative">
       {/* Breadcrumb */}
@@ -328,6 +419,13 @@ export default function GenericProductConfigurator({
               title={product.title}
               fallbackEmoji={fallbackEmoji}
             />
+
+            {requiresTemplateFit && (
+              <BlankTemplateDownload
+                options={product.options}
+                productTitle={product.title}
+              />
+            )}
 
             {howToOrderVideoId && (
               <div className="mt-6">
@@ -560,7 +658,9 @@ export default function GenericProductConfigurator({
 
             <button
               type="button"
-              onClick={handleAddToCart}
+              onClick={
+                willUseTemplateFit ? handleContinueToTemplateFit : handleAddToCart
+              }
               disabled={!canCheckout}
               className={`group flex w-full items-center justify-center gap-2 rounded-md px-6 py-4 font-headline text-sm font-bold uppercase tracking-wider transition ${
                 canCheckout
@@ -585,6 +685,11 @@ export default function GenericProductConfigurator({
                   <span>⬆</span>
                   Upload {needsFront && needsBack ? "both designs" : "design"} to continue
                 </>
+              ) : willUseTemplateFit ? (
+                <>
+                  Continue
+                  <span>→</span>
+                </>
               ) : (
                 <>
                   <span>🛒</span>
@@ -593,7 +698,9 @@ export default function GenericProductConfigurator({
               )}
             </button>
             <p className="text-center text-[11px] text-foreground-muted">
-              You&apos;ll be redirected to Shopify checkout.
+              {willUseTemplateFit
+                ? "Next, you'll fit your design onto the print template."
+                : "You'll be redirected to Shopify checkout."}
             </p>
           </div>
         </div>

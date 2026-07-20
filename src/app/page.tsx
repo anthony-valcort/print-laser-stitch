@@ -105,7 +105,7 @@ export default async function Home() {
 
             {/* Right — Hero image */}
             <div className="relative">
-              <div className="pointer-events-none absolute -inset-4 -z-10 rounded-[2rem] bg-linear-to-br from-[#d9f000]/20 via-[#18d3e8]/20 to-[#d94cb3]/20 opacity-60 blur-2xl" />
+              <div className="pointer-events-none absolute -inset-4 -z-10 rounded-4xl bg-linear-to-br from-[#d9f000]/20 via-[#18d3e8]/20 to-[#d94cb3]/20 opacity-60 blur-2xl" />
               <div className="relative overflow-hidden rounded-2xl border border-[#d9f000]/30 shadow-2xl shadow-[#d9f000]/20">
                 <Image
                   src="/Hero.jpeg"

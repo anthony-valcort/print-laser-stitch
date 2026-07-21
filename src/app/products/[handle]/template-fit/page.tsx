@@ -8,12 +8,15 @@ export const metadata: Metadata = {
   description: "Position your artwork inside the print bleed and safe lines.",
 };
 
-export default function TemplateFitPage() {
+type Params = Promise<{ handle: string }>;
+
+export default async function TemplateFitPage({ params }: { params: Params }) {
+  const { handle } = await params;
   return (
     <>
       <Header />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10 sm:px-6 lg:px-8">
-        <TemplateFitPageClient />
+        <TemplateFitPageClient productHandle={handle} />
       </main>
       <Footer />
     </>

@@ -1,17 +1,33 @@
 export type SizeInches = { width: number; height: number };
 
-const UNIT_WORD = /(?:in(?:ch(?:es)?)?\.?)?/.source;
+// A number token — "4", "4.25", or ".6" (a leading-dot decimal, as seen in
+// Anthony's "8x5x.6"" cutting-board depth).
+const NUM = /(?:\d+(?:\.\d+)?|\.\d+)/.source;
+// An inch marker — the word "in"/"inch"/"inches", or the typographic
+// double-quote/double-prime symbols Shopify size labels use ("12" x 18"",
+// "12” x 60”").
+const UNIT_WORD = /(?:in(?:ch(?:es)?)?\.?|["″”])?/.source;
+
+// Three chained numbers ("8x5x.6"", "16 x 11 x 1\"") means width × height ×
+// depth — a physical 3D product (e.g. a cutting board), not a flat sheet
+// with a print bleed. Reject those before attempting the 2D match below.
+const THREE_DIM_PATTERN = new RegExp(
+  `${NUM}\\s*${UNIT_WORD}\\s*[x×]\\s*${NUM}\\s*${UNIT_WORD}\\s*[x×]\\s*${NUM}`,
+  "i",
+);
 
 /**
  * Extracts width × height in inches from a Shopify size-option value like
- * "4x6", "4.25x5.5", "5 x 7", "5×7", or Anthony's actual "4 Inch x 6 Inch"
- * / "4 Inch x 5.5 Inch" format. Returns null for non-dimensional labels
- * (e.g. "Small", "100 pcs") so callers can gracefully hide dimension-based
- * features (template-fit, blank template PDF) for those variants.
+ * "4x6", "4.25x5.5", "5 x 7", "5×7", Anthony's "4 Inch x 6 Inch" format, or
+ * the quoted "12" x 18"" format. Returns null for non-dimensional labels
+ * (e.g. "Small", "100 pcs") and for width×height×depth labels (3D products)
+ * so callers can gracefully hide dimension-based features (template-fit,
+ * blank template PDF) for those variants.
  */
 export function parseSizeInches(label: string): SizeInches | null {
+  if (THREE_DIM_PATTERN.test(label)) return null;
   const pattern = new RegExp(
-    `(\\d+(?:\\.\\d+)?)\\s*${UNIT_WORD}\\s*[x×]\\s*(\\d+(?:\\.\\d+)?)\\s*${UNIT_WORD}`,
+    `(${NUM})\\s*${UNIT_WORD}\\s*[x×]\\s*(${NUM})\\s*${UNIT_WORD}`,
     "i",
   );
   const match = label.match(pattern);

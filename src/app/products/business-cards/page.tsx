@@ -23,6 +23,7 @@ export default function BusinessCardsPage() {
           minQuantity={1}
           uploadMode="front-back"
           fallbackEmoji="💳"
+          fixedSizeInches={{ width: 2, height: 3.5 }}
         />
         <FAQSection />
       </main>

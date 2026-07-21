@@ -43,9 +43,11 @@ export default function QrCodeListClient() {
           onChange={(e) => setTypeFilter(e.target.value as QrCodeType | "all")}
           className="rounded-xl border border-border-soft bg-white/5 px-3 py-2 text-sm outline-none focus:border-accent"
         >
-          <option value="all">All types</option>
+          <option value="all" style={{ backgroundColor: "#1e1e1e", color: "#f5f5f5" }}>
+            All types
+          </option>
           {QR_TYPES.map((t) => (
-            <option key={t} value={t}>
+            <option key={t} value={t} style={{ backgroundColor: "#1e1e1e", color: "#f5f5f5" }}>
               {QR_TYPE_LABELS[t]}
             </option>
           ))}

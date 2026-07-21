@@ -50,13 +50,27 @@ export type GenericProductConfiguratorProps = {
   /** YouTube video ID for a "How to Order" clip shown below the gallery. */
   howToOrderVideoId?: string;
   /**
-   * When true, "Continue" hands the uploaded design(s) off to a template-fit
-   * page (`/products/{handle}/template-fit`) — where the customer positions
-   * their artwork against the print bleed/safe guides — instead of adding
-   * straight to cart. Falls back to the normal add-to-cart flow if the
-   * selected size can't be parsed as a WxH dimension.
+   * When true/false, force-enables or force-disables the template-fit flow
+   * ("Continue" hands uploaded design(s) off to `/products/{handle}/
+   * template-fit`, where the customer positions artwork against print
+   * bleed/safe guides, instead of adding straight to cart). Leave
+   * unset (the default) to auto-detect: enabled whenever the product has a
+   * dimensional Size option (e.g. "4x6", "12 x 18") — which is how every
+   * product except this one gets the feature, with no per-page wiring.
+   * Either way, it falls back to the normal add-to-cart flow if the
+   * selected size can't be parsed as a WxH dimension (apparel's S/M/L
+   * sizing, quantity-tier "options" like business cards, etc. never match).
    */
   requiresTemplateFit?: boolean;
+  /**
+   * For products with one fixed real-world print size but no Shopify Size
+   * *option* to auto-detect from (e.g. Business Cards is always 2×3.5″ —
+   * its only option is a quantity tier, "250Pcs"/"500Pcs"/…). Providing this
+   * enables template-fit the same as a dimensional Size option would, just
+   * with a constant size instead of one parsed from the customer's
+   * selection.
+   */
+  fixedSizeInches?: { width: number; height: number };
 };
 
 // Detect a Shopify option that controls print sides — Flyers calls it
@@ -108,7 +122,8 @@ export default function GenericProductConfigurator({
   fallbackEmoji = "📦",
   notice,
   howToOrderVideoId,
-  requiresTemplateFit = false,
+  requiresTemplateFit,
+  fixedSizeInches,
 }: GenericProductConfiguratorProps) {
   const router = useRouter();
   const { addItem } = useCart();
@@ -305,10 +320,16 @@ export default function GenericProductConfigurator({
     router.push("/cart");
   }
 
-  const sizeInches = requiresTemplateFit
-    ? selectedSizeInches(selectedOptions)
+  const autoTemplateFit = useMemo(
+    () => findDimensionOption(product.options) !== undefined || !!fixedSizeInches,
+    [product.options, fixedSizeInches],
+  );
+  const templateFitEnabled = requiresTemplateFit ?? autoTemplateFit;
+
+  const sizeInches = templateFitEnabled
+    ? (selectedSizeInches(selectedOptions) ?? fixedSizeInches ?? null)
     : null;
-  const willUseTemplateFit = requiresTemplateFit && !!sizeInches;
+  const willUseTemplateFit = templateFitEnabled && !!sizeInches;
 
   function handleContinueToTemplateFit() {
     if (!canCheckout || !currentVariant || !sizeInches) return;
@@ -420,10 +441,11 @@ export default function GenericProductConfigurator({
               fallbackEmoji={fallbackEmoji}
             />
 
-            {requiresTemplateFit && (
+            {templateFitEnabled && (
               <BlankTemplateDownload
                 options={product.options}
                 productTitle={product.title}
+                fixedSizeInches={fixedSizeInches}
               />
             )}
 

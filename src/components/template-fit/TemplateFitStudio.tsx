@@ -12,7 +12,9 @@ import {
 import { BLEED_IN, SAFE_IN } from "@/lib/template-fit/constants";
 import {
   baseFitWidthIn,
+  effectiveNaturalSize,
   flattenToCanvas,
+  type Rotation,
 } from "@/lib/template-fit/flatten-to-canvas";
 
 export type Side = "front" | "back";
@@ -26,6 +28,7 @@ type SideState = {
   zoom: number;
   offsetXIn: number;
   offsetYIn: number;
+  rotation: Rotation;
   flipX: boolean;
   flipY: boolean;
   confirmed: boolean;
@@ -33,7 +36,7 @@ type SideState = {
 
 type TransformSnapshot = Pick<
   SideState,
-  "fitMode" | "zoom" | "offsetXIn" | "offsetYIn" | "flipX" | "flipY"
+  "fitMode" | "zoom" | "offsetXIn" | "offsetYIn" | "rotation" | "flipX" | "flipY"
 >;
 
 type HistoryState = { stack: TransformSnapshot[]; index: number };
@@ -45,6 +48,7 @@ const BASELINE: TransformSnapshot = {
   zoom: 1,
   offsetXIn: 0,
   offsetYIn: 0,
+  rotation: 0,
   flipX: false,
   flipY: false,
 };
@@ -64,9 +68,14 @@ function snapshotOf(s: SideState): TransformSnapshot {
     zoom: s.zoom,
     offsetXIn: s.offsetXIn,
     offsetYIn: s.offsetYIn,
+    rotation: s.rotation,
     flipX: s.flipX,
     flipY: s.flipY,
   };
+}
+
+function rotate90(rotation: Rotation, delta: 90 | -90): Rotation {
+  return (((rotation + delta) % 360) + 360) % 360 as Rotation;
 }
 
 export default function TemplateFitStudio({
@@ -188,23 +197,30 @@ export default function TemplateFitStudio({
   const currentInput = sides[activeSide];
   const history = historyBySide[activeSide];
 
+  const rotated = current.rotation === 90 || current.rotation === 270;
+  const eff = effectiveNaturalSize(
+    current.naturalWidth,
+    current.naturalHeight,
+    current.rotation,
+  );
+
+  // drawnWidthIn/drawnHeightIn = the *visual* bounding box (post-rotation)
+  // that the customer sees and that "W:/H:" reports.
   const drawnWidthIn = useMemo(() => {
     if (!currentInput || !current.naturalWidth) return 0;
     return (
-      baseFitWidthIn(
-        current.naturalWidth,
-        current.naturalHeight,
-        bleedWIn,
-        bleedHIn,
-        current.fitMode,
-      ) * current.zoom
+      baseFitWidthIn(eff.width, eff.height, bleedWIn, bleedHIn, current.fitMode) *
+      current.zoom
     );
-  }, [current, currentInput, bleedWIn, bleedHIn]);
+  }, [currentInput, current.naturalWidth, current.fitMode, current.zoom, eff.width, eff.height, bleedWIn, bleedHIn]);
 
-  const aspect = current.naturalWidth
-    ? current.naturalHeight / current.naturalWidth
-    : 1;
-  const drawnHeightIn = drawnWidthIn * aspect;
+  const drawnHeightIn = eff.width ? drawnWidthIn * (eff.height / eff.width) : 0;
+
+  // ownWidthIn/ownHeightIn = the image element's *own* (pre-rotation) draw
+  // size — swapped back from the bounding box so that, once CSS/canvas
+  // rotates it, the visual result matches drawnWidthIn × drawnHeightIn.
+  const ownWidthIn = rotated ? drawnHeightIn : drawnWidthIn;
+  const ownHeightIn = rotated ? drawnWidthIn : drawnHeightIn;
 
   const pxPerIn = containerWidthPx > 0 ? containerWidthPx / bleedWIn : 0;
   const containerHeightPx = containerWidthPx * (bleedHIn / bleedWIn);
@@ -272,6 +288,10 @@ export default function TemplateFitStudio({
     });
   }
 
+  function rotateBy(delta: 90 | -90) {
+    commitAndPush(activeSide, { rotation: rotate90(current.rotation, delta) });
+  }
+
   function toggleFlip(axis: "x" | "y") {
     commitAndPush(
       activeSide,
@@ -331,11 +351,11 @@ export default function TemplateFitStudio({
       drag.liveOffsetYIn = offsetYIn;
       drag.moved = true;
 
-      const leftPx = (bleedWIn / 2 + offsetXIn - drawnWidthIn / 2) * pxPerIn;
-      const topPx = (bleedHIn / 2 + offsetYIn - drawnHeightIn / 2) * pxPerIn;
-      img.style.transform = `translate3d(${leftPx}px, ${topPx}px, 0) scale(${current.flipX ? -1 : 1}, ${current.flipY ? -1 : 1})`;
+      const leftPx = (bleedWIn / 2 + offsetXIn - ownWidthIn / 2) * pxPerIn;
+      const topPx = (bleedHIn / 2 + offsetYIn - ownHeightIn / 2) * pxPerIn;
+      img.style.transform = `translate3d(${leftPx}px, ${topPx}px, 0) rotate(${current.rotation}deg) scale(${current.flipX ? -1 : 1}, ${current.flipY ? -1 : 1})`;
     },
-    [pxPerIn, bleedWIn, bleedHIn, drawnWidthIn, drawnHeightIn, current.flipX, current.flipY],
+    [pxPerIn, bleedWIn, bleedHIn, ownWidthIn, ownHeightIn, current.rotation, current.flipX, current.flipY],
   );
 
   const handlePointerUp = useCallback(() => {
@@ -390,18 +410,15 @@ export default function TemplateFitStudio({
         const input = sides[side];
         const st = stateBySide[side];
         if (!input) continue;
+        const stEff = effectiveNaturalSize(st.naturalWidth, st.naturalHeight, st.rotation);
         const drawW =
-          baseFitWidthIn(
-            st.naturalWidth,
-            st.naturalHeight,
-            bleedWIn,
-            bleedHIn,
-            st.fitMode,
-          ) * st.zoom;
+          baseFitWidthIn(stEff.width, stEff.height, bleedWIn, bleedHIn, st.fitMode) *
+          st.zoom;
         blobs[side] = await flattenToCanvas(input.fileUrl, bleedWIn, bleedHIn, {
           widthIn: drawW,
           offsetXIn: st.offsetXIn,
           offsetYIn: st.offsetYIn,
+          rotation: st.rotation,
           flipX: st.flipX,
           flipY: st.flipY,
         });
@@ -419,16 +436,16 @@ export default function TemplateFitStudio({
   const safeTopPct = ((BLEED_IN + SAFE_IN) / bleedHIn) * 100;
 
   const imgLeftPx =
-    (bleedWIn / 2 + current.offsetXIn - drawnWidthIn / 2) * pxPerIn;
+    (bleedWIn / 2 + current.offsetXIn - ownWidthIn / 2) * pxPerIn;
   const imgTopPx =
-    (bleedHIn / 2 + current.offsetYIn - drawnHeightIn / 2) * pxPerIn;
-  const imgWidthPx = drawnWidthIn * pxPerIn;
-  const imgHeightPx = drawnHeightIn * pxPerIn;
+    (bleedHIn / 2 + current.offsetYIn - ownHeightIn / 2) * pxPerIn;
+  const imgWidthPx = ownWidthIn * pxPerIn;
+  const imgHeightPx = ownHeightIn * pxPerIn;
 
   // Quality — effective print resolution at the current zoom, so the
   // customer knows before ordering whether their file will look sharp.
   const effectiveDpi =
-    current.naturalWidth && drawnWidthIn ? current.naturalWidth / drawnWidthIn : null;
+    current.naturalWidth && drawnWidthIn ? eff.width / drawnWidthIn : null;
   const quality: "high" | "medium" | "low" | null =
     effectiveDpi == null ? null : effectiveDpi >= 200 ? "high" : effectiveDpi >= 100 ? "medium" : "low";
   const recommendedPx =
@@ -537,8 +554,24 @@ export default function TemplateFitStudio({
         <div className="flex items-center gap-1">
           <button
             type="button"
+            onClick={() => rotateBy(-90)}
+            title="Rotate left 90°"
+            className="grid h-7 w-7 place-items-center rounded-full bg-white/10 text-sm hover:bg-white/20"
+          >
+            ⟲
+          </button>
+          <button
+            type="button"
+            onClick={() => rotateBy(90)}
+            title="Rotate right 90°"
+            className="grid h-7 w-7 place-items-center rounded-full bg-white/10 text-sm hover:bg-white/20"
+          >
+            ⟳
+          </button>
+          <button
+            type="button"
             onClick={() => toggleFlip("x")}
-            title="Flip horizontal"
+            title="Flip horizontal (mirror)"
             aria-pressed={current.flipX}
             className={`grid h-7 w-7 place-items-center rounded-full text-sm ${current.flipX ? "bg-[#18d3e8]/20 text-[#18d3e8]" : "bg-white/10 hover:bg-white/20"}`}
           >
@@ -547,7 +580,7 @@ export default function TemplateFitStudio({
           <button
             type="button"
             onClick={() => toggleFlip("y")}
-            title="Flip vertical"
+            title="Flip vertical (mirror)"
             aria-pressed={current.flipY}
             className={`grid h-7 w-7 place-items-center rounded-full text-sm ${current.flipY ? "bg-[#18d3e8]/20 text-[#18d3e8]" : "bg-white/10 hover:bg-white/20"}`}
           >
@@ -635,7 +668,7 @@ export default function TemplateFitStudio({
                 // (which draws via canvas and isn't subject to this CSS rule).
                 maxWidth: "none",
                 maxHeight: "none",
-                transform: `translate3d(${imgLeftPx}px, ${imgTopPx}px, 0) scale(${current.flipX ? -1 : 1}, ${current.flipY ? -1 : 1})`,
+                transform: `translate3d(${imgLeftPx}px, ${imgTopPx}px, 0) rotate(${current.rotation}deg) scale(${current.flipX ? -1 : 1}, ${current.flipY ? -1 : 1})`,
               }}
             />
           )}

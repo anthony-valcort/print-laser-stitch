@@ -151,7 +151,7 @@ export default function QrCodeForm({ mode, qrId, initial }: Props) {
                   className="w-full rounded-xl border border-border-soft bg-white/5 px-3 py-2 text-sm outline-none focus:border-accent"
                 >
                   {f.options?.map((o) => (
-                    <option key={o} value={o}>
+                    <option key={o} value={o} style={{ backgroundColor: "#1e1e1e", color: "#f5f5f5" }}>
                       {o}
                     </option>
                   ))}

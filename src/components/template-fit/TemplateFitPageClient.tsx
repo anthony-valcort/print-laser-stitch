@@ -13,7 +13,11 @@ import { parseSizeInches } from "@/lib/parse-size";
 import { useCart } from "@/lib/cart-store";
 import type { ProductCartItem } from "@/lib/cart-types";
 
-export default function TemplateFitPageClient() {
+export default function TemplateFitPageClient({
+  productHandle,
+}: {
+  productHandle: string;
+}) {
   const router = useRouter();
   const { addItem } = useCart();
   const [payload, setPayload] = useState<TemplateFitPayload | null | undefined>(
@@ -32,8 +36,10 @@ export default function TemplateFitPageClient() {
 
   useEffect(() => {
     const p = readTemplateFitPayload();
-    if (!p) {
-      router.replace("/products/flyers");
+    // Guards against stale sessionStorage from a different product (e.g. two
+    // tabs, or navigating here directly without going through "Continue").
+    if (!p || p.productHandle !== productHandle) {
+      router.replace(`/products/${productHandle}`);
       return;
     }
     setPayload(p);
@@ -42,7 +48,7 @@ export default function TemplateFitPageClient() {
     setSelectedOptions(p.cartItem.selectedOptions);
     setVariantId(p.cartItem.variantId);
     setUnitPrice(p.cartItem.unitPrice);
-  }, [router]);
+  }, [router, productHandle]);
 
   const subtitle = useMemo(
     () => Object.values(selectedOptions).join(" · ") || "Standard",
@@ -177,7 +183,7 @@ export default function TemplateFitPageClient() {
             className="rounded-xl border border-border-soft bg-white/5 px-3 py-2 text-sm outline-none focus:border-accent"
           >
             {payload.sizeChoices.map((v) => (
-              <option key={v} value={v}>
+              <option key={v} value={v} style={{ backgroundColor: "#1e1e1e", color: "#f5f5f5" }}>
                 {v}
               </option>
             ))}

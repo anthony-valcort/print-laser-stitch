@@ -154,22 +154,10 @@ export default function HeaderClient({
             Decal Signage
           </Link>
           <Link
-            href="/blog"
-            className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
-          >
-            Blog
-          </Link>
-          <Link
             href="/gallery"
             className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
           >
             Gallery
-          </Link>
-          <Link
-            href="/about"
-            className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
-          >
-            About
           </Link>
           <div
             className="relative shrink-0"
@@ -199,6 +187,18 @@ export default function HeaderClient({
             {moreOpen && (
               <div className="absolute right-0 top-full pt-2">
                 <div className="w-48 overflow-hidden rounded-2xl border border-border-soft bg-background-soft shadow-2xl shadow-black/40">
+                  <Link
+                    href="/about"
+                    className="block px-4 py-3 text-sm hover:bg-white/5"
+                  >
+                    About
+                  </Link>
+                  <Link
+                    href="/blog"
+                    className="block px-4 py-3 text-sm hover:bg-white/5"
+                  >
+                    Blog
+                  </Link>
                   <a
                     href="https://printlaserstitchuniversity.com/"
                     target="_blank"

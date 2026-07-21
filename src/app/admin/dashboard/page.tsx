@@ -340,14 +340,14 @@ export default function AdminDashboard() {
             >
               Gallery →
             </Link>
-            <button
+            {/* <button
               onClick={runSetup}
               disabled={setupRunning}
               title="Run once to create Shopify Metaobject definitions"
               className="rounded-lg border border-border-soft px-3 py-1.5 font-headline text-xs text-foreground-muted transition hover:border-[#18d3e8] hover:text-[#18d3e8] disabled:opacity-50"
             >
               {setupRunning ? "Setting up…" : "Shopify Setup"}
-            </button>
+            </button> */}
             <a
               href="/vehicle-stickers"
               target="_blank"

@@ -575,7 +575,7 @@ export default function ProductConfigurator() {
                 className={`mt-3 flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition ${
                   size === "custom"
                     ? TILE_ON
-                    : "border-dashed border-border-strong bg-white/[0.02] hover:bg-white/5"
+                    : "border-dashed border-border-strong bg-white/2 hover:bg-white/5"
                 }`}
               >
                 <Image
@@ -588,7 +588,7 @@ export default function ProductConfigurator() {
                 <span className="font-semibold">Custom size</span>
               </button>
               {size === "custom" && (
-                <div className="mt-3 space-y-3 rounded-2xl border border-border-soft bg-white/[0.02] p-4">
+                <div className="mt-3 space-y-3 rounded-2xl border border-border-soft bg-white/2 p-4">
                   <div className="grid grid-cols-2 gap-3">
                     <NumberField
                       label="Width (in)"
@@ -654,7 +654,7 @@ export default function ProductConfigurator() {
                 className={`relative flex min-h-44 min-w-0 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition ${
                   dragActive
                     ? "border-[#d9f000] bg-[#d9f000]/10"
-                    : "border-border-strong bg-white/[0.02] hover:bg-white/5"
+                    : "border-border-strong bg-white/2 hover:bg-white/5"
                 }`}
               >
                 {file ? (
@@ -679,7 +679,7 @@ export default function ProductConfigurator() {
                       )}
                     </div>
                     <div className="min-w-0 flex-1 text-left">
-                      <div className="font-medium break-words [overflow-wrap:anywhere] text-foreground">
+                      <div className="font-medium wrap-break-word text-foreground">
                         {file.name}
                       </div>
                       <div className="text-xs text-foreground-muted">
@@ -696,7 +696,7 @@ export default function ProductConfigurator() {
                         </div>
                       )}
                       {!isUploading && !fileUrl && uploadError && (
-                        <div className="mt-2 max-w-md break-words rounded-md bg-amber-500/10 px-2 py-1 text-[11px] text-amber-300">
+                        <div className="mt-2 max-w-md wrap-break-word rounded-md bg-amber-500/10 px-2 py-1 text-[11px] text-amber-300">
                           ⚠ Upload failed: {uploadError}
                         </div>
                       )}
@@ -739,7 +739,7 @@ export default function ProductConfigurator() {
                 onChange={(e) => setInstructions(e.target.value)}
                 rows={4}
                 placeholder="Enter any special requests or notes here…"
-                className="w-full resize-none rounded-xl border border-border-soft bg-white/[0.03] px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/60 outline-none ring-[#d9f000]/30 focus:ring-2"
+                className="w-full resize-none rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/60 outline-none ring-[#d9f000]/30 focus:ring-2"
               />
             </Section>
           </div>
@@ -823,7 +823,7 @@ export default function ProductConfigurator() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 rounded-xl border border-border-soft bg-white/[0.03] px-3 py-2 text-[12px] text-foreground-muted">
+              <div className="flex items-center gap-2 rounded-xl border border-border-soft bg-white/3 px-3 py-2 text-[12px] text-foreground-muted">
                 <span>🕒</span>
                 <span>Printed &amp; shipped next business day</span>
               </div>
@@ -836,7 +836,7 @@ export default function ProductConfigurator() {
                 className={`group flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 font-headline text-sm font-bold uppercase tracking-wider transition ${
                   !ctaDisabled
                     ? "accent-gradient text-black shadow-lg shadow-[#d9f000]/30 hover:brightness-110"
-                    : "cursor-not-allowed border border-border-soft bg-white/[0.04] text-foreground-muted"
+                    : "cursor-not-allowed border border-border-soft bg-white/4 text-foreground-muted"
                 }`}
               >
                 {isCheckingOut ? (
@@ -1093,7 +1093,7 @@ function NumberField({
             if (v !== raw) onChange(v);
           }
         }}
-        className="w-full rounded-lg border border-border-soft bg-white/[0.04] px-3 py-2 text-sm text-foreground outline-none ring-[#d9f000]/30 focus:ring-2"
+        className="w-full rounded-lg border border-border-soft bg-white/4 px-3 py-2 text-sm text-foreground outline-none ring-[#d9f000]/30 focus:ring-2"
       />
     </label>
   );

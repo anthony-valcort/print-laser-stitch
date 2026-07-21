@@ -270,7 +270,7 @@ export default async function Home() {
               <div className="relative">
                 {/* Matches the source image's native 3:2 ratio so object-cover
                     has no need to crop any of it away. */}
-                <div className="relative mx-auto aspect-[3/2] w-full max-w-sm overflow-hidden rounded-2xl border border-border-soft bg-background/60 shadow-2xl shadow-black/40 backdrop-blur transition group-hover:scale-105 lg:max-w-none">
+                <div className="relative mx-auto aspect-3/2 w-full max-w-sm overflow-hidden rounded-2xl border border-border-soft bg-background/60 shadow-2xl shadow-black/40 backdrop-blur transition group-hover:scale-105 lg:max-w-none">
                   <Image
                     src="/car wrap decal.png"
                     alt="Custom vehicle sticker kit example"

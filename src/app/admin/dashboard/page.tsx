@@ -333,7 +333,13 @@ export default function AdminDashboard() {
               Vehicle Sticker Dashboard
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/admin/dashboard"
+              className="rounded-lg border border-[#d9f000] px-3 py-1.5 font-headline text-xs font-semibold text-[#d9f000]"
+            >
+              Vehicles
+            </Link>
             <Link
               href="/admin/gallery"
               className="rounded-lg border border-border-soft px-3 py-1.5 font-headline text-xs text-foreground-muted transition hover:border-[#18d3e8] hover:text-[#18d3e8]"
@@ -353,7 +359,14 @@ export default function AdminDashboard() {
               target="_blank"
               className="font-headline text-xs text-foreground-muted transition hover:text-[#18d3e8]"
             >
-              View page ↗
+              Vehicles Page ↗
+            </a>
+            <a
+              href="/gallery"
+              target="_blank"
+              className="font-headline text-xs text-foreground-muted transition hover:text-[#18d3e8]"
+            >
+              Gallery Page ↗
             </a>
             <button
               onClick={logout}

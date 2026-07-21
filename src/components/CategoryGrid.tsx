@@ -140,25 +140,23 @@ export default function CategoryGrid({
               </span>
             </div>
 
-            {/* Image side — Shopify collection image, dynamic, in a white rectangle tile */}
+            {/* Image side — Shopify collection image, dynamic, transparent on the card color */}
             <div className="relative z-10 flex-1 p-3">
-              <div className="relative h-full w-full overflow-hidden rounded-xl bg-white/95">
-                {c.image?.url ? (
-                  <Image
-                    src={c.image.url}
-                    alt={c.image.altText ?? c.title}
-                    fill
-                    sizes="(max-width: 640px) 46vw, 28vw"
-                    className="object-contain object-center p-2 transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="grid h-full place-items-center">
-                    <span className="text-4xl drop-shadow-2xl sm:text-6xl">
-                      🗂️
-                    </span>
-                  </div>
-                )}
-              </div>
+              {c.image?.url ? (
+                <Image
+                  src={c.image.url}
+                  alt={c.image.altText ?? c.title}
+                  fill
+                  sizes="(max-width: 640px) 46vw, 28vw"
+                  className="object-contain object-center p-2 transition-transform duration-500 group-hover:scale-105"
+                />
+              ) : (
+                <div className="grid h-full place-items-center">
+                  <span className="text-4xl drop-shadow-2xl sm:text-6xl">
+                    🗂️
+                  </span>
+                </div>
+              )}
             </div>
           </Link>
         );

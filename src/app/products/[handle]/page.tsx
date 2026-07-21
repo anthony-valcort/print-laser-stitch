@@ -12,6 +12,7 @@ import {
 } from "@/lib/shopify-products";
 import { ShopifyError } from "@/lib/shopify";
 import { isSizeOption } from "@/components/configurator/colors";
+import { getTemplateFitOverrides } from "@/lib/product-template-fit-overrides";
 
 /**
  * Does this Size option's values look like garment sizes (apparel) vs
@@ -135,7 +136,10 @@ export default async function DynamicProductPage({
             singleUploadLabel={apparelSingleUploadLabel}
           />
         ) : (
-          <GenericProductConfigurator product={product} />
+          <GenericProductConfigurator
+            product={product}
+            {...getTemplateFitOverrides(product.handle)}
+          />
         )}
         <FAQSection />
       </main>

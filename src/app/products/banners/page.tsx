@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FAQSection from "@/components/FAQSection";
 import ProductPageShell from "@/components/ProductPageShell";
+import { getTemplateFitOverrides } from "@/lib/product-template-fit-overrides";
 
 export const metadata: Metadata = {
   title: "Custom Banners · Print Laser Stitch",
@@ -12,20 +13,21 @@ export const metadata: Metadata = {
 
 export const revalidate = 300;
 
+const HANDLE = "custom-banners";
+
 export default function BannersPage() {
   return (
     <>
       <Header />
       <main className="flex-1">
         <ProductPageShell
-          handle="custom-banners"
+          handle={HANDLE}
           badge="Indoor & outdoor banners"
           minQuantity={1}
           uploadMode="auto"
           uploadLabel="Banner Design"
           fallbackEmoji="🚩"
-          sizeUnit="ft"
-          showBleedTrim={false}
+          {...getTemplateFitOverrides(HANDLE)}
         />
         <FAQSection />
       </main>

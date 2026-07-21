@@ -8,6 +8,28 @@ type RegisterRequest = {
   mimeType: string;
 };
 
+// The three shapes fileCreate/node can return, flattened into one type
+// (only the fields matching the actual resolved type will be present).
+type RawFileNode = {
+  id: string;
+  fileStatus: string;
+  url?: string | null;
+  image?: { url: string } | null;
+  sources?: Array<{ url: string }>;
+};
+
+function extractFileUrl(node: {
+  url?: string | null;
+  image?: { url: string } | null;
+  sources?: Array<{ url: string }>;
+}): string | null {
+  return node.url ?? node.image?.url ?? node.sources?.[0]?.url ?? null;
+}
+
+// A design upload is always a non-image/video file (PDF/AI/PNG treated as a
+// plain document) and comes back as GenericFile. Gallery uploads can be an
+// actual image or video, which Shopify classifies as MediaImage/Video
+// instead — covered here too so this same route works for both.
 const FILE_CREATE_MUTATION = `
   mutation fileCreate($files: [FileCreateInput!]!) {
     fileCreate(files: $files) {
@@ -16,6 +38,12 @@ const FILE_CREATE_MUTATION = `
         fileStatus
         ... on GenericFile {
           url
+        }
+        ... on MediaImage {
+          image { url }
+        }
+        ... on Video {
+          sources { url }
         }
       }
       userErrors { field message }
@@ -29,6 +57,14 @@ const FILE_BY_ID_QUERY = `
       ... on GenericFile {
         fileStatus
         url
+      }
+      ... on MediaImage {
+        fileStatus
+        image { url }
+      }
+      ... on Video {
+        fileStatus
+        sources { url }
       }
     }
   }
@@ -69,7 +105,7 @@ export async function POST(req: NextRequest) {
       {
         originalSource: body.resourceUrl,
         contentType: "FILE",
-        alt: `Customer design: ${body.filename}`,
+        alt: body.filename,
       },
     ],
   };
@@ -81,7 +117,7 @@ export async function POST(req: NextRequest) {
   const createData = createResp.data as {
     data?: {
       fileCreate?: {
-        files?: Array<{ id: string; fileStatus: string; url?: string | null }>;
+        files?: RawFileNode[];
         userErrors?: Array<{ field: string[]; message: string }>;
       };
     };
@@ -104,7 +140,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Poll until the file's permanent URL is ready (max ~6 seconds).
-  let url = file.url ?? null;
+  let url = extractFileUrl(file);
   if (!url || file.fileStatus !== "READY") {
     url = await pollForReadyUrl(STORE, TOKEN, file.id);
   }
@@ -141,13 +177,19 @@ async function pollForReadyUrl(
     const node = (
       resp.data as {
         data?: {
-          node?: { fileStatus?: string; url?: string | null } | null;
+          node?: {
+            fileStatus?: string;
+            url?: string | null;
+            image?: { url: string } | null;
+            sources?: Array<{ url: string }>;
+          } | null;
         };
       }
     ).data?.node;
 
-    if (node?.fileStatus === "READY" && node.url) {
-      return node.url;
+    const readyUrl = node ? extractFileUrl(node) : null;
+    if (node?.fileStatus === "READY" && readyUrl) {
+      return readyUrl;
     }
     if (node?.fileStatus === "FAILED") {
       return null;

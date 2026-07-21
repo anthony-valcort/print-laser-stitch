@@ -7,6 +7,20 @@ export type ShopifyImage = {
   altText: string | null;
 };
 
+/** A single product gallery entry — either a static image or an uploaded
+ * video. Shopify's legacy `images` connection silently excludes videos, so
+ * the gallery query uses the newer `media` connection and maps both types
+ * into this union. */
+export type ShopifyMedia =
+  | { type: "image"; url: string; altText: string | null }
+  | {
+      type: "video";
+      url: string;
+      mimeType: string;
+      previewImageUrl: string | null;
+      altText: string | null;
+    };
+
 export type ShopifySelectedOption = {
   name: string;
   value: string;
@@ -49,7 +63,11 @@ export type ShopifyProduct = {
   title: string;
   descriptionHtml: string;
   featuredImage: ShopifyImage | null;
+  /** Images only (no videos) — for thumbnails/cart icons where a still
+   * image is required. Use `media` for the full product gallery. */
   images: ShopifyImage[];
+  /** Full gallery — images and videos, in Shopify's display order. */
+  media: ShopifyMedia[];
   options: ShopifyOption[];
   variants: ShopifyVariant[];
   /** Colours from `shopify.color-pattern` metafield — empty if not set. */
@@ -66,6 +84,19 @@ const PRODUCT_BY_HANDLE = `
       featuredImage { url altText }
       images(first: 20) {
         nodes { url altText }
+      }
+      media(first: 20) {
+        nodes {
+          __typename
+          ... on MediaImage {
+            image { url altText }
+          }
+          ... on Video {
+            alt
+            sources { url mimeType }
+            preview { image { url } }
+          }
+        }
       }
       options {
         id
@@ -88,6 +119,41 @@ const PRODUCT_BY_HANDLE = `
   }
 `;
 
+// A flat shape (rather than a discriminated union) since a GraphQL union
+// response is just one object per node with whichever inline-fragment
+// fields matched — TS can't cleanly narrow a union against a generic
+// `{ __typename: string }` catch-all member, so this sidesteps that.
+type RawMediaNode = {
+  __typename: string;
+  image?: ShopifyImage | null;
+  alt?: string | null;
+  sources?: Array<{ url: string; mimeType: string }>;
+  preview?: { image: { url: string } | null } | null;
+};
+
+function mapMediaNodes(nodes: RawMediaNode[]): ShopifyMedia[] {
+  const media: ShopifyMedia[] = [];
+  for (const node of nodes) {
+    if (node.__typename === "MediaImage" && node.image) {
+      media.push({ type: "image", url: node.image.url, altText: node.image.altText });
+    } else if (node.__typename === "Video") {
+      const src = node.sources?.[0];
+      if (src) {
+        media.push({
+          type: "video",
+          url: src.url,
+          mimeType: src.mimeType,
+          previewImageUrl: node.preview?.image?.url ?? null,
+          altText: node.alt ?? null,
+        });
+      }
+    }
+    // Other media types (Model3d, ExternalVideo) aren't supported by the
+    // product gallery UI yet — skipped rather than crashing.
+  }
+  return media;
+}
+
 type RawProductByHandleResp = {
   productByHandle: {
     id: string;
@@ -96,6 +162,7 @@ type RawProductByHandleResp = {
     descriptionHtml: string;
     featuredImage: ShopifyImage | null;
     images: { nodes: ShopifyImage[] };
+    media: { nodes: RawMediaNode[] };
     options: ShopifyOption[];
     variants: {
       nodes: Array<Omit<ShopifyVariant, "image"> & { image: ShopifyImage | null }>;
@@ -213,6 +280,7 @@ export async function getProductByHandle(
     descriptionHtml: p.descriptionHtml,
     featuredImage: p.featuredImage,
     images: p.images.nodes,
+    media: mapMediaNodes(p.media.nodes),
     options: p.options,
     variants: p.variants.nodes,
     taxonomyColors,

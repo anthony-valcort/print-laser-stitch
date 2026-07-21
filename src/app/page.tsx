@@ -100,6 +100,13 @@ export default async function Home() {
                   Browse Products
                   <Arrow />
                 </Link>
+                <Link
+                  href="/gallery"
+                  className="inline-flex items-center gap-2 rounded-md border border-border-strong bg-white/5 px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-foreground transition hover:bg-white/10"
+                >
+                  View Our Gallery
+                  <Arrow />
+                </Link>
               </div>
             </div>
 

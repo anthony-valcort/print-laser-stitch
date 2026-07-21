@@ -9,7 +9,7 @@ import {
   TSHIRT_MIN_QUANTITY,
   type PrintLocationKey,
 } from "@/lib/tshirt-pricing";
-import type { ShopifyImage, ShopifyProduct } from "@/lib/shopify-products";
+import type { ShopifyMedia, ShopifyProduct } from "@/lib/shopify-products";
 import { useCart } from "@/lib/cart-store";
 import type { TShirtCartItem, TShirtSizeLine } from "@/lib/cart-types";
 import {
@@ -288,21 +288,23 @@ export default function TShirtConfigurator({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [multiColor, colorLines, sizeQuantities, selectedOptions, product.variants]);
 
-  // Build gallery: reference variant image first, then product images, dedup'd.
-  const galleryImages = useMemo<ShopifyImage[]>(() => {
-    const imgs: ShopifyImage[] = [];
-    if (referenceVariant?.image) imgs.push(referenceVariant.image);
+  // Build gallery: reference variant image first, then product media, dedup'd.
+  const galleryImages = useMemo<ShopifyMedia[]>(() => {
+    const imgs: ShopifyMedia[] = [];
+    if (referenceVariant?.image) {
+      imgs.push({ type: "image", ...referenceVariant.image });
+    }
     if (
       product.featuredImage &&
       !imgs.some((i) => i.url === product.featuredImage!.url)
     ) {
-      imgs.push(product.featuredImage);
+      imgs.push({ type: "image", ...product.featuredImage });
     }
-    for (const img of product.images) {
-      if (!imgs.some((i) => i.url === img.url)) imgs.push(img);
+    for (const m of product.media) {
+      if (!imgs.some((i) => i.url === m.url)) imgs.push(m);
     }
     return imgs;
-  }, [referenceVariant, product.images, product.featuredImage]);
+  }, [referenceVariant, product.media, product.featuredImage]);
 
   // When the reference variant changes (fabric/sleeve), jump to its image.
   useEffect(() => {

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 
 type Mode = "login" | "signup" | "recover";
 
@@ -287,6 +288,17 @@ export default function AuthForm({ mode }: { mode: Mode }) {
                 : "Create account"}
         </button>
       </form>
+
+      {!isRecover && process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+        <>
+          <div className="my-5 flex items-center gap-3 text-xs text-foreground-muted">
+            <span className="h-px flex-1 bg-border-soft" />
+            or
+            <span className="h-px flex-1 bg-border-soft" />
+          </div>
+          <GoogleSignInButton redirect={redirect} onError={setError} />
+        </>
+      )}
 
       <div className="mt-6 text-center text-sm text-foreground-muted">
         {isRecover ? (

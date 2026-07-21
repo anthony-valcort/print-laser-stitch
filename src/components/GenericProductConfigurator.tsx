@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import type { ShopifyImage, ShopifyProduct } from "@/lib/shopify-products";
+import type { ShopifyMedia, ShopifyProduct } from "@/lib/shopify-products";
 import { useCart } from "@/lib/cart-store";
 import type { ProductCartItem } from "@/lib/cart-types";
 import { colorHex, isColorOption } from "@/components/configurator/colors";
@@ -202,21 +202,24 @@ export default function GenericProductConfigurator({
   const effectiveQty = hasQuantityOption ? 1 : Math.max(1, quantity);
   const total = variantPrice * effectiveQty;
 
-  // Build gallery: variant image first, then product images, dedup'd.
-  const galleryImages = useMemo<ShopifyImage[]>(() => {
-    const imgs: ShopifyImage[] = [];
-    if (currentVariant?.image) imgs.push(currentVariant.image);
+  // Build gallery: variant image first, then product media (images +
+  // videos), dedup'd.
+  const galleryImages = useMemo<ShopifyMedia[]>(() => {
+    const imgs: ShopifyMedia[] = [];
+    if (currentVariant?.image) {
+      imgs.push({ type: "image", ...currentVariant.image });
+    }
     if (
       product.featuredImage &&
       !imgs.some((i) => i.url === product.featuredImage!.url)
     ) {
-      imgs.push(product.featuredImage);
+      imgs.push({ type: "image", ...product.featuredImage });
     }
-    for (const img of product.images) {
-      if (!imgs.some((i) => i.url === img.url)) imgs.push(img);
+    for (const m of product.media) {
+      if (!imgs.some((i) => i.url === m.url)) imgs.push(m);
     }
     return imgs;
-  }, [currentVariant, product.images, product.featuredImage]);
+  }, [currentVariant, product.media, product.featuredImage]);
 
   useEffect(() => {
     setGalleryIdx(0);

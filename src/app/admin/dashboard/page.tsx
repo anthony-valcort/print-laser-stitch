@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   ALL_PARTS,
   PART_LABELS,
@@ -333,6 +334,12 @@ export default function AdminDashboard() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <Link
+              href="/admin/gallery"
+              className="rounded-lg border border-border-soft px-3 py-1.5 font-headline text-xs text-foreground-muted transition hover:border-[#18d3e8] hover:text-[#18d3e8]"
+            >
+              Gallery →
+            </Link>
             <button
               onClick={runSetup}
               disabled={setupRunning}

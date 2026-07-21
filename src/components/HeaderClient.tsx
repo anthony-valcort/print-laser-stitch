@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import CartIcon from "./CartIcon";
+import SearchBar from "./SearchBar";
 
 export type HeaderCustomer = {
   firstName: string | null;
@@ -26,6 +27,7 @@ export default function HeaderClient({
 }) {
   const [productsOpen, setProductsOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Lock background scroll while the mobile menu is open so scrolling the
@@ -50,7 +52,7 @@ export default function HeaderClient({
             alt="Print Laser Stitch"
             width={40}
             height={40}
-            className="h-10 w-auto"
+            className="h-10 w-10 shrink-0"
             priority
           />
         </Link>
@@ -58,7 +60,7 @@ export default function HeaderClient({
         <nav className="hidden items-center gap-1 lg:flex">
           <Link
             href="/"
-            className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
+            className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
           >
             Home
           </Link>
@@ -70,7 +72,7 @@ export default function HeaderClient({
             >
               <Link
                 href="/collections"
-                className="flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
+                className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
               >
                 Products
                 <svg
@@ -127,74 +129,113 @@ export default function HeaderClient({
           ) : (
             <Link
               href="/collections"
-              className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
+              className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
             >
               Products
             </Link>
           )}
           <Link
             href="/products/vinyl-stickers"
-            className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-[#d9f000] transition hover:bg-[#d9f000]/20"
+            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold text-[#d9f000] transition hover:bg-[#d9f000]/20"
           >
             <span>✨</span>
             Custom Stickers
           </Link>
           <Link
             href="/decal-quote"
-            className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
+            className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
           >
             Quick Quote
           </Link>
           <Link
             href="/signage-quotes"
-            className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
+            className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
           >
             Decal Signage
           </Link>
           <Link
             href="/blog"
-            className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
+            className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
           >
             Blog
           </Link>
-          <a
-            href="https://printlaserstitchuniversity.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium text-foreground/80 transition hover:text-foreground hover:bg-white/5"
+          <Link
+            href="/gallery"
+            className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
           >
-            <Image
-              src="/university-logo.jpeg"
-              alt=""
-              width={18}
-              height={18}
-              className="h-4.5 w-4.5 shrink-0 rounded-full object-cover ring-1 ring-[#d94cb3]/40"
-            />
-            University
-          </a>
+            Gallery
+          </Link>
           <Link
             href="/about"
-            className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
+            className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
           >
             About
           </Link>
-          <a
-            href="https://printlaserstitch.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
+          <div
+            className="relative shrink-0"
+            onMouseEnter={() => setMoreOpen(true)}
+            onMouseLeave={() => setMoreOpen(false)}
           >
-            Portal
-          </a>
+            <button
+              type="button"
+              className="flex items-center gap-1 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
+              onClick={() => setMoreOpen((v) => !v)}
+            >
+              More
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`transition-transform ${moreOpen ? "rotate-180" : ""}`}
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
+            {moreOpen && (
+              <div className="absolute right-0 top-full pt-2">
+                <div className="w-48 overflow-hidden rounded-2xl border border-border-soft bg-background-soft shadow-2xl shadow-black/40">
+                  <a
+                    href="https://printlaserstitchuniversity.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2.5 px-4 py-3 text-sm hover:bg-white/5"
+                  >
+                    <Image
+                      src="/university-logo.jpeg"
+                      alt=""
+                      width={18}
+                      height={18}
+                      className="h-4.5 w-4.5 shrink-0 rounded-full object-cover ring-1 ring-[#d94cb3]/40"
+                    />
+                    University
+                  </a>
+                  <a
+                    href="https://printlaserstitch.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block px-4 py-3 text-sm hover:bg-white/5"
+                  >
+                    🔐 Portal
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
+          <SearchBar className="w-40 shrink-0 xl:w-56" />
           {customer ? (
             <div
-              className="relative"
+              className="relative shrink-0"
               onMouseEnter={() => setAccountOpen(true)}
               onMouseLeave={() => setAccountOpen(false)}
             >
               <button
                 type="button"
-                className="flex items-center gap-2 rounded-full border border-border-soft bg-white/5 px-3 py-1.5 text-sm font-medium hover:bg-white/10"
+                className="flex items-center gap-2 whitespace-nowrap rounded-full border border-border-soft bg-white/5 px-3 py-1.5 text-sm font-medium hover:bg-white/10"
                 onClick={() => setAccountOpen((v) => !v)}
               >
                 <span className="grid h-7 w-7 place-items-center rounded-full accent-gradient text-xs font-bold text-black">
@@ -255,20 +296,12 @@ export default function HeaderClient({
               )}
             </div>
           ) : (
-            <>
-              <Link
-                href="/login"
-                className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
-              >
-                Login
-              </Link>
-              <Link
-                href="/signup"
-                className="rounded-md accent-gradient px-4 py-2 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-md shadow-[#d9f000]/30 hover:brightness-110"
-              >
-                Sign up
-              </Link>
-            </>
+            <Link
+              href="/login"
+              className="shrink-0 rounded-md accent-gradient px-4 py-2 font-headline text-sm font-bold whitespace-nowrap uppercase tracking-wider text-black shadow-md shadow-[#d9f000]/30 hover:brightness-110"
+            >
+              Login
+            </Link>
           )}
           <CartIcon />
         </nav>
@@ -312,6 +345,9 @@ export default function HeaderClient({
       {mobileOpen && (
         <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-border-soft bg-background-soft lg:hidden">
           <div className="mx-auto max-w-7xl space-y-1 px-4 py-4">
+            <div className="pb-2">
+              <SearchBar className="w-full" />
+            </div>
             <Link
               href="/"
               className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
@@ -346,6 +382,13 @@ export default function HeaderClient({
               className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
             >
               📰 Blog
+            </Link>
+            <Link
+              href="/gallery"
+              onClick={() => setMobileOpen(false)}
+              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
+            >
+              🖼️ Gallery
             </Link>
             <a
               href="https://printlaserstitchuniversity.com/"

@@ -9,7 +9,7 @@ import {
   type TemplateFitPayload,
 } from "@/lib/template-fit/session";
 import { uploadFlattenedDesign } from "@/lib/template-fit/upload-flattened";
-import { parseSizeInches } from "@/lib/parse-size";
+import { parseSizeInchesWithUnit } from "@/lib/parse-size";
 import { useCart } from "@/lib/cart-store";
 import type { ProductCartItem } from "@/lib/cart-types";
 
@@ -57,7 +57,7 @@ export default function TemplateFitPageClient({
 
   function handleSizeChange(newValue: string) {
     if (!payload?.sizeOptionName) return;
-    const dims = parseSizeInches(newValue);
+    const dims = parseSizeInchesWithUnit(newValue, payload.sizeUnit);
     if (!dims) return;
     const newSelected = { ...selectedOptions, [payload.sizeOptionName]: newValue };
     const variant = payload.variants.find((v) =>
@@ -201,6 +201,7 @@ export default function TemplateFitPageClient({
         busy={uploading}
         error={error}
         onFinalize={handleFinalize}
+        bleedIn={payload.bleedIn}
       />
     </>
   );

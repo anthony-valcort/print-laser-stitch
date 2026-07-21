@@ -267,6 +267,9 @@ export default function VehicleStickersClient({
                     <div className="flex flex-1 flex-col gap-3 p-4">
                       <div>
                         <div className="font-headline text-sm font-bold">{PART_LABELS[part]}</div>
+                        {info.skinName && (
+                          <div className="text-xs text-foreground-muted">{info.skinName}</div>
+                        )}
                         <div className="font-headline text-2xl font-black text-[#d9f000]">
                           ${info.price.toFixed(2)}
                         </div>
@@ -436,6 +439,9 @@ export default function VehicleStickersClient({
                   <div className="mt-1 font-display text-2xl font-black uppercase">
                     {PART_LABELS[detailPart]}
                   </div>
+                  {info.skinName && (
+                    <div className="mt-0.5 text-sm text-foreground-muted">{info.skinName}</div>
+                  )}
                   <div className="mt-1 font-headline text-3xl font-black text-[#d9f000]">
                     ${info.price.toFixed(2)}
                   </div>

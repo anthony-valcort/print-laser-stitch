@@ -61,9 +61,10 @@ export async function downloadBlankTemplate(
   heightIn: number,
   sizeLabel: string,
   productTitle: string,
+  bleedIn: number = BLEED_IN,
 ): Promise<void> {
-  const bleedWIn = widthIn + 2 * BLEED_IN;
-  const bleedHIn = heightIn + 2 * BLEED_IN;
+  const bleedWIn = widthIn + 2 * bleedIn;
+  const bleedHIn = heightIn + 2 * bleedIn;
   const pageWIn = bleedWIn + 2 * CROP_MARGIN_IN;
   const pageHIn = bleedHIn + 2 * CROP_MARGIN_IN + HEADER_IN;
 
@@ -87,7 +88,9 @@ export async function downloadBlankTemplate(
     color: black,
   });
   page.drawText(
-    `Final Cut Size: ${widthIn}" x ${heightIn}"   ·   Artwork with Bleed: ${bleedWIn.toFixed(3)}" x ${bleedHIn.toFixed(3)}"`,
+    bleedIn > 0
+      ? `Final Cut Size: ${widthIn}" x ${heightIn}"   ·   Artwork with Bleed: ${bleedWIn.toFixed(3)}" x ${bleedHIn.toFixed(3)}"`
+      : `Finished Size: ${widthIn}" x ${heightIn}"`,
     {
       x: CROP_MARGIN_IN * PT_PER_IN,
       y: pageHPt - HEADER_IN * PT_PER_IN * 0.95,
@@ -102,11 +105,14 @@ export async function downloadBlankTemplate(
   const originY = CROP_MARGIN_IN * PT_PER_IN;
   const bleedWPt = bleedWIn * PT_PER_IN;
   const bleedHPt = bleedHIn * PT_PER_IN;
-  const bleedInsetPt = BLEED_IN * PT_PER_IN;
+  const bleedInsetPt = bleedIn * PT_PER_IN;
   const safeInsetPt = SAFE_IN * PT_PER_IN;
 
-  // Bleed line (red, dashed)
-  drawDashedRect(page, originX, originY, bleedWPt, bleedHPt, red);
+  // Bleed line (red, dashed) — skipped for products with no bleed step
+  // (e.g. Banners, finished at the ordered size with no die-cut margin).
+  if (bleedIn > 0) {
+    drawDashedRect(page, originX, originY, bleedWPt, bleedHPt, red);
+  }
 
   // Trim / final cut line (black, solid) — inset from bleed
   const trimX = originX + bleedInsetPt;
@@ -155,13 +161,15 @@ export async function downloadBlankTemplate(
     });
   }
 
-  page.drawText("Bleed Line", {
-    x: originX + 4,
-    y: originY + bleedHPt - 12,
-    size: 7,
-    font,
-    color: red,
-  });
+  if (bleedIn > 0) {
+    page.drawText("Bleed Line", {
+      x: originX + 4,
+      y: originY + bleedHPt - 12,
+      size: 7,
+      font,
+      color: red,
+    });
+  }
   page.drawText("Safe Line", {
     x: trimX + safeInsetPt + 4,
     y: trimY + trimHPt - safeInsetPt - 12,

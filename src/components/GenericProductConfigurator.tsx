@@ -22,7 +22,9 @@ import {
   findDimensionOption,
   parseSizeInches,
   selectedSizeInches,
+  type SizeUnit,
 } from "@/lib/parse-size";
+import { BLEED_IN } from "@/lib/template-fit/constants";
 import { saveTemplateFitPayload } from "@/lib/template-fit/session";
 import BlankTemplateDownload from "@/components/configurator/BlankTemplateDownload";
 
@@ -71,6 +73,21 @@ export type GenericProductConfiguratorProps = {
    * selection.
    */
   fixedSizeInches?: { width: number; height: number };
+  /**
+   * Unit the product's Size option numbers are actually written in.
+   * Defaults to "in". Banners' "2 x 1" .. "8 x 4" are feet, same as the
+   * printing industry usually quotes them — the digits look identical to
+   * inches, so this must be set explicitly per product.
+   */
+  sizeUnit?: SizeUnit;
+  /**
+   * Whether the template-fit studio shows bleed/trim guide lines around the
+   * design (default true). Set false for products with no bleed step —
+   * e.g. Banners are finished at the ordered size (hemmed/grommeted, not
+   * die-cut), so there's no bleed or trim margin to show, just the
+   * finished-size edge and a safe-area guide.
+   */
+  showBleedTrim?: boolean;
 };
 
 // Detect a Shopify option that controls print sides — Flyers calls it
@@ -124,6 +141,8 @@ export default function GenericProductConfigurator({
   howToOrderVideoId,
   requiresTemplateFit,
   fixedSizeInches,
+  sizeUnit = "in",
+  showBleedTrim = true,
 }: GenericProductConfiguratorProps) {
   const router = useRouter();
   const { addItem } = useCart();
@@ -327,7 +346,7 @@ export default function GenericProductConfigurator({
   const templateFitEnabled = requiresTemplateFit ?? autoTemplateFit;
 
   const sizeInches = templateFitEnabled
-    ? (selectedSizeInches(selectedOptions) ?? fixedSizeInches ?? null)
+    ? (selectedSizeInches(selectedOptions, sizeUnit) ?? fixedSizeInches ?? null)
     : null;
   const willUseTemplateFit = templateFitEnabled && !!sizeInches;
 
@@ -377,6 +396,8 @@ export default function GenericProductConfigurator({
       sides,
       sizeOptionName: sizeOption?.name ?? null,
       sizeChoices,
+      sizeUnit,
+      bleedIn: showBleedTrim ? BLEED_IN : 0,
       variants: product.variants.map((v) => ({
         id: v.id,
         price: v.price,
@@ -446,6 +467,8 @@ export default function GenericProductConfigurator({
                 options={product.options}
                 productTitle={product.title}
                 fixedSizeInches={fixedSizeInches}
+                sizeUnit={sizeUnit}
+                bleedIn={showBleedTrim ? BLEED_IN : 0}
               />
             )}
 

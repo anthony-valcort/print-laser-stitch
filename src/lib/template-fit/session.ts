@@ -1,3 +1,5 @@
+import type { SizeUnit } from "@/lib/parse-size";
+
 export type TemplateFitSide = "front" | "back";
 
 export type TemplateFitVariant = {
@@ -20,6 +22,13 @@ export type TemplateFitPayload = {
   sizeOptionName: string | null;
   /** Dimension-shaped values of that option, e.g. ["4 Inch x 6 Inch", "5 Inch x 7 Inch"]. */
   sizeChoices: string[];
+  /** Unit the raw sizeChoices numbers are actually written in (Banners uses
+   * feet) — needed so re-picking a size on this page converts correctly. */
+  sizeUnit: SizeUnit;
+  /** Bleed margin in inches added around widthIn/heightIn for this product.
+   * 0 for products with no bleed step (e.g. Banners) — the studio then
+   * hides the bleed/trim guides and shows just the finished-size edge. */
+  bleedIn: number;
   /** Every variant, so picking a new size can re-resolve price + variant id. */
   variants: TemplateFitVariant[];
   cartItem: {

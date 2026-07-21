@@ -124,30 +124,30 @@ export default async function Home() {
         <section className="mx-auto max-w-7xl px-4 pb-4 pt-2 sm:px-6 lg:px-8">
           <Link
             href="/products/vinyl-stickers"
-            className="group relative isolate flex min-h-40 flex-row overflow-hidden rounded-2xl bg-[#9adfc4] shadow-lg shadow-black/20 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/30 sm:min-h-0"
+            className="group relative isolate flex min-h-40 flex-row overflow-hidden rounded-2xl bg-[#ffb366] shadow-lg shadow-black/20 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/30 sm:min-h-0"
           >
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-0 bg-[#5fae8d]"
+              className="pointer-events-none absolute inset-0 bg-[#ff8c1a]"
               style={{
                 clipPath: "polygon(38% 0, 100% 0, 100% 100%, 12% 100%)",
               }}
             />
 
             <div className="relative z-10 flex max-w-[54%] flex-1 flex-col justify-center gap-2 p-5 sm:max-w-none sm:gap-3 sm:p-10 lg:p-12">
-              <span className="hidden w-fit items-center gap-2 rounded-full border border-black/10 bg-white/40 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#1c6b52] sm:inline-flex">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#1c6b52]" />
+              <span className="hidden w-fit items-center gap-2 rounded-full border border-black/10 bg-white/40 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8a3e00] sm:inline-flex">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#8a3e00]" />
                 Design it yourself
               </span>
-              <h2 className="font-display text-lg font-black uppercase leading-[0.95] tracking-tight text-[#1c6b52] sm:text-4xl">
+              <h2 className="font-display text-lg font-black uppercase leading-[0.95] tracking-tight text-[#8a3e00] sm:text-4xl">
                 Custom Vinyl Stickers
               </h2>
-              <p className="line-clamp-2 text-[11px] leading-relaxed text-[#256b52] sm:line-clamp-none sm:max-w-xl sm:text-base">
+              <p className="line-clamp-2 text-[11px] leading-relaxed text-[#8a4a1a] sm:line-clamp-none sm:max-w-xl sm:text-base">
                 Upload your artwork, pick a shape, size and finish, then see
                 an instant proof with a die-cut preview — before you ever
                 check out.
               </p>
-              <ul className="hidden gap-2 text-sm text-[#256b52] sm:grid sm:grid-cols-2">
+              <ul className="hidden gap-2 text-sm text-[#8a4a1a] sm:grid sm:grid-cols-2">
                 <li className="flex items-center gap-2">
                   <StickerCheckIcon /> Instant preflight proof
                 </li>
@@ -167,14 +167,14 @@ export default async function Home() {
               </span>
             </div>
 
-            <div className="relative z-10 flex-1 px-3 py-2 sm:px-6 sm:py-4">
-              <div className="relative h-full w-full overflow-hidden rounded-2xl shadow-lg shadow-black/20">
+            <div className="relative z-10 flex-1 self-stretch px-3 py-3 sm:px-6 sm:py-6">
+              <div className="relative h-full w-full overflow-hidden rounded-2xl border border-black/15 bg-black/10 shadow-2xl shadow-black/30 backdrop-blur-sm">
                 <Image
-                  src="/vinyl-sticker-logo.jpeg"
+                  src="/vinyl-sticker-logo.png"
                   alt="Custom vinyl stickers"
                   fill
                   sizes="(max-width: 640px) 46vw, 40vw"
-                  className="object-contain transition-transform duration-500 group-hover:scale-105"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               </div>
             </div>
@@ -252,7 +252,7 @@ export default async function Home() {
                     <CheckIcon /> Full Vehicle Set
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckIcon /> Top / Roof Wrap
+                    <CheckIcon /> Back Decals
                   </li>
                 </ul>
                 <span className="mt-8 inline-flex items-center gap-2 rounded-md cyan-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#18d3e8]/30 transition group-hover:brightness-110">
@@ -261,18 +261,16 @@ export default async function Home() {
                 </span>
               </div>
               <div className="relative">
-                <div className="relative mx-auto grid aspect-square max-w-xs grid-cols-2 gap-2 overflow-hidden rounded-2xl border border-border-soft bg-background/60 p-4 shadow-2xl shadow-black/40 backdrop-blur transition group-hover:scale-105 lg:max-w-none">
-                  {["🚘 Hood Set", "🛻 Bedside", "✨ Full Set", "⬆️ Top"].map((label) => (
-                    <div
-                      key={label}
-                      className="flex flex-col items-center justify-center gap-1 rounded-xl bg-white/5 p-3 text-center"
-                    >
-                      <span className="text-2xl">{label.split(" ")[0]}</span>
-                      <span className="font-headline text-[10px] font-bold uppercase tracking-wide text-foreground-muted">
-                        {label.split(" ").slice(1).join(" ")}
-                      </span>
-                    </div>
-                  ))}
+                {/* Matches the source image's native 3:2 ratio so object-cover
+                    has no need to crop any of it away. */}
+                <div className="relative mx-auto aspect-[3/2] w-full max-w-sm overflow-hidden rounded-2xl border border-border-soft bg-background/60 shadow-2xl shadow-black/40 backdrop-blur transition group-hover:scale-105 lg:max-w-none">
+                  <Image
+                    src="/car wrap decal.png"
+                    alt="Custom vehicle sticker kit example"
+                    fill
+                    className="object-cover"
+                    sizes="(min-width: 1024px) 480px, 400px"
+                  />
                 </div>
               </div>
             </div>
@@ -544,7 +542,7 @@ function CheckIcon() {
 
 function StickerCheckIcon() {
   return (
-    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#1c6b52]/15 text-[#1c6b52]">
+    <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#8a3e00]/15 text-[#8a3e00]">
       <svg
         width="12"
         height="12"

@@ -4,14 +4,18 @@ export const PART_LABELS: Record<PartKey, string> = {
   hoodSet: "Hood Set",
   bedside: "Bedside",
   fullSet: "Full Set",
-  top: "Top",
+  // Internal key stays "top" (it's the id used everywhere data is keyed —
+  // seed data, admin form state, cart line items), but there's no "Top"
+  // (roof) product; this set is actually the rear/tailgate decal, so it's
+  // displayed as "Back".
+  top: "Back",
 };
 
 export const PART_ICONS: Record<PartKey, string> = {
   hoodSet: "🚘",
   bedside: "🛻",
   fullSet: "✨",
-  top: "⬆️",
+  top: "🔙",
 };
 
 export const ALL_PARTS: PartKey[] = ["hoodSet", "bedside", "fullSet", "top"];
@@ -23,6 +27,9 @@ export type StickerPart = {
   /** All images for this set — shown in the gallery modal. */
   imageUrls?: string[];
   shopifyVariantId?: string;
+  /** Free-text pattern/finish name for this set's decal (e.g. "Camo",
+   * "Topographic", "Carbon Fiber", "Lava") — admin-entered, not a fixed list. */
+  skinName?: string;
 };
 
 export type VehicleSticker = {

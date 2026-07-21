@@ -25,6 +25,10 @@ import type { ProofShape, RoundedCorners } from "@/lib/proof/types";
 
 type SizeChoice = SizeKey | "custom";
 
+// Placeholder — same clip used on the Flyers "How to Order" section. Swap
+// for the real vinyl-stickers walkthrough video's ID once it's ready.
+const HOW_TO_ORDER_VIDEO_ID = "iSvRIeYYNl4";
+
 const ACCEPT =
   ".png,.jpg,.jpeg,.pdf,.svg,.ai,image/png,image/jpeg,image/svg+xml,application/pdf";
 
@@ -419,35 +423,48 @@ export default function ProductConfigurator() {
         <div className="relative overflow-hidden rounded-3xl border border-[#d9f000]/25 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#d94cb3]/10 p-7 sm:p-10">
           <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[#d9f000]/15 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-[#18d3e8]/15 blur-3xl" />
-          <div className="relative">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#d9f000]/40 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#d9f000]" />
-              Design it yourself
-            </span>
-            <h1 className="mt-4 font-display text-3xl font-black uppercase leading-[1.05] tracking-tight sm:text-5xl">
-              Custom{" "}
-              <span className="accent-gradient-text">Vinyl Stickers</span>
-            </h1>
-            <p className="mt-3 max-w-xl text-sm text-foreground-muted sm:text-base">
-              Turn your artwork into tough, weatherproof stickers — cut to the
-              exact shape of your design and built to survive sun, rain and
-              everyday wear. Upload your file, preview the proof on screen,
-              then order in minutes.
-            </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {[
-                "💦 Holds up outdoors",
-                "☀️ UV & fade resistant",
-                "✂️ Precision die-cut",
-                "🖥️ Live on-screen proof",
-              ].map((t) => (
-                <span
-                  key={t}
-                  className="rounded-full border border-border-soft bg-white/5 px-3 py-1 text-xs font-medium text-foreground/80"
-                >
-                  {t}
-                </span>
-              ))}
+          <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-center">
+            <div>
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#d9f000]/40 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#d9f000]" />
+                Design it yourself
+              </span>
+              <h1 className="mt-4 font-display text-3xl font-black uppercase leading-[1.05] tracking-tight sm:text-5xl">
+                Custom{" "}
+                <span className="accent-gradient-text">Vinyl Stickers</span>
+              </h1>
+              <p className="mt-3 max-w-xl text-sm text-foreground-muted sm:text-base">
+                Turn your artwork into tough, weatherproof stickers — cut to the
+                exact shape of your design and built to survive sun, rain and
+                everyday wear. Upload your file, preview the proof on screen,
+                then order in minutes.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {[
+                  "💦 Holds up outdoors",
+                  "☀️ UV & fade resistant",
+                  "✂️ Precision die-cut",
+                  "🖥️ Live on-screen proof",
+                ].map((t) => (
+                  <span
+                    key={t}
+                    className="rounded-full border border-border-soft bg-white/5 px-3 py-1 text-xs font-medium text-foreground/80"
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* How to order — video */}
+            <div className="aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${HOW_TO_ORDER_VIDEO_ID}`}
+                title="How to order — Print Laser Stitch"
+                className="h-full w-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
             </div>
           </div>
         </div>

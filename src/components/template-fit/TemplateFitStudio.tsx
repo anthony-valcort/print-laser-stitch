@@ -85,6 +85,7 @@ export default function TemplateFitStudio({
   busy = false,
   error = null,
   onFinalize,
+  bleedIn = BLEED_IN,
 }: {
   widthIn: number;
   heightIn: number;
@@ -92,9 +93,13 @@ export default function TemplateFitStudio({
   busy?: boolean;
   error?: string | null;
   onFinalize: (blobs: Partial<Record<Side, Blob>>) => void;
+  /** Bleed margin in inches, added around widthIn/heightIn. Pass 0 for
+   * products with no bleed step (e.g. Banners) — the bleed/trim guide
+   * lines are hidden and only the finished-size edge + safe line show. */
+  bleedIn?: number;
 }) {
-  const bleedWIn = widthIn + 2 * BLEED_IN;
-  const bleedHIn = heightIn + 2 * BLEED_IN;
+  const bleedWIn = widthIn + 2 * bleedIn;
+  const bleedHIn = heightIn + 2 * bleedIn;
 
   const availableSides = useMemo(
     () => (Object.keys(sides) as Side[]).filter((s) => sides[s]),
@@ -300,14 +305,14 @@ export default function TemplateFitStudio({
   }
 
   function alignOffsetX(h: "left" | "center" | "right"): number {
-    if (h === "left") return BLEED_IN - bleedWIn / 2 + drawnWidthIn / 2;
-    if (h === "right") return bleedWIn / 2 - BLEED_IN - drawnWidthIn / 2;
+    if (h === "left") return bleedIn - bleedWIn / 2 + drawnWidthIn / 2;
+    if (h === "right") return bleedWIn / 2 - bleedIn - drawnWidthIn / 2;
     return 0;
   }
 
   function alignOffsetY(v: "top" | "middle" | "bottom"): number {
-    if (v === "top") return BLEED_IN - bleedHIn / 2 + drawnHeightIn / 2;
-    if (v === "bottom") return bleedHIn / 2 - BLEED_IN - drawnHeightIn / 2;
+    if (v === "top") return bleedIn - bleedHIn / 2 + drawnHeightIn / 2;
+    if (v === "bottom") return bleedHIn / 2 - bleedIn - drawnHeightIn / 2;
     return 0;
   }
 
@@ -430,10 +435,10 @@ export default function TemplateFitStudio({
   }
 
   // Guide overlay insets, as % of container width/height.
-  const trimLeftPct = (BLEED_IN / bleedWIn) * 100;
-  const trimTopPct = (BLEED_IN / bleedHIn) * 100;
-  const safeLeftPct = ((BLEED_IN + SAFE_IN) / bleedWIn) * 100;
-  const safeTopPct = ((BLEED_IN + SAFE_IN) / bleedHIn) * 100;
+  const trimLeftPct = (bleedIn / bleedWIn) * 100;
+  const trimTopPct = (bleedIn / bleedHIn) * 100;
+  const safeLeftPct = ((bleedIn + SAFE_IN) / bleedWIn) * 100;
+  const safeTopPct = ((bleedIn + SAFE_IN) / bleedHIn) * 100;
 
   const imgLeftPx =
     (bleedWIn / 2 + current.offsetXIn - ownWidthIn / 2) * pxPerIn;
@@ -673,18 +678,22 @@ export default function TemplateFitStudio({
             />
           )}
 
-          {/* Bleed line — outer edge */}
-          <div className="pointer-events-none absolute inset-0 border-2 border-dashed border-red-500/80" />
-          {/* Trim line */}
-          <div
-            className="pointer-events-none absolute border-2 border-white/90"
-            style={{
-              left: `${trimLeftPct}%`,
-              right: `${trimLeftPct}%`,
-              top: `${trimTopPct}%`,
-              bottom: `${trimTopPct}%`,
-            }}
-          />
+          {bleedIn > 0 && (
+            <>
+              {/* Bleed line — outer edge */}
+              <div className="pointer-events-none absolute inset-0 border-2 border-dashed border-red-500/80" />
+              {/* Trim line */}
+              <div
+                className="pointer-events-none absolute border-2 border-white/90"
+                style={{
+                  left: `${trimLeftPct}%`,
+                  right: `${trimLeftPct}%`,
+                  top: `${trimTopPct}%`,
+                  bottom: `${trimTopPct}%`,
+                }}
+              />
+            </>
+          )}
           {/* Safe line */}
           <div
             className="pointer-events-none absolute border-2 border-dashed border-emerald-400/90"
@@ -698,8 +707,12 @@ export default function TemplateFitStudio({
         </div>
 
         <div className="mt-2 flex justify-center gap-4 text-[10px] font-semibold uppercase tracking-wider">
-          <span className="text-red-400">■ Bleed</span>
-          <span className="text-white">■ Trim</span>
+          {bleedIn > 0 && (
+            <>
+              <span className="text-red-400">■ Bleed</span>
+              <span className="text-white">■ Trim</span>
+            </>
+          )}
           <span className="text-emerald-400">■ Safe</span>
         </div>
       </div>

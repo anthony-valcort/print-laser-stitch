@@ -2,13 +2,20 @@
 
 import { useState } from "react";
 import type { ShopifyOption } from "@/lib/shopify-products";
-import { findDimensionOption, parseSizeInches } from "@/lib/parse-size";
+import {
+  findDimensionOption,
+  parseSizeInches,
+  parseSizeInchesWithUnit,
+  type SizeUnit,
+} from "@/lib/parse-size";
 import { downloadBlankTemplate } from "@/lib/template-fit/download-blank-template";
 
 export default function BlankTemplateDownload({
   options,
   productTitle,
   fixedSizeInches,
+  sizeUnit = "in",
+  bleedIn,
 }: {
   options: ShopifyOption[];
   productTitle: string;
@@ -16,6 +23,11 @@ export default function BlankTemplateDownload({
    * from (e.g. Business Cards, always 2×3.5″) — see the matching prop on
    * GenericProductConfigurator. */
   fixedSizeInches?: { width: number; height: number };
+  /** Unit the Size option's numbers are actually in (Banners are feet). */
+  sizeUnit?: SizeUnit;
+  /** Bleed margin to draw, in inches. Pass 0 for products with no bleed
+   * step (e.g. Banners) — see the matching prop on GenericProductConfigurator. */
+  bleedIn?: number;
 }) {
   const sizeOption = findDimensionOption(options);
   const sizeValues = sizeOption
@@ -32,7 +44,9 @@ export default function BlankTemplateDownload({
   const showPicker = sizeValues.length > 0;
 
   async function handleDownload() {
-    const dims = showPicker ? parseSizeInches(selected) : fixedSizeInches;
+    const dims = showPicker
+      ? parseSizeInchesWithUnit(selected, sizeUnit)
+      : fixedSizeInches;
     if (!dims) return;
     setBusy(true);
     try {
@@ -41,6 +55,7 @@ export default function BlankTemplateDownload({
         dims.height,
         showPicker ? selected : (fixedLabel ?? ""),
         productTitle,
+        bleedIn,
       );
     } finally {
       setBusy(false);

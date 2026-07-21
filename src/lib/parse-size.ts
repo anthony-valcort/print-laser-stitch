@@ -45,12 +45,33 @@ export function parseSizeInches(label: string): SizeInches | null {
   return { width, height };
 }
 
+/** The unit a product's Size option numbers are actually written in. Most
+ * print products (Flyers, Posters, Car Magnets…) use inches, but Banners'
+ * "2 x 1" .. "8 x 4" are feet (a 2ft × 1ft banner), same as the printing
+ * industry usually quotes them — the raw numbers look identical to inches,
+ * so this has to be told per-product, not inferred from the string. */
+export type SizeUnit = "in" | "ft";
+
+/** Like parseSizeInches, but converts to inches when the label's numbers are
+ * actually in feet (see SizeUnit). */
+export function parseSizeInchesWithUnit(
+  label: string,
+  unit: SizeUnit = "in",
+): SizeInches | null {
+  const parsed = parseSizeInches(label);
+  if (!parsed) return null;
+  return unit === "ft"
+    ? { width: parsed.width * 12, height: parsed.height * 12 }
+    : parsed;
+}
+
 /** First dimension-shaped value among the customer's current selections. */
 export function selectedSizeInches(
   selectedOptions: Record<string, string>,
+  unit: SizeUnit = "in",
 ): SizeInches | null {
   for (const value of Object.values(selectedOptions)) {
-    const parsed = parseSizeInches(value);
+    const parsed = parseSizeInchesWithUnit(value, unit);
     if (parsed) return parsed;
   }
   return null;

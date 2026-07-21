@@ -24,6 +24,8 @@ export default function BannersPage() {
           uploadMode="auto"
           uploadLabel="Banner Design"
           fallbackEmoji="🚩"
+          sizeUnit="ft"
+          showBleedTrim={false}
         />
         <FAQSection />
       </main>

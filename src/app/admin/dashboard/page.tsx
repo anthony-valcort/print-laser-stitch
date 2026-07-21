@@ -21,6 +21,8 @@ type PartEntry = {
   pendingPreviews: string[];
   /** Controlled URL input field */
   urlInput: string;
+  /** Free-text pattern/finish name, e.g. "Camo", "Topographic". */
+  skinName: string;
 };
 
 type FormState = {
@@ -36,7 +38,7 @@ type FormState = {
 };
 
 function emptyPart(): PartEntry {
-  return { enabled: false, price: "", imageUrls: [], pendingFiles: [], pendingPreviews: [], urlInput: "" };
+  return { enabled: false, price: "", imageUrls: [], pendingFiles: [], pendingPreviews: [], urlInput: "", skinName: "" };
 }
 
 const EMPTY_FORM: FormState = {
@@ -49,7 +51,7 @@ const EMPTY_FORM: FormState = {
 function partToEntry(sp: StickerPart | undefined): PartEntry {
   if (!sp) return emptyPart();
   const urls = sp.imageUrls?.length ? sp.imageUrls : sp.imageUrl ? [sp.imageUrl] : [];
-  return { enabled: true, price: String(sp.price), imageUrls: urls, pendingFiles: [], pendingPreviews: [], urlInput: "" };
+  return { enabled: true, price: String(sp.price), imageUrls: urls, pendingFiles: [], pendingPreviews: [], urlInput: "", skinName: sp.skinName ?? "" };
 }
 
 function vehicleToForm(v: VehicleSticker): FormState {
@@ -83,6 +85,7 @@ function formToPayload(f: FormState): Omit<VehicleSticker, "id"> {
         price: parseFloat(p.price),
         imageUrls: p.imageUrls,
         imageUrl: p.imageUrls[0],
+        skinName: p.skinName.trim() || undefined,
       };
     }
   }
@@ -664,6 +667,14 @@ export default function AdminDashboard() {
                         {/* Image for this part (only when enabled) */}
                         {p.enabled && (
                           <div className="ml-7 space-y-2">
+                            {/* Skin / pattern name */}
+                            <input
+                              type="text"
+                              value={p.skinName}
+                              onChange={(e) => setPart(key, { skinName: e.target.value })}
+                              placeholder="Skin name (e.g. Camo, Topographic, Carbon Fiber)…"
+                              className="w-full rounded-lg border border-border-soft bg-background px-2 py-1.5 font-headline text-[11px] outline-none focus:border-[#18d3e8]"
+                            />
                             {/* Existing images grid */}
                             {(p.imageUrls.length > 0 || p.pendingPreviews.length > 0) && (
                               <div className="flex flex-wrap gap-2">

@@ -13,6 +13,7 @@ import {
 import { ShopifyError } from "@/lib/shopify";
 import { isSizeOption } from "@/components/configurator/colors";
 import { getTemplateFitOverrides } from "@/lib/product-template-fit-overrides";
+import { HOW_TO_ORDER_VIDEO_IDS } from "@/lib/how-to-order-videos";
 
 /**
  * Does this Size option's values look like garment sizes (apparel) vs
@@ -139,6 +140,7 @@ export default async function DynamicProductPage({
           <GenericProductConfigurator
             product={product}
             {...getTemplateFitOverrides(product.handle)}
+            howToOrderVideoId={HOW_TO_ORDER_VIDEO_IDS[product.handle]}
           />
         )}
         <FAQSection />

@@ -28,13 +28,7 @@ import {
 } from "@/components/configurator/UploadBox";
 import { SizeQtyStepper } from "@/components/configurator/QuantityStepper";
 import { ExpandableDescription } from "@/components/configurator/ExpandableDescription";
-
-// Client-provided "How to Order" walkthrough videos, keyed by the product's
-// real Shopify handle so the video follows the product regardless of which
-// route (friendly static page or the raw-handle catch-all) rendered it.
-const HOW_TO_ORDER_VIDEO_IDS: Record<string, string> = {
-  "cotton-t-shirts": "jlGjde0g60k",
-};
+import { HOW_TO_ORDER_VIDEO_IDS } from "@/lib/how-to-order-videos";
 
 export type ApparelConfiguratorProps = {
   product: ShopifyProduct;

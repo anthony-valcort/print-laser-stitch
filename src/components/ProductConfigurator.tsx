@@ -421,7 +421,7 @@ export default function ProductConfigurator() {
         <div className="relative overflow-hidden rounded-3xl border border-[#d9f000]/25 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#d94cb3]/10 p-7 sm:p-10">
           <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[#d9f000]/15 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-[#18d3e8]/15 blur-3xl" />
-          <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-center">
+          <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_460px] lg:items-center xl:grid-cols-[minmax(0,1fr)_540px]">
             <div>
               <span className="inline-flex items-center gap-2 rounded-full border border-[#d9f000]/40 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#d9f000]" />

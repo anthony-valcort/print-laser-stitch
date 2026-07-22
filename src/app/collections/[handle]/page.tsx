@@ -9,6 +9,13 @@ import { ShopifyError } from "@/lib/shopify";
 
 export const revalidate = 300;
 
+// Client-provided "How to Order" walkthrough videos, keyed by Shopify
+// collection handle — shown in the header slot next to the description.
+const COLLECTION_HOW_TO_ORDER_VIDEO_IDS: Record<string, string> = {
+  "business-printing": "iSvRIeYYNl4",
+  "custom-apparel": "jlGjde0g60k",
+};
+
 type Params = Promise<{ handle: string }>;
 
 export async function generateMetadata({
@@ -127,14 +134,14 @@ export default async function CollectionPage({
               </p>
             </div>
 
-            {collection.handle === "business-printing" && (
+            {COLLECTION_HOW_TO_ORDER_VIDEO_IDS[collection.handle] && (
               <div className="w-full shrink-0 lg:w-105">
                 <h2 className="font-display text-2xl font-black uppercase tracking-tight text-[#d9f000] sm:text-3xl">
                   How to Order
                 </h2>
                 <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
                   <iframe
-                    src="https://www.youtube-nocookie.com/embed/iSvRIeYYNl4"
+                    src={`https://www.youtube-nocookie.com/embed/${COLLECTION_HOW_TO_ORDER_VIDEO_IDS[collection.handle]}`}
                     title="How to order — Print Laser Stitch"
                     className="h-full w-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

@@ -25,9 +25,7 @@ import type { ProofShape, RoundedCorners } from "@/lib/proof/types";
 
 type SizeChoice = SizeKey | "custom";
 
-// Placeholder — same clip used on the Flyers "How to Order" section. Swap
-// for the real vinyl-stickers walkthrough video's ID once it's ready.
-const HOW_TO_ORDER_VIDEO_ID = "iSvRIeYYNl4";
+const HOW_TO_ORDER_VIDEO_ID = "Op0VOMmloQ4";
 
 const ACCEPT =
   ".png,.jpg,.jpeg,.pdf,.svg,.ai,image/png,image/jpeg,image/svg+xml,application/pdf";

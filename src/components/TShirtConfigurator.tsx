@@ -29,6 +29,13 @@ import {
 import { SizeQtyStepper } from "@/components/configurator/QuantityStepper";
 import { ExpandableDescription } from "@/components/configurator/ExpandableDescription";
 
+// Client-provided "How to Order" walkthrough videos, keyed by the product's
+// real Shopify handle so the video follows the product regardless of which
+// route (friendly static page or the raw-handle catch-all) rendered it.
+const HOW_TO_ORDER_VIDEO_IDS: Record<string, string> = {
+  "cotton-t-shirts": "jlGjde0g60k",
+};
+
 export type ApparelConfiguratorProps = {
   product: ShopifyProduct;
   /** Override the badge shown above the title. */
@@ -246,6 +253,7 @@ export default function TShirtConfigurator({
   }, [product.variants, sizeOption, colorOption, referenceColor, selectedOptions]);
 
   const perShirtPrice = referenceVariant ? Number(referenceVariant.price) : 0;
+  const howToOrderVideoId = HOW_TO_ORDER_VIDEO_IDS[product.handle];
 
   // Flattened (color, size, qty, variant) lines for the multi-color matrix.
   const colorLines = useMemo(() => {
@@ -492,6 +500,23 @@ export default function TShirtConfigurator({
               setIdx={setGalleryIdx}
               title={product.title}
             />
+
+            {howToOrderVideoId && (
+              <div className="mt-6">
+                <h2 className="font-display text-xl font-black uppercase tracking-tight text-[#d9f000]">
+                  How to Order
+                </h2>
+                <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${howToOrderVideoId}`}
+                    title="How to order — Print Laser Stitch"
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* RIGHT: Configurator */}

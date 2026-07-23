@@ -8,6 +8,12 @@ import { type NextRequest, NextResponse } from "next/server";
 import { shopifyAdminFetch } from "@/lib/shopify";
 import { isAdminAuthorized } from "@/lib/vehicle-shopify";
 
+type RawFileNode = {
+  id: string;
+  fileStatus: string;
+  image?: { url: string } | null;
+};
+
 export async function POST(req: NextRequest) {
   if (!(await isAdminAuthorized(req.headers.get("authorization")))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -68,7 +74,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No upload target returned" }, { status: 500 });
   }
 
-  // Step 2 — PUT file to S3
+  // Step 2 — PUT file to the staged (temporary) target
   const uploadHeaders: Record<string, string> = {
     "Content-Type": file.type || "image/jpeg",
   };
@@ -89,11 +95,21 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Step 3 — register in Shopify Files (fire-and-forget)
-  await shopifyAdminFetch(
+  // Step 3 — register in Shopify Files, then wait for the *permanent* CDN
+  // URL. `target.resourceUrl` (the temporary staging path used above) must
+  // never be returned to the client — it's a short-lived reference that
+  // Shopify discards once the file finishes processing, so anything saved
+  // using it breaks a few days later even though the registered file itself
+  // is fine.
+  const createData = await shopifyAdminFetch<{
+    fileCreate: {
+      files: RawFileNode[];
+      userErrors: { field: string; message: string }[];
+    };
+  }>(
     `mutation FileCreate($files: [FileCreateInput!]!) {
       fileCreate(files: $files) {
-        files { id }
+        files { id fileStatus ... on MediaImage { image { url } } }
         userErrors { field message }
       }
     }`,
@@ -104,7 +120,66 @@ export async function POST(req: NextRequest) {
         alt: file.name,
       }],
     },
-  ).catch(() => {});
+  );
 
-  return NextResponse.json({ url: target.resourceUrl });
+  if (createData.fileCreate.userErrors.length) {
+    return NextResponse.json(
+      { error: createData.fileCreate.userErrors[0].message },
+      { status: 400 },
+    );
+  }
+
+  const created = createData.fileCreate.files[0];
+  if (!created) {
+    return NextResponse.json(
+      { error: "No file returned from fileCreate" },
+      { status: 500 },
+    );
+  }
+
+  let url = created.image?.url ?? null;
+  if (!url || created.fileStatus !== "READY") {
+    url = await pollForReadyUrl(created.id);
+  }
+
+  if (!url) {
+    return NextResponse.json(
+      {
+        error: "File registered but URL not ready in time. Try again.",
+        fileId: created.id,
+      },
+      { status: 504 },
+    );
+  }
+
+  return NextResponse.json({ url });
+}
+
+async function pollForReadyUrl(fileId: string): Promise<string | null> {
+  const maxAttempts = 12;
+  const delayMs = 500;
+
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise((r) => setTimeout(r, delayMs));
+
+    try {
+      const data = await shopifyAdminFetch<{
+        node: { fileStatus?: string; image?: { url: string } | null } | null;
+      }>(
+        `query fileById($id: ID!) {
+          node(id: $id) {
+            ... on MediaImage { fileStatus image { url } }
+          }
+        }`,
+        { id: fileId },
+      );
+      const node = data.node;
+      if (node?.fileStatus === "READY" && node.image?.url) return node.image.url;
+      if (node?.fileStatus === "FAILED") return null;
+    } catch {
+      // transient error — keep polling until maxAttempts is exhausted
+    }
+  }
+
+  return null;
 }

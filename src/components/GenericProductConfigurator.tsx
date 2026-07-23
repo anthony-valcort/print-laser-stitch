@@ -11,6 +11,7 @@ import { Section } from "@/components/configurator/Section";
 import { ColorSwatch } from "@/components/configurator/ColorSwatch";
 import { ProductGallery } from "@/components/configurator/ProductGallery";
 import {
+  ACCEPT_PREVIEWABLE_DESIGN_FILES,
   EMPTY_UPLOAD_SLOT,
   UploadBox,
   uploadDesign,
@@ -66,7 +67,7 @@ export type GenericProductConfiguratorProps = {
   requiresTemplateFit?: boolean;
   /**
    * For products with one fixed real-world print size but no Shopify Size
-   * *option* to auto-detect from (e.g. Business Cards is always 2×3.5″ —
+   * *option* to auto-detect from (e.g. Business Cards is always 3.5×2″ —
    * its only option is a quantity tier, "250Pcs"/"500Pcs"/…). Providing this
    * enables template-fit the same as a dimensional Size option would, just
    * with a constant size instead of one parsed from the customer's
@@ -646,16 +647,44 @@ export default function GenericProductConfigurator({
                           : undefined
                       }
                       slot={frontUpload}
-                      onSelect={(f) => uploadDesign(f, setFrontUpload)}
+                      onSelect={(f) =>
+                        uploadDesign(f, setFrontUpload, {
+                          requirePreviewable: templateFitEnabled,
+                        })
+                      }
                       onClear={() => setFrontUpload(EMPTY_UPLOAD_SLOT)}
+                      accept={
+                        templateFitEnabled
+                          ? ACCEPT_PREVIEWABLE_DESIGN_FILES
+                          : undefined
+                      }
+                      hint={
+                        templateFitEnabled
+                          ? "PNG · JPG · SVG · ≤20MB"
+                          : undefined
+                      }
                     />
                   )}
                   {needsBack && (
                     <UploadBox
                       label="Back design"
                       slot={backUpload}
-                      onSelect={(f) => uploadDesign(f, setBackUpload)}
+                      onSelect={(f) =>
+                        uploadDesign(f, setBackUpload, {
+                          requirePreviewable: templateFitEnabled,
+                        })
+                      }
                       onClear={() => setBackUpload(EMPTY_UPLOAD_SLOT)}
+                      accept={
+                        templateFitEnabled
+                          ? ACCEPT_PREVIEWABLE_DESIGN_FILES
+                          : undefined
+                      }
+                      hint={
+                        templateFitEnabled
+                          ? "PNG · JPG · SVG · ≤20MB"
+                          : undefined
+                      }
                     />
                   )}
                 </div>

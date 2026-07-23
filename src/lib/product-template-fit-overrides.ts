@@ -20,7 +20,10 @@ export type TemplateFitOverrides = {
 
 export const PRODUCT_TEMPLATE_FIT_OVERRIDES: Record<string, TemplateFitOverrides> = {
   "custom-banners": { sizeUnit: "ft", showBleedTrim: false },
-  "2x3-5-standard-business-cards": { fixedSizeInches: { width: 2, height: 3.5 } },
+  // Standard business cards are landscape (3.5" wide x 2" tall) — this was
+  // previously {width: 2, height: 3.5} (portrait), which drew the wrong-shaped
+  // print guide in both the Fit Studio canvas and the downloadable blank PDF.
+  "2x3-5-standard-business-cards": { fixedSizeInches: { width: 3.5, height: 2 } },
 };
 
 export function getTemplateFitOverrides(handle: string): TemplateFitOverrides {

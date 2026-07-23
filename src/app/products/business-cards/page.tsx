@@ -8,7 +8,7 @@ import { getTemplateFitOverrides } from "@/lib/product-template-fit-overrides";
 export const metadata: Metadata = {
   title: "Standard Business Cards · Print Laser Stitch",
   description:
-    "2×3.5″ 15pt premium business cards, matte or glossy finish. Bulk pricing from 250 to 5,000 cards.",
+    "3.5×2″ 15pt premium business cards, matte or glossy finish. Bulk pricing from 250 to 5,000 cards.",
 };
 
 export const revalidate = 300;

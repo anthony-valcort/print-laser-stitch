@@ -5,6 +5,26 @@ import { useEffect, useRef, useState } from "react";
 export const ACCEPT_DESIGN_FILES =
   ".png,.jpg,.jpeg,.pdf,.svg,.ai,image/png,image/jpeg,image/svg+xml,application/pdf";
 
+// For products that go through the visual "Fit Your Design" studio: that
+// tool previews the file with a plain <img>, which cannot render a PDF or AI
+// file at all — the canvas just stays blank. So those products must only
+// accept formats a browser can actually display (raster images + SVG).
+export const ACCEPT_PREVIEWABLE_DESIGN_FILES =
+  ".png,.jpg,.jpeg,.svg,image/png,image/jpeg,image/svg+xml";
+
+const NON_PREVIEWABLE_EXTENSIONS = [".pdf", ".ai"];
+const NON_PREVIEWABLE_MIME_TYPES = ["application/pdf", "application/postscript"];
+
+/** True unless the file is a known non-previewable format (PDF/AI) — used to
+ * reject those client-side for template-fit products before even attempting
+ * the upload, since the `accept` attribute alone doesn't block drag & drop. */
+export function isPreviewableDesignFile(f: File): boolean {
+  const name = f.name.toLowerCase();
+  if (NON_PREVIEWABLE_EXTENSIONS.some((ext) => name.endsWith(ext))) return false;
+  if (NON_PREVIEWABLE_MIME_TYPES.includes(f.type)) return false;
+  return true;
+}
+
 export type UploadSlot = {
   file: File | null;
   fileUrl: string | null;
@@ -62,7 +82,21 @@ function xhrUpload(
 export async function uploadDesign(
   f: File,
   set: React.Dispatch<React.SetStateAction<UploadSlot>>,
+  opts?: { requirePreviewable?: boolean },
 ) {
+  if (opts?.requirePreviewable && !isPreviewableDesignFile(f)) {
+    set({
+      file: f,
+      fileUrl: null,
+      isUploading: false,
+      progress: 0,
+      isProcessing: false,
+      error:
+        "This product uses a visual positioning tool that can't preview PDF or AI files — please upload a PNG, JPG, or SVG instead.",
+    });
+    return;
+  }
+
   set({
     file: f,
     fileUrl: null,
@@ -155,11 +189,18 @@ export function UploadBox({
   slot,
   onSelect,
   onClear,
+  accept = ACCEPT_DESIGN_FILES,
+  hint = "PNG · JPG · PDF · SVG · AI · ≤20MB",
 }: {
   label?: string;
   slot: UploadSlot;
   onSelect: (f: File) => void;
   onClear: () => void;
+  /** File picker filter — pass ACCEPT_PREVIEWABLE_DESIGN_FILES for products
+   * that go through the visual Fit Studio (no PDF/AI preview support). */
+  accept?: string;
+  /** Hint text shown under the drop-zone — should match `accept`. */
+  hint?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -205,7 +246,7 @@ export function UploadBox({
           ref={inputRef}
           type="file"
           className="hidden"
-          accept={ACCEPT_DESIGN_FILES}
+          accept={accept}
           onChange={(e) => {
             const f = e.target.files?.[0];
             if (f) onSelect(f);
@@ -298,7 +339,7 @@ export function UploadBox({
               Drop or click to upload
             </div>
             <div className="mt-0.5 text-[10px] text-foreground-muted">
-              PNG · JPG · PDF · SVG · AI · ≤20MB
+              {hint}
             </div>
           </>
         )}

@@ -20,7 +20,7 @@ export default function BlankTemplateDownload({
   options: ShopifyOption[];
   productTitle: string;
   /** Fallback for products with one fixed size but no Size option to pick
-   * from (e.g. Business Cards, always 2×3.5″) — see the matching prop on
+   * from (e.g. Business Cards, always 3.5×2″) — see the matching prop on
    * GenericProductConfigurator. */
   fixedSizeInches?: { width: number; height: number };
   /** Unit the Size option's numbers are actually in (Banners are feet). */

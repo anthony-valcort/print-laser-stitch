@@ -660,7 +660,7 @@ export default function GenericProductConfigurator({
                       }
                       hint={
                         templateFitEnabled
-                          ? "PNG · JPG · SVG · ≤20MB"
+                          ? "PNG · JPG · SVG · PDF · ≤20MB"
                           : undefined
                       }
                     />
@@ -682,7 +682,7 @@ export default function GenericProductConfigurator({
                       }
                       hint={
                         templateFitEnabled
-                          ? "PNG · JPG · SVG · ≤20MB"
+                          ? "PNG · JPG · SVG · PDF · ≤20MB"
                           : undefined
                       }
                     />

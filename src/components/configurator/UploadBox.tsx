@@ -1,23 +1,26 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { isPdfFile, renderPdfFirstPageToFile } from "@/lib/template-fit/pdf-to-image";
 
 export const ACCEPT_DESIGN_FILES =
   ".png,.jpg,.jpeg,.pdf,.svg,.ai,image/png,image/jpeg,image/svg+xml,application/pdf";
 
 // For products that go through the visual "Fit Your Design" studio: that
-// tool previews the file with a plain <img>, which cannot render a PDF or AI
-// file at all — the canvas just stays blank. So those products must only
-// accept formats a browser can actually display (raster images + SVG).
+// tool previews the file with a plain <img>, which can't display a raw PDF —
+// so a PDF selected here is rendered to a PNG first (see uploadDesign below)
+// before it ever reaches the studio. AI files aren't reliably renderable the
+// same way (not guaranteed to be PDF-structured), so those are still rejected.
 export const ACCEPT_PREVIEWABLE_DESIGN_FILES =
-  ".png,.jpg,.jpeg,.svg,image/png,image/jpeg,image/svg+xml";
+  ".png,.jpg,.jpeg,.svg,.pdf,image/png,image/jpeg,image/svg+xml,application/pdf";
 
-const NON_PREVIEWABLE_EXTENSIONS = [".pdf", ".ai"];
-const NON_PREVIEWABLE_MIME_TYPES = ["application/pdf", "application/postscript"];
+const NON_PREVIEWABLE_EXTENSIONS = [".ai"];
+const NON_PREVIEWABLE_MIME_TYPES = ["application/postscript"];
 
-/** True unless the file is a known non-previewable format (PDF/AI) — used to
+/** True unless the file is a known non-previewable format (AI) — used to
  * reject those client-side for template-fit products before even attempting
- * the upload, since the `accept` attribute alone doesn't block drag & drop. */
+ * the upload, since the `accept` attribute alone doesn't block drag & drop.
+ * PDFs are handled separately (rendered to PNG) rather than rejected here. */
 export function isPreviewableDesignFile(f: File): boolean {
   const name = f.name.toLowerCase();
   if (NON_PREVIEWABLE_EXTENSIONS.some((ext) => name.endsWith(ext))) return false;
@@ -92,13 +95,44 @@ export async function uploadDesign(
       progress: 0,
       isProcessing: false,
       error:
-        "This product uses a visual positioning tool that can't preview PDF or AI files — please upload a PNG, JPG, or SVG instead.",
+        "This product uses a visual positioning tool that can't preview AI files — please upload a PNG, JPG, SVG, or PDF instead.",
     });
     return;
   }
 
+  let uploadFile = f;
+
+  if (opts?.requirePreviewable && isPdfFile(f)) {
+    // The Fit Studio previews designs with a plain <img>, which can't
+    // display a raw PDF — render its first page to a PNG here so the rest
+    // of the pipeline (preview, drag/zoom, final export) never has to know
+    // the original was a PDF.
+    set({
+      file: f,
+      fileUrl: null,
+      isUploading: true,
+      progress: 0,
+      isProcessing: true,
+      error: null,
+    });
+    try {
+      uploadFile = await renderPdfFirstPageToFile(f);
+    } catch {
+      set({
+        file: f,
+        fileUrl: null,
+        isUploading: false,
+        progress: 0,
+        isProcessing: false,
+        error:
+          "Couldn't read that PDF — please try re-exporting it or upload a PNG/JPG instead.",
+      });
+      return;
+    }
+  }
+
   set({
-    file: f,
+    file: uploadFile,
     fileUrl: null,
     isUploading: true,
     progress: 0,
@@ -111,9 +145,9 @@ export async function uploadDesign(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        filename: f.name,
-        mimeType: f.type || "application/octet-stream",
-        fileSize: f.size,
+        filename: uploadFile.name,
+        mimeType: uploadFile.type || "application/octet-stream",
+        fileSize: uploadFile.size,
       }),
     });
     const stage = (await stageResp.json()) as
@@ -131,7 +165,7 @@ export async function uploadDesign(
 
     const fd = new FormData();
     for (const param of stage.parameters) fd.append(param.name, param.value);
-    fd.append("file", f);
+    fd.append("file", uploadFile);
 
     const uploadResp = await xhrUpload(stage.url, fd, (percent) => {
       set((prev) => ({ ...prev, progress: percent }));
@@ -151,8 +185,8 @@ export async function uploadDesign(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         resourceUrl: stage.resourceUrl,
-        filename: f.name,
-        mimeType: f.type || "application/octet-stream",
+        filename: uploadFile.name,
+        mimeType: uploadFile.type || "application/octet-stream",
       }),
     });
     const registered = (await registerResp.json()) as
@@ -165,7 +199,7 @@ export async function uploadDesign(
     }
 
     set({
-      file: f,
+      file: uploadFile,
       fileUrl: registered.url,
       isUploading: false,
       progress: 100,
@@ -174,7 +208,7 @@ export async function uploadDesign(
     });
   } catch (err) {
     set({
-      file: f,
+      file: uploadFile,
       fileUrl: null,
       isUploading: false,
       progress: 0,

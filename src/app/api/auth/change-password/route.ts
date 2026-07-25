@@ -89,7 +89,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ ok: true });
+    // See /api/auth/update-profile — mobile needs the rotated token since it
+    // has no cookie to fall back on.
+    return NextResponse.json({
+      ok: true,
+      ...(newToken ? { token: newToken.accessToken, expiresAt: newToken.expiresAt } : {}),
+    });
   } catch (err) {
     const msg =
       err instanceof Error ? err.message : "Could not update password";

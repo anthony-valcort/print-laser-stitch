@@ -121,7 +121,12 @@ export async function POST(req: NextRequest) {
       expiresAt: tok.expiresAt,
     });
 
-    return NextResponse.json({ ok: true });
+    // See /api/auth/login — mobile stores this token itself (no shared cookie jar).
+    return NextResponse.json({
+      ok: true,
+      token: tok.accessToken,
+      expiresAt: tok.expiresAt,
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Signup failed";
     return NextResponse.json({ error: msg }, { status: 500 });

@@ -12,7 +12,7 @@
  */
 
 import { cache } from "react";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { shopifyStorefrontFetch } from "./shopify-storefront";
 
 export const SESSION_COOKIE = "pls_customer";
@@ -22,6 +22,37 @@ export type CustomerSession = {
   /** ISO timestamp string when the token expires. */
   expiresAt: string;
 };
+
+/**
+ * Resolve the current session token from either source:
+ *   1. The httpOnly `pls_customer` cookie (web).
+ *   2. An `Authorization: Bearer <token>` header (mobile app — no cookie jar
+ *      shared with the site, so it stores the Shopify customerAccessToken
+ *      itself after login/signup and sends it back on every request).
+ * Cookie wins if both are somehow present. Purely additive — web requests
+ * never send the header, so their behavior is unchanged.
+ */
+async function resolveSessionToken(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const raw = cookieStore.get(SESSION_COOKIE)?.value;
+  if (raw) {
+    try {
+      const session = JSON.parse(raw) as CustomerSession;
+      if (session.token && new Date(session.expiresAt) >= new Date()) {
+        return session.token;
+      }
+    } catch {
+      // fall through to header check
+    }
+  }
+
+  const headerStore = await headers();
+  const auth = headerStore.get("authorization");
+  if (auth?.startsWith("Bearer ")) {
+    return auth.slice("Bearer ".length).trim() || null;
+  }
+  return null;
+}
 
 export type CurrentCustomer = {
   id: string;
@@ -66,20 +97,8 @@ export type CustomerOrder = {
  * cheap because Shopify caches it server-side.
  */
 export const getCurrentCustomer = cache(async (): Promise<CurrentCustomer | null> => {
-  const cookieStore = await cookies();
-  const raw = cookieStore.get(SESSION_COOKIE)?.value;
-  if (!raw) return null;
-
-  let session: CustomerSession;
-  try {
-    session = JSON.parse(raw) as CustomerSession;
-  } catch {
-    return null;
-  }
-
-  if (!session.token || new Date(session.expiresAt) < new Date()) {
-    return null;
-  }
+  const token = await resolveSessionToken();
+  if (!token) return null;
 
   try {
     type Resp = {
@@ -103,7 +122,7 @@ export const getCurrentCustomer = cache(async (): Promise<CurrentCustomer | null
           displayName
         }
       }`,
-      { token: session.token },
+      { token },
     );
     return data.customer;
   } catch {
@@ -116,17 +135,8 @@ export const getCurrentCustomer = cache(async (): Promise<CurrentCustomer | null
  * logged in or on error.
  */
 export async function getCurrentCustomerOrders(): Promise<CustomerOrder[]> {
-  const cookieStore = await cookies();
-  const raw = cookieStore.get(SESSION_COOKIE)?.value;
-  if (!raw) return [];
-
-  let session: CustomerSession;
-  try {
-    session = JSON.parse(raw) as CustomerSession;
-  } catch {
-    return [];
-  }
-  if (!session.token) return [];
+  const token = await resolveSessionToken();
+  if (!token) return [];
 
   try {
     type Money = { amount: string; currencyCode: string };
@@ -209,7 +219,7 @@ export async function getCurrentCustomerOrders(): Promise<CustomerOrder[]> {
           }
         }
       }`,
-      { token: session.token },
+      { token },
     );
 
     const orders = data.customer?.orders.edges ?? [];
@@ -243,16 +253,7 @@ export async function getCurrentCustomerOrders(): Promise<CustomerOrder[]> {
  * or null if no valid session.
  */
 export async function getCurrentSessionToken(): Promise<string | null> {
-  const cookieStore = await cookies();
-  const raw = cookieStore.get(SESSION_COOKIE)?.value;
-  if (!raw) return null;
-  try {
-    const session = JSON.parse(raw) as CustomerSession;
-    if (!session.token || new Date(session.expiresAt) < new Date()) return null;
-    return session.token;
-  } catch {
-    return null;
-  }
+  return resolveSessionToken();
 }
 
 /** Set the session cookie. Called from API route handlers after a successful
@@ -296,10 +297,18 @@ export async function clearCustomerSession(): Promise<string | null> {
   const cookieStore = await cookies();
   const raw = cookieStore.get(SESSION_COOKIE)?.value;
   cookieStore.delete(SESSION_COOKIE);
-  if (!raw) return null;
-  try {
-    return (JSON.parse(raw) as CustomerSession).token;
-  } catch {
-    return null;
+  if (raw) {
+    try {
+      return (JSON.parse(raw) as CustomerSession).token;
+    } catch {
+      // fall through to header check
+    }
   }
+  // No cookie (mobile client) — invalidate the token it sent us instead.
+  const headerStore = await headers();
+  const auth = headerStore.get("authorization");
+  if (auth?.startsWith("Bearer ")) {
+    return auth.slice("Bearer ".length).trim() || null;
+  }
+  return null;
 }

@@ -64,7 +64,14 @@ export async function POST(req: NextRequest) {
       expiresAt: tok.expiresAt,
     });
 
-    return NextResponse.json({ ok: true });
+    // Web relies on the httpOnly cookie set above; the mobile app has no
+    // cookie jar shared with the site, so it stores this token itself and
+    // sends it back as `Authorization: Bearer <token>` on later requests.
+    return NextResponse.json({
+      ok: true,
+      token: tok.accessToken,
+      expiresAt: tok.expiresAt,
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Login failed";
     return NextResponse.json({ error: msg }, { status: 500 });

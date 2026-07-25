@@ -124,9 +124,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Mirrors login/signup — if Shopify rotated the token above, the mobile
+    // app needs the new value to replace its stored copy (it has no cookie
+    // to fall back on, unlike web).
     return NextResponse.json({
       ok: true,
       customer: data.customerUpdate.customer,
+      ...(newToken ? { token: newToken.accessToken, expiresAt: newToken.expiresAt } : {}),
     });
   } catch (err) {
     const msg =

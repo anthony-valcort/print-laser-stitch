@@ -52,17 +52,19 @@ function drawDashedRect(
 }
 
 /**
- * Builds a vector PDF print guide (bleed / trim / safe lines + crop marks) for
- * the given size and triggers a browser download — entirely client-side, no
- * server round-trip needed since it's just static shapes and text.
+ * Builds a vector PDF print guide (bleed / trim / safe lines + crop marks)
+ * for the given size. Pure — no DOM/browser APIs — so it runs the same way
+ * client-side (web's direct download) or server-side (the mobile app's
+ * /api/template-fit/blank-template route, since React Native has no
+ * Blob/anchor-download mechanism to trigger a save the way a browser does).
  */
-export async function downloadBlankTemplate(
+export async function buildBlankTemplatePdfBytes(
   widthIn: number,
   heightIn: number,
   sizeLabel: string,
   productTitle: string,
   bleedIn: number = BLEED_IN,
-): Promise<void> {
+): Promise<Uint8Array> {
   const bleedWIn = widthIn + 2 * bleedIn;
   const bleedHIn = heightIn + 2 * bleedIn;
   const pageWIn = bleedWIn + 2 * CROP_MARGIN_IN;
@@ -178,13 +180,38 @@ export async function downloadBlankTemplate(
     color: green,
   });
 
-  const bytes = await doc.save();
+  return doc.save();
+}
+
+export function blankTemplateFilename(sizeLabel: string): string {
+  const slug = sizeLabel.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "");
+  return `template-${slug}.pdf`;
+}
+
+/**
+ * Builds the PDF (see buildBlankTemplatePdfBytes) and triggers a browser
+ * download — entirely client-side, no server round-trip needed since it's
+ * just static shapes and text.
+ */
+export async function downloadBlankTemplate(
+  widthIn: number,
+  heightIn: number,
+  sizeLabel: string,
+  productTitle: string,
+  bleedIn: number = BLEED_IN,
+): Promise<void> {
+  const bytes = await buildBlankTemplatePdfBytes(
+    widthIn,
+    heightIn,
+    sizeLabel,
+    productTitle,
+    bleedIn,
+  );
   const blob = new Blob([bytes as BlobPart], { type: "application/pdf" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  const slug = sizeLabel.trim().replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "");
-  a.download = `template-${slug}.pdf`;
+  a.download = blankTemplateFilename(sizeLabel);
   document.body.appendChild(a);
   a.click();
   a.remove();

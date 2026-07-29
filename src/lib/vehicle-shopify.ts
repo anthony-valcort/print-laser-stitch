@@ -22,7 +22,7 @@ async function getShopId(): Promise<string> {
 }
 
 // ─── Low-level metafield helpers ──────────────────────────────────────────────
-async function readMetafield(key: string): Promise<string | null> {
+async function readMetafield(key: string, revalidate?: number | false): Promise<string | null> {
   const d = await shopifyAdminFetch<{
     shop: { metafield: { value: string } | null };
   }>(
@@ -30,6 +30,7 @@ async function readMetafield(key: string): Promise<string | null> {
       shop { metafield(namespace: $ns, key: $key) { value } }
     }`,
     { ns: NS, key },
+    revalidate !== undefined ? { revalidate } : {},
   );
   return d.shop.metafield?.value ?? null;
 }
@@ -56,9 +57,18 @@ async function writeMetafield(
 }
 
 // ─── Vehicle CRUD ─────────────────────────────────────────────────────────────
-export async function getAllVehicles(): Promise<VehicleSticker[]> {
+/**
+ * Shopify's Admin GraphQL API has been intermittently slow/hanging for this
+ * particular metafield read (observed 20s+ stalls in production, not just a
+ * cold start), which left the mobile app's Vehicle Sticker Kits screen stuck
+ * on a spinner forever. The catalog barely changes, so cache the public read
+ * for 5 minutes — most requests now never touch Shopify at all. Admin
+ * writes (below) always read fresh so they never clobber another edit with
+ * stale cached data.
+ */
+export async function getAllVehicles(opts: { fresh?: boolean } = {}): Promise<VehicleSticker[]> {
   try {
-    const raw = await readMetafield("vehicles");
+    const raw = await readMetafield("vehicles", opts.fresh ? 0 : 300);
     if (!raw) return SEED_VEHICLES;
     const list = JSON.parse(raw) as VehicleSticker[];
     return list.length ? list : SEED_VEHICLES;
@@ -74,7 +84,7 @@ async function saveVehicles(list: VehicleSticker[]): Promise<void> {
 export async function createVehicle(
   v: Omit<VehicleSticker, "id">,
 ): Promise<VehicleSticker> {
-  const current = await getAllVehicles();
+  const current = await getAllVehicles({ fresh: true });
   const isSeedOnly = current.every((c) => SEED_VEHICLES.some((s) => s.id === c.id));
   const base = isSeedOnly ? [] : current;
   const vehicle: VehicleSticker = { ...v, id: `v${Date.now()}` };
@@ -86,7 +96,7 @@ export async function updateVehicle(
   id: string,
   patch: Omit<VehicleSticker, "id">,
 ): Promise<VehicleSticker> {
-  const list = await getAllVehicles();
+  const list = await getAllVehicles({ fresh: true });
   const idx = list.findIndex((v) => v.id === id);
   if (idx === -1) throw new Error(`Vehicle ${id} not found`);
   list[idx] = { ...patch, id };
@@ -95,7 +105,7 @@ export async function updateVehicle(
 }
 
 export async function deleteVehicle(id: string): Promise<void> {
-  const list = await getAllVehicles();
+  const list = await getAllVehicles({ fresh: true });
   await saveVehicles(list.filter((v) => v.id !== id));
 }
 

@@ -97,6 +97,37 @@ export async function POST(req: NextRequest) {
     const left = Math.round(centerXPx - placedW / 2);
     const top = Math.round(centerYPx - placedH / 2);
 
+    // Positioning is expected to bleed the artwork past any/all of the four
+    // edges (that's the point of the red Bleed boundary in the UI) — but
+    // unlike a browser <canvas>, sharp's composite() throws unless the
+    // overlay sits entirely within the base canvas when given explicit
+    // left/top. Clamp by extracting only the portion that actually overlaps
+    // the canvas before compositing, same visual result a canvas gives for
+    // free by silently clipping.
+    const srcLeft = Math.max(0, -left);
+    const srcTop = Math.max(0, -top);
+    const dstLeft = Math.max(0, left);
+    const dstTop = Math.max(0, top);
+    const overlapW = Math.min(placedW - srcLeft, canvasWPx - dstLeft);
+    const overlapH = Math.min(placedH - srcTop, canvasHPx - dstTop);
+
+    const composite =
+      overlapW > 0 && overlapH > 0
+        ? [
+            {
+              input:
+                overlapW === placedW && overlapH === placedH
+                  ? placedBuffer
+                  : await sharp(placedBuffer)
+                      .extract({ left: srcLeft, top: srcTop, width: overlapW, height: overlapH })
+                      .png()
+                      .toBuffer(),
+              left: dstLeft,
+              top: dstTop,
+            },
+          ]
+        : [];
+
     const finalBuffer = await sharp({
       create: {
         width: canvasWPx,
@@ -105,7 +136,7 @@ export async function POST(req: NextRequest) {
         background: "#ffffff",
       },
     })
-      .composite([{ input: placedBuffer, left, top }])
+      .composite(composite)
       .png()
       .toBuffer();
 

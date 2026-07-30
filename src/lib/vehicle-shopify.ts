@@ -7,6 +7,7 @@
  */
 
 import { createHash } from "crypto";
+import { revalidateTag, unstable_cache } from "next/cache";
 import { shopifyAdminFetch } from "./shopify";
 import { SEED_VEHICLES, type PartKey, type StickerPart, type VehicleSticker } from "./vehicle-sticker-data";
 
@@ -22,7 +23,7 @@ async function getShopId(): Promise<string> {
 }
 
 // ─── Low-level metafield helpers ──────────────────────────────────────────────
-async function readMetafield(key: string, revalidate?: number | false): Promise<string | null> {
+async function readMetafield(key: string): Promise<string | null> {
   const d = await shopifyAdminFetch<{
     shop: { metafield: { value: string } | null };
   }>(
@@ -30,7 +31,6 @@ async function readMetafield(key: string, revalidate?: number | false): Promise<
       shop { metafield(namespace: $ns, key: $key) { value } }
     }`,
     { ns: NS, key },
-    revalidate !== undefined ? { revalidate } : {},
   );
   return d.shop.metafield?.value ?? null;
 }
@@ -57,18 +57,9 @@ async function writeMetafield(
 }
 
 // ─── Vehicle CRUD ─────────────────────────────────────────────────────────────
-/**
- * Shopify's Admin GraphQL API has been intermittently slow/hanging for this
- * particular metafield read (observed 20s+ stalls in production, not just a
- * cold start), which left the mobile app's Vehicle Sticker Kits screen stuck
- * on a spinner forever. The catalog barely changes, so cache the public read
- * for 5 minutes — most requests now never touch Shopify at all. Admin
- * writes (below) always read fresh so they never clobber another edit with
- * stale cached data.
- */
-export async function getAllVehicles(opts: { fresh?: boolean } = {}): Promise<VehicleSticker[]> {
+async function fetchAllVehiclesFresh(): Promise<VehicleSticker[]> {
   try {
-    const raw = await readMetafield("vehicles", opts.fresh ? 0 : 300);
+    const raw = await readMetafield("vehicles");
     if (!raw) return SEED_VEHICLES;
     const list = JSON.parse(raw) as VehicleSticker[];
     return list.length ? list : SEED_VEHICLES;
@@ -77,8 +68,31 @@ export async function getAllVehicles(opts: { fresh?: boolean } = {}): Promise<Ve
   }
 }
 
+/**
+ * getAllCollections() (shopify-collections.ts) has always been fast and
+ * reliable in production; this metafield read wasn't, even after an earlier
+ * attempt to cache it via `next: { revalidate }` on the raw fetch(). The
+ * difference: Shopify's Admin API is called over POST, and Next's fetch-level
+ * data cache isn't reliably applied to POST requests — collections was never
+ * actually relying on that path, it wraps the whole function in
+ * unstable_cache(), which caches the return value regardless of HTTP method.
+ * Mirroring that pattern here (not the fetch-level revalidate option) is the
+ * fix. Admin writes below always read fresh so they never clobber another
+ * edit with stale cached data.
+ */
+const getAllVehiclesCached = unstable_cache(fetchAllVehiclesFresh, ["pls-all-vehicles"], {
+  revalidate: 300,
+  tags: ["vehicles:all"],
+});
+
+export async function getAllVehicles(opts: { fresh?: boolean } = {}): Promise<VehicleSticker[]> {
+  return opts.fresh ? fetchAllVehiclesFresh() : getAllVehiclesCached();
+}
+
 async function saveVehicles(list: VehicleSticker[]): Promise<void> {
   await writeMetafield("vehicles", "json", JSON.stringify(list));
+  // Admin edits should be visible right away, not stale-while-revalidate.
+  revalidateTag("vehicles:all", { expire: 0 });
 }
 
 export async function createVehicle(

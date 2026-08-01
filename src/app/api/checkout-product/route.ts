@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { gidToNumericId, shopifyAdminFetch } from "@/lib/shopify";
 import { requireCustomerOr401 } from "@/lib/customer-session";
 import { normalizeInvoiceUrl, waitForInvoiceReady } from "@/lib/shopify-checkout";
+import { isAllowedDesignUrl } from "@/lib/allowed-design-hosts";
 
 type CheckoutRequest = {
   variantId: string;
@@ -76,16 +77,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid quantity" }, { status: 400 });
   }
 
-  // Reject any design URL not from Shopify Files.
+  // Reject any design URL not from an allowed upload host.
   if (body.extraProperties) {
     for (const [name, value] of Object.entries(body.extraProperties)) {
       if (
         /design|file|art/i.test(name) &&
         value.startsWith("http") &&
-        !value.startsWith("https://cdn.shopify.com/")
+        !isAllowedDesignUrl(value)
       ) {
         return NextResponse.json(
-          { error: "Design URLs must come from Shopify Files" },
+          { error: "Design URLs must come from an allowed upload host" },
           { status: 400 },
         );
       }

@@ -19,6 +19,7 @@ import { gidToNumericId, shopifyAdminFetch } from "@/lib/shopify";
 import { getCurrentCustomer } from "@/lib/customer-session";
 import { normalizeInvoiceUrl, waitForInvoiceReady } from "@/lib/shopify-checkout";
 import { lookupDiscountCode } from "@/lib/discount-lookup";
+import { isAllowedDesignUrl } from "@/lib/allowed-design-hosts";
 import {
   QUANTITY_OPTIONS,
   calcPrice as calcStickerPrice,
@@ -594,16 +595,16 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Reject any uploaded design URL not from Shopify Files (defense in depth).
+  // Reject any uploaded design URL not from an allowed host (defense in depth).
   for (const li of lineItems) {
     for (const prop of li.properties ?? []) {
       if (
         /design|file|art/i.test(prop.name) &&
         prop.value.startsWith("http") &&
-        !prop.value.startsWith("https://cdn.shopify.com/")
+        !isAllowedDesignUrl(prop.value)
       ) {
         return NextResponse.json(
-          { error: "Design URLs must come from Shopify Files" },
+          { error: "Design URLs must come from an allowed upload host" },
           { status: 400 },
         );
       }

@@ -50,9 +50,9 @@ export interface VinylStickerCartItem extends CartItemBase {
   /** Preflight proof (set once the customer reviews & approves a proof). */
   proof?: {
     status: "approved" | "changes-requested";
-    /** Shopify Files URL of the flattened proof preview. */
+    /** Cloudinary URL of the flattened proof preview. */
     proofUrl?: string;
-    /** Shopify Files URL of the production cutline SVG. */
+    /** Cloudinary URL of the production cutline SVG. */
     cutlineUrl?: string;
     shape: string;
     borderThickness: string;

@@ -30,7 +30,7 @@ function loadImage(url: string): Promise<HTMLImageElement> {
 /**
  * Renders the image at its current pan/zoom/rotation transform onto a canvas
  * sized to the bleed rectangle at print resolution, and returns it as a PNG
- * blob — this flattened image is what gets uploaded to Shopify Files as the
+ * blob — this flattened image is what gets uploaded to Cloudinary as the
  * final production-ready design.
  */
 export async function flattenToCanvas(

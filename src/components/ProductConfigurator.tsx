@@ -192,7 +192,7 @@ export default function ProductConfigurator() {
         throw new Error(message);
       }
 
-      // Step 2: Upload the file directly to Shopify's GCS-backed staging URL.
+      // Step 2: Upload the file directly to the signed Cloudinary target.
       // Order matters: signed params first, then `file` last.
       const fd = new FormData();
       for (const param of stage.parameters) {
@@ -208,8 +208,8 @@ export default function ProductConfigurator() {
         );
       }
 
-      // Step 3: Register the staged file with Shopify Files; backend polls
-      // until the permanent CDN URL is ready and returns it.
+      // Step 3: Look up the uploaded file on Cloudinary and get its permanent
+      // delivery URL.
       const registerResp = await fetch("/api/shopify-upload/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -685,12 +685,12 @@ export default function ProductConfigurator() {
                       </div>
                       {isUploading && (
                         <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#18d3e8]/15 px-2 py-0.5 text-[11px] font-semibold text-[#18d3e8]">
-                          Uploading to Shopify…
+                          Uploading…
                         </div>
                       )}
                       {!isUploading && fileUrl && (
                         <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
-                          ✓ Uploaded to Shopify Files
+                          ✓ Uploaded
                         </div>
                       )}
                       {!isUploading && !fileUrl && uploadError && (
@@ -850,7 +850,7 @@ export default function ProductConfigurator() {
                 ) : file ? (
                   <>
                     <span>👁</span>
-                    View Proof · ${price.total.toFixed(2)}
+                    View Proof · ${(price.perUnit * orderQty).toFixed(2)}
                   </>
                 ) : (
                   <>

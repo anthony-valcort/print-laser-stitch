@@ -3,6 +3,7 @@ import { gidToNumericId, shopifyAdminFetch } from "@/lib/shopify";
 import { detectMinQuantityFromTitle } from "@/lib/shopify-products";
 import { requireCustomerOr401 } from "@/lib/customer-session";
 import { normalizeInvoiceUrl, waitForInvoiceReady } from "@/lib/shopify-checkout";
+import { isAllowedDesignUrl } from "@/lib/allowed-design-hosts";
 import {
   PRINT_LOCATIONS,
   TSHIRT_MIN_QUANTITY,
@@ -144,9 +145,9 @@ export async function POST(req: NextRequest) {
     );
   }
   for (const url of [body.frontFileUrl, body.backFileUrl]) {
-    if (url && !url.startsWith("https://cdn.shopify.com/")) {
+    if (url && !isAllowedDesignUrl(url)) {
       return NextResponse.json(
-        { error: "Design URLs must come from Shopify Files" },
+        { error: "Design URLs must come from an allowed upload host" },
         { status: 400 },
       );
     }

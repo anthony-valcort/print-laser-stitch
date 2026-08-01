@@ -32,9 +32,9 @@ export type UploadSlot = {
   file: File | null;
   fileUrl: string | null;
   isUploading: boolean;
-  /** 0–100 during the file transfer to Shopify staging. */
+  /** 0–100 during the file transfer to Cloudinary. */
   progress: number;
-  /** True after upload finishes but while we wait for fileCreate to finalize. */
+  /** True after upload finishes but while we wait to look up the permanent URL. */
   isProcessing: boolean;
   error: string | null;
 };
@@ -79,7 +79,7 @@ function xhrUpload(
 }
 
 /**
- * Three-step direct upload to Shopify Files. Updates the passed setter as
+ * Three-step direct upload to Cloudinary. Updates the passed setter as
  * progress moves through staging → upload → register.
  */
 export async function uploadDesign(
@@ -176,8 +176,8 @@ export async function uploadDesign(
       );
     }
 
-    // File bytes are fully uploaded; now Shopify Files needs to register and
-    // finalize. Switch the badge to "Processing…" while we wait.
+    // File bytes are fully uploaded; now we need to look up its permanent
+    // Cloudinary URL. Switch the badge to "Processing…" while we wait.
     set((prev) => ({ ...prev, progress: 100, isProcessing: true }));
 
     const registerResp = await fetch("/api/shopify-upload/register", {

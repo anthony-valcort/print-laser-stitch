@@ -1,6 +1,6 @@
 /**
  * Uploads a flattened design Blob (produced by flatten-to-canvas.ts) straight
- * to Shopify Files, reusing the same stage/register API routes that
+ * to Cloudinary, reusing the same stage/register API routes that
  * UploadBox.tsx uses for raw customer uploads (see uploadDesign() there).
  */
 export async function uploadFlattenedDesign(

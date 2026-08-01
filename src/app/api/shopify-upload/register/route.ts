@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { registerUploadedFile } from "@/lib/shopify-files";
+import { registerUploadedFile } from "@/lib/cloudinary-files";
 
 type RegisterRequest = {
   resourceUrl: string;
@@ -8,9 +8,8 @@ type RegisterRequest = {
 };
 
 /**
- * Phase 2 of Shopify Files upload — register the file uploaded to staged
- * target with Shopify Files. Returns the permanent Shopify CDN URL once the
- * file finishes processing (polled briefly).
+ * Phase 2 of the design-file upload — look up the file uploaded straight to
+ * Cloudinary in phase 1 and return its permanent, untransformed delivery URL.
  */
 export async function POST(req: NextRequest) {
   let body: RegisterRequest;

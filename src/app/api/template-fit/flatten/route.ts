@@ -1,12 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
-import { uploadBufferToShopifyFiles } from "@/lib/shopify-files";
+import { uploadBufferToCloudinary } from "@/lib/cloudinary-files";
 import { FLATTEN_DPI } from "@/lib/template-fit/constants";
 
 type Rotation = 0 | 90 | 180 | 270;
 
 type FlattenRequest = {
-  /** Shopify CDN URL of the raw uploaded side image. */
+  /** Cloudinary URL of the raw uploaded side image. */
   imageUrl: string;
   filename: string;
   /** Bleed-rectangle size, inches. */
@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
       .png()
       .toBuffer();
 
-    const url = await uploadBufferToShopifyFiles(finalBuffer, filename, "image/png");
+    const url = await uploadBufferToCloudinary(finalBuffer, filename, "image/png");
     return NextResponse.json({ url });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Could not flatten design";

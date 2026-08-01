@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { createStagedUpload } from "@/lib/shopify-files";
+import { createStagedUpload } from "@/lib/cloudinary-files";
 
 type StageRequest = {
   filename: string;
@@ -8,10 +8,10 @@ type StageRequest = {
 };
 
 /**
- * Phase 1 of Shopify Files upload — request a staged upload target.
- * Browser will then POST the actual file directly to Shopify's GCS bucket
+ * Phase 1 of the design-file upload — request a signed Cloudinary upload
+ * target. Browser will then POST the actual file directly to Cloudinary
  * using the returned `url` and `parameters`. After upload completes, browser
- * calls /api/shopify-upload/register to register the file with Shopify Files.
+ * calls /api/shopify-upload/register to look up the permanent delivery URL.
  */
 export async function POST(req: NextRequest) {
   let body: StageRequest;
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const target = await createStagedUpload(body.filename, body.mimeType, body.fileSize);
+    const target = await createStagedUpload(body.filename);
     return NextResponse.json(target);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Could not create staged upload";

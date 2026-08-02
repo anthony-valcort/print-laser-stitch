@@ -171,7 +171,7 @@ function MobileProofBody() {
       open
       file={file}
       initialShape={shape}
-      initialBorder="normal"
+      initialBorder="thin"
       initialRounded={rounded}
       widthIn={widthIn}
       heightIn={heightIn}

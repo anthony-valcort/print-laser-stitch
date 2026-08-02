@@ -878,7 +878,7 @@ export default function ProductConfigurator() {
           open={showProof}
           file={file}
           initialShape={shape as ProofShape}
-          initialBorder="normal"
+          initialBorder="thin"
           initialRounded={
             (shape === "square" || shape === "rectangle") && roundedCorners
               ? "soft"

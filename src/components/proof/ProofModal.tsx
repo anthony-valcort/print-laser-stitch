@@ -75,7 +75,7 @@ export default function ProofModal({
   const [shape, setShape] = useState<ProofShape>(initialShape);
   const [border, setBorder] = useState<BorderThickness>(initialBorder);
   const [rounded, setRounded] = useState<RoundedCorners>(initialRounded);
-  const [fit, setFit] = useState<Fit>("fill");
+  const [fit, setFit] = useState<Fit>("fit");
   const [zoom, setZoom] = useState(1);
   const [showCutline, setShowCutline] = useState(true);
   const [removeBg, setRemoveBg] = useState(false);

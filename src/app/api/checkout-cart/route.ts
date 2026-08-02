@@ -18,7 +18,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { gidToNumericId, shopifyAdminFetch } from "@/lib/shopify";
 import { getCurrentCustomer } from "@/lib/customer-session";
 import { normalizeInvoiceUrl, waitForInvoiceReady } from "@/lib/shopify-checkout";
-import { lookupDiscountCode } from "@/lib/discount-lookup";
+import { isStickerScopedCode, lookupDiscountCode } from "@/lib/discount-lookup";
 import { isAllowedDesignUrl } from "@/lib/allowed-design-hosts";
 import {
   QUANTITY_OPTIONS,
@@ -75,6 +75,14 @@ type VariantLookupResp = {
   } | null>;
 };
 
+type DraftAppliedDiscount = {
+  description: string;
+  value_type: "percentage" | "fixed_amount";
+  value: string;
+  amount?: string;
+  title: string;
+};
+
 type DraftLineItem = {
   variant_id?: number;
   title?: string;
@@ -83,14 +91,10 @@ type DraftLineItem = {
   requires_shipping?: boolean;
   taxable?: boolean;
   properties?: { name: string; value: string }[];
-};
-
-type DraftAppliedDiscount = {
-  description: string;
-  value_type: "percentage" | "fixed_amount";
-  value: string;
-  amount?: string;
-  title: string;
+  /** Line-level discount — used for sticker-scoped codes (see
+   * discountEligibleSubtotal in discount-types.ts) so the discount only
+   * reduces this line instead of the whole draft order. */
+  applied_discount?: DraftAppliedDiscount;
 };
 
 export async function POST(req: NextRequest) {
@@ -178,6 +182,10 @@ export async function POST(req: NextRequest) {
   // Build draft-order line items by expanding each cart item.
   const lineItems: DraftLineItem[] = [];
   const noteParts: string[] = [];
+  // Indices into lineItems that came from a vinyl-sticker cart item — used to
+  // apply sticker-scoped discount codes at the line level (see below) instead
+  // of order-wide, since Custom Vinyl Stickers isn't a real Shopify product.
+  const stickerLineIndices: number[] = [];
 
   for (const item of body.items) {
     if (item.kind === "vinyl-sticker") {
@@ -283,6 +291,7 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      stickerLineIndices.push(lineItems.length);
       lineItems.push({
         title: `Custom Vinyl Stickers · ${sizeLabel} · ${item.shape}`,
         price: price.perUnit.toFixed(2),
@@ -615,7 +624,9 @@ export async function POST(req: NextRequest) {
   // trust the client's stored value — a malicious user could otherwise forge
   // a 100% percentage. We pass the line-item subtotal so Shopify's minimum
   // requirement check uses an accurate, server-computed amount.
+  const lineTotal = (li: DraftLineItem) => Number(li.price || 0) * li.quantity;
   let appliedDiscount: DraftAppliedDiscount | null = null;
+  let discountScopedToStickers = false;
   const discountCode = body.discountCode?.trim();
   if (discountCode) {
     const itemsSubtotal = lineItems.reduce((sum, li) => {
@@ -630,15 +641,65 @@ export async function POST(req: NextRequest) {
         const unit = match ? match[1].price : Number(li.price || 0);
         return sum + unit * li.quantity;
       }
-      return sum + Number(li.price || 0) * li.quantity;
+      return sum + lineTotal(li);
     }, 0);
+    const stickerSubtotal = stickerLineIndices.reduce(
+      (sum, idx) => sum + lineTotal(lineItems[idx]),
+      0,
+    );
 
-    const result = await lookupDiscountCode(discountCode, itemsSubtotal);
+    // Custom Vinyl Stickers isn't a real Shopify product, so a sticker-scoped
+    // code's minimum requirement (and its discount amount, below) is checked
+    // against the stickers in this cart, not the whole order.
+    const result = await lookupDiscountCode(
+      discountCode,
+      isStickerScopedCode(discountCode) ? stickerSubtotal : itemsSubtotal,
+    );
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
     const d = result.discount;
-    if (d.valueType === "percentage") {
+    discountScopedToStickers = d.scope === "vinyl-sticker";
+
+    if (discountScopedToStickers) {
+      if (stickerLineIndices.length === 0) {
+        return NextResponse.json(
+          {
+            error: `${d.code} only applies to Custom Vinyl Stickers — add one to your cart to use it.`,
+          },
+          { status: 400 },
+        );
+      }
+      if (d.valueType === "percentage") {
+        for (const idx of stickerLineIndices) {
+          lineItems[idx].applied_discount = {
+            description: d.code,
+            title: d.title,
+            value_type: "percentage",
+            value: d.value.toString(),
+          };
+        }
+      } else if (d.valueType === "fixed_amount") {
+        // Split the flat amount across every sticker line, proportional to
+        // each line's own share of the stickers subtotal, so multiple
+        // sticker lines in one cart don't each get the full amount.
+        const totalDiscount = Math.min(d.value, stickerSubtotal);
+        for (const idx of stickerLineIndices) {
+          const share =
+            stickerSubtotal > 0
+              ? (lineTotal(lineItems[idx]) / stickerSubtotal) * totalDiscount
+              : 0;
+          lineItems[idx].applied_discount = {
+            description: d.code,
+            title: d.title,
+            value_type: "fixed_amount",
+            value: share.toFixed(2),
+          };
+        }
+      }
+      // Free-shipping is inherently order-wide — nothing to scope at the
+      // line level, so it falls through to the note below same as unscoped.
+    } else if (d.valueType === "percentage") {
       appliedDiscount = {
         description: d.code,
         title: d.title,
@@ -665,7 +726,7 @@ export async function POST(req: NextRequest) {
       line_items: lineItems,
       tags: "cart-checkout,custom-configurator",
       note: discountCode
-        ? `Cart checkout · ${noteParts.join(" + ")} · Discount: ${discountCode.toUpperCase()}`
+        ? `Cart checkout · ${noteParts.join(" + ")} · Discount: ${discountCode.toUpperCase()}${discountScopedToStickers ? " (stickers only)" : ""}`
         : `Cart checkout · ${noteParts.join(" + ")}`,
       ...(appliedDiscount ? { applied_discount: appliedDiscount } : {}),
     },

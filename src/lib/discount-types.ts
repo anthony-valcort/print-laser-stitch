@@ -7,6 +7,8 @@
  * so the discount stays in sync as the customer adds or removes items.
  */
 
+import type { CartItem } from "./cart-types";
+
 export type DiscountValueType = "percentage" | "fixed_amount" | "shipping";
 
 export interface CartDiscount {
@@ -28,6 +30,29 @@ export interface CartDiscount {
    * Re-checked on every cart change.
    */
   minimumSubtotal?: number;
+  /**
+   * Custom Vinyl Stickers isn't a real Shopify product, so it can't be
+   * targeted through Shopify's own "specific products/collections" discount
+   * scoping — instead, any code containing "STICKER" (see discount-lookup.ts)
+   * is treated as applying only to vinyl-sticker cart items rather than the
+   * whole order.
+   */
+  scope?: "vinyl-sticker";
+}
+
+/** The subtotal a discount's value applies against — the whole cart, unless
+ * it's sticker-scoped, in which case only vinyl-sticker line items count. */
+export function discountEligibleSubtotal(
+  items: CartItem[],
+  discount: CartDiscount | null,
+): number {
+  if (!discount) return 0;
+  if (discount.scope === "vinyl-sticker") {
+    return items
+      .filter((i) => i.kind === "vinyl-sticker")
+      .reduce((sum, i) => sum + (i.totalPrice || 0), 0);
+  }
+  return items.reduce((sum, i) => sum + (i.totalPrice || 0), 0);
 }
 
 /**

@@ -12,6 +12,7 @@ import {
 import type { CartItem, NewCartItem } from "./cart-types";
 import {
   computeDiscountAmount,
+  discountEligibleSubtotal,
   type CartDiscount,
 } from "./discount-types";
 
@@ -336,22 +337,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [items],
   );
 
+  // The subtotal a discount's value actually applies against — the whole
+  // cart, unless it's sticker-scoped (see discount-types.ts), in which case
+  // only vinyl-sticker line items count.
+  const discountBaseSubtotal = useMemo(
+    () => discountEligibleSubtotal(items, discount),
+    [items, discount],
+  );
+
   // If the cart no longer meets the applied discount's minimum, drop it so the
   // customer isn't confused at checkout.
   useEffect(() => {
     if (!isHydrated || !discount) return;
     if (
       typeof discount.minimumSubtotal === "number" &&
-      subtotal > 0 &&
-      subtotal < discount.minimumSubtotal
+      discountBaseSubtotal > 0 &&
+      discountBaseSubtotal < discount.minimumSubtotal
     ) {
       setDiscount(null);
     }
-  }, [subtotal, discount, isHydrated]);
+  }, [discountBaseSubtotal, discount, isHydrated]);
 
   const discountAmount = useMemo(
-    () => computeDiscountAmount(discount, subtotal),
-    [discount, subtotal],
+    () => computeDiscountAmount(discount, discountBaseSubtotal),
+    [discount, discountBaseSubtotal],
   );
 
   const total = useMemo(

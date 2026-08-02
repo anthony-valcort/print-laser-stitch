@@ -229,6 +229,15 @@ export default function CartView({
                   <dd className="font-medium">−${discountAmount.toFixed(2)}</dd>
                 </div>
               )}
+              {discount &&
+                discount.scope === "vinyl-sticker" &&
+                discountAmount === 0 &&
+                !items.some((i) => i.kind === "vinyl-sticker") && (
+                  <div className="rounded-lg bg-amber-500/10 px-2.5 py-1.5 text-xs text-amber-300">
+                    {discount.code} only applies to Custom Vinyl Stickers —
+                    add one to your cart to use it.
+                  </div>
+                )}
               {discount && discount.valueType === "shipping" && (
                 <div className="flex items-center justify-between text-emerald-300">
                   <dt>

@@ -5,10 +5,23 @@
  * `/api/checkout-cart` (re-validate at order creation so the client can't
  * forge a discount). Returns either a usable `CartDiscount` or a reason
  * string explaining why the code isn't usable.
+ *
+ * Custom Vinyl Stickers isn't a real Shopify product/collection, so it can't
+ * be scoped through Shopify's own discount targeting UI. Instead, any code
+ * whose text contains "STICKER" (e.g. "SUMMER-STICKER-20") is treated as
+ * applying only to vinyl-sticker cart items — see discountEligibleSubtotal()
+ * in discount-types.ts and the line-item-level applied_discount in
+ * checkout-cart/route.ts.
  */
 
 import { shopifyAdminFetch } from "./shopify";
 import type { CartDiscount } from "./discount-types";
+
+/** Whether a discount code text should be treated as scoped to Custom Vinyl
+ * Stickers only (see the file-level comment above). */
+export function isStickerScopedCode(code: string): boolean {
+  return code.trim().toUpperCase().includes("STICKER");
+}
 
 type DiscountLookupSuccess = {
   ok: true;
@@ -154,6 +167,10 @@ export async function lookupDiscountCode(
     return { ok: false, error: "This code is currently disabled.", status: 400 };
   }
 
+  const scope: CartDiscount["scope"] = isStickerScopedCode(trimmed)
+    ? "vinyl-sticker"
+    : undefined;
+
   if (kind === "DiscountCodeFreeShipping") {
     return {
       ok: true,
@@ -162,6 +179,7 @@ export async function lookupDiscountCode(
         title: cd.title || trimmed.toUpperCase(),
         valueType: "shipping",
         value: 0,
+        scope,
       },
     };
   }
@@ -218,6 +236,7 @@ export async function lookupDiscountCode(
       valueType,
       value,
       minimumSubtotal,
+      scope,
     },
   };
 }

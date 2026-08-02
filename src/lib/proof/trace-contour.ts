@@ -29,12 +29,22 @@ function buildMask(
   return mask;
 }
 
-/** Keep only the largest 4-connected foreground component. */
-function largestComponent(mask: Uint8Array, w: number, h: number): Uint8Array {
+// A traced die-cut has to be one contiguous piece of vinyl — it can't be cut
+// into disconnected floating islands. If the largest blob doesn't account
+// for nearly all the opaque pixels, the art is really multiple separate
+// pieces (e.g. a photo collage), and tracing "the biggest one" would silently
+// throw away the rest. DOMINANT_RATIO draws the line between that case and
+// ordinary single-subject art with a few stray anti-aliased/noise pixels.
+const DOMINANT_RATIO = 0.9;
+
+/** Keep only the largest 4-connected foreground component, unless it isn't
+ * clearly the *only* significant one — see DOMINANT_RATIO above. */
+function largestComponent(mask: Uint8Array, w: number, h: number): Uint8Array | null {
   const label = new Int32Array(w * h).fill(-1);
   const stack: number[] = [];
   let best = -1;
   let bestSize = 0;
+  let totalSize = 0;
   let cur = 0;
 
   for (let s = 0; s < mask.length; s++) {
@@ -65,6 +75,7 @@ function largestComponent(mask: Uint8Array, w: number, h: number): Uint8Array {
         stack.push(idx + w);
       }
     }
+    totalSize += size;
     if (size > bestSize) {
       bestSize = size;
       best = cur;
@@ -72,8 +83,9 @@ function largestComponent(mask: Uint8Array, w: number, h: number): Uint8Array {
     cur++;
   }
 
+  if (best === -1 || bestSize < totalSize * DOMINANT_RATIO) return null;
+
   const out = new Uint8Array(w * h);
-  if (best === -1) return out;
   for (let i = 0; i < out.length; i++) if (label[i] === best) out[i] = 1;
   return out;
 }
@@ -149,6 +161,7 @@ export function traceAlphaContour(img: ImageData): Polygon | null {
   }
 
   const blob = largestComponent(mask, w, h);
+  if (!blob) return null;
   const traced = mooreTrace(blob, w, h);
   if (traced.length < 3) return null;
 

@@ -122,10 +122,13 @@ export async function generateProof(
     if (traced && traced.length >= 3) {
       baseShape = simplifyPolygon(traced, Math.max(1.5, widthPx * 0.0015));
     } else {
-      // Opaque artwork (e.g. a JPG with no transparency and BG not removed):
-      // fall back to the placed image's rectangle. A human still reviews.
+      // Either opaque artwork (e.g. a JPG with no transparency and BG not
+      // removed) or art made of several disconnected transparent regions
+      // (e.g. a multi-photo collage) — a die-cut sticker has to be one
+      // contiguous piece, so either way we fall back to the placed image's
+      // rectangle. A human still reviews.
       warnings.push(
-        "No transparent edges found — using the artwork's outline. Tip: use Remove background or upload a transparent PNG for a true die-cut.",
+        "Using the artwork's rectangle as the die-cut outline — for a precise custom shape, use art with a single connected subject on a transparent background.",
       );
       baseShape = [
         { x: rect.x, y: rect.y },

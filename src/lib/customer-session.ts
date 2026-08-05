@@ -169,7 +169,7 @@ export async function getCurrentCustomerOrders(): Promise<CustomerOrder[]> {
                   node: {
                     title: string;
                     quantity: number;
-                    variantTitle: string | null;
+                    variant: { title: string } | null;
                     originalTotalPrice: Money;
                   };
                 }>;
@@ -209,7 +209,7 @@ export async function getCurrentCustomerOrders(): Promise<CustomerOrder[]> {
                     node {
                       title
                       quantity
-                      variantTitle
+                      variant { title }
                       originalTotalPrice { amount currencyCode }
                     }
                   }
@@ -238,7 +238,7 @@ export async function getCurrentCustomerOrders(): Promise<CustomerOrder[]> {
       lineItems: e.node.lineItems.edges.map((li) => ({
         title: li.node.title,
         quantity: li.node.quantity,
-        variantTitle: li.node.variantTitle,
+        variantTitle: li.node.variant?.title ?? null,
         originalTotalPrice: li.node.originalTotalPrice,
       })),
     }));

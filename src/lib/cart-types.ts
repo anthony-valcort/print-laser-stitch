@@ -125,6 +125,8 @@ export interface SignageCartItem extends CartItemBase {
   discountPercent: number;
   subtotal: number;
   notes?: string;
+  /** Optional reference photos (Cloudinary URLs) — install location, wall, vehicle, etc. */
+  imageUrls?: string[];
 }
 
 export interface DecalPanelLine {
@@ -135,6 +137,10 @@ export interface DecalPanelLine {
   /** Height in inches. */
   height: number;
   description?: string;
+  /** Optional reference photo (Cloudinary URL) for this panel. */
+  imageUrl?: string;
+  /** Optional free-text note tied to this panel/photo. */
+  note?: string;
 }
 
 /**

@@ -467,6 +467,16 @@ export async function POST(req: NextRequest) {
           value: item.notes.trim().slice(0, 2000),
         });
       }
+      if (Array.isArray(item.imageUrls)) {
+        item.imageUrls.forEach((url, i) => {
+          if (typeof url === "string" && url.trim()) {
+            properties.push({
+              name: `Reference Image ${i + 1}`,
+              value: url.trim(),
+            });
+          }
+        });
+      }
 
       // Single line item — total already reflects discount. No tax line
       // because Decal Signage Calculator in the old site didn't add tax.
@@ -551,7 +561,7 @@ export async function POST(req: NextRequest) {
         const sqft = (Number(p.width) * Number(p.height)) / 144;
         return `${p.typeLabel} ${p.width}″×${p.height}″ (${sqft.toFixed(2)} sqft)${
           p.description ? ` — ${p.description}` : ""
-        }`;
+        }${p.note?.trim() ? ` (Note: ${p.note.trim()})` : ""}`;
       });
 
       const properties: { name: string; value: string }[] = [
@@ -566,6 +576,14 @@ export async function POST(req: NextRequest) {
         },
         { name: "Panels", value: panelLines.join("\n") },
       ];
+      item.panels.forEach((p, i) => {
+        if (typeof p.imageUrl === "string" && p.imageUrl.trim()) {
+          properties.push({
+            name: `Panel ${i + 1} Image`,
+            value: p.imageUrl.trim(),
+          });
+        }
+      });
       if (recomputed.discountAmount > 0) {
         properties.push({
           name: "Discount",
@@ -608,7 +626,7 @@ export async function POST(req: NextRequest) {
   for (const li of lineItems) {
     for (const prop of li.properties ?? []) {
       if (
-        /design|file|art/i.test(prop.name) &&
+        /design|file|art|image/i.test(prop.name) &&
         prop.value.startsWith("http") &&
         !isAllowedDesignUrl(prop.value)
       ) {

@@ -16,6 +16,12 @@ const COLLECTION_HOW_TO_ORDER_VIDEO_IDS: Record<string, string> = {
   "custom-apparel": "jlGjde0g60k",
 };
 
+// Client-provided reference image shown in the same header slot, for
+// collections that have one instead of a how-to-order video.
+const COLLECTION_HEADER_IMAGES: Record<string, string> = {
+  "vehicle-boat-graphics": "/car%20sticker.jpg",
+};
+
 type Params = Promise<{ handle: string }>;
 
 export async function generateMetadata({
@@ -117,14 +123,26 @@ export default async function CollectionPage({
           </div>
         </div>
 
-        <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <div className="mb-8 flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="mb-10 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h1 className="font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
+              <h1
+                className={`font-display font-black uppercase tracking-tight ${
+                  COLLECTION_HEADER_IMAGES[collection.handle]
+                    ? "text-4xl sm:text-5xl"
+                    : "text-3xl sm:text-4xl"
+                }`}
+              >
                 {collection.title}
               </h1>
               {description && (
-                <p className="mt-3 max-w-2xl text-sm text-foreground-muted">
+                <p
+                  className={`mt-3 max-w-2xl text-foreground-muted ${
+                    COLLECTION_HEADER_IMAGES[collection.handle]
+                      ? "text-base"
+                      : "text-sm"
+                  }`}
+                >
                   {description}
                 </p>
               )}
@@ -134,21 +152,33 @@ export default async function CollectionPage({
               </p>
             </div>
 
-            {COLLECTION_HOW_TO_ORDER_VIDEO_IDS[collection.handle] && (
-              <div className="w-full shrink-0 lg:w-105">
-                <h2 className="font-display text-2xl font-black uppercase tracking-tight text-[#d9f000] sm:text-3xl">
-                  How to Order
-                </h2>
-                <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
-                  <iframe
-                    src={`https://www.youtube-nocookie.com/embed/${COLLECTION_HOW_TO_ORDER_VIDEO_IDS[collection.handle]}`}
-                    title="How to order — Print Laser Stitch"
-                    className="h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
-                </div>
+            {COLLECTION_HEADER_IMAGES[collection.handle] ? (
+              <div className="w-full shrink-0 sm:w-64 lg:w-72">
+                <Image
+                  src={COLLECTION_HEADER_IMAGES[collection.handle]}
+                  alt={`${collection.title} pricing reference`}
+                  width={2304}
+                  height={3456}
+                  className="h-auto w-full rounded-2xl border border-border-soft shadow-lg shadow-black/30"
+                />
               </div>
+            ) : (
+              COLLECTION_HOW_TO_ORDER_VIDEO_IDS[collection.handle] && (
+                <div className="w-full shrink-0 lg:w-105">
+                  <h2 className="font-display text-2xl font-black uppercase tracking-tight text-[#d9f000] sm:text-3xl">
+                    How to Order
+                  </h2>
+                  <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
+                    <iframe
+                      src={`https://www.youtube-nocookie.com/embed/${COLLECTION_HOW_TO_ORDER_VIDEO_IDS[collection.handle]}`}
+                      title="How to order — Print Laser Stitch"
+                      className="h-full w-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              )
             )}
           </div>
 

@@ -11,6 +11,8 @@ import {
 } from "@/lib/signage-pricing";
 import { useCart } from "@/lib/cart-store";
 import type { SignageCartItem } from "@/lib/cart-types";
+import { MultiImageUpload } from "@/components/configurator/MultiImageUpload";
+import type { UploadSlot } from "@/components/configurator/UploadBox";
 
 const PLAN_VISUALS: Record<
   ServicePlanKey,
@@ -57,6 +59,7 @@ export default function SignageCalculator() {
   const [servicePlan, setServicePlan] =
     useState<ServicePlanKey>("full-install");
   const [notes, setNotes] = useState<string>("");
+  const [images, setImages] = useState<UploadSlot[]>([]);
   const [toast, setToast] = useState<string | null>(null);
 
   const result = useMemo(
@@ -85,6 +88,10 @@ export default function SignageCalculator() {
     }
     setToast(null);
 
+    const imageUrls = images
+      .map((s) => s.fileUrl)
+      .filter((url): url is string => Boolean(url));
+
     const cartItem: Omit<SignageCartItem, "id" | "addedAt"> = {
       kind: "signage",
       title: `Decal Signage · ${currentPlan.label}`,
@@ -105,6 +112,7 @@ export default function SignageCalculator() {
       discountPercent: Number(discountPercent) || 0,
       subtotal: result.subtotal,
       notes: notes.trim() || undefined,
+      imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
       editHref: "/signage-quotes",
     };
 
@@ -505,6 +513,23 @@ export default function SignageCalculator() {
                   </>
                 )}
               </div>
+            </div>
+
+            {/* Reference images — optional, any number of photos */}
+            <div className="mt-4 rounded-3xl border border-border-soft bg-linear-to-br from-surface to-surface-elevated p-5">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground-muted">
+                  Reference images
+                </span>
+                <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-foreground-muted">
+                  Optional
+                </span>
+              </div>
+              <MultiImageUpload images={images} onImagesChange={setImages} />
+              <p className="mt-3 text-[11px] text-foreground-muted">
+                Add photos of the wall, vehicle, or install location — it
+                helps our design team prep your job faster.
+              </p>
             </div>
           </aside>
         </div>

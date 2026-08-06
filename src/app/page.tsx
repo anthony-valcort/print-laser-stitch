@@ -87,7 +87,7 @@ export default async function Home() {
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
                 <Link
-                  href="/products/vinyl-stickers"
+                  href="/decal-quote"
                   className="inline-flex items-center gap-2 rounded-md accent-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 transition hover:brightness-110"
                 >
                   Get a Quote

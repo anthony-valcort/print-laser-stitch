@@ -13,6 +13,13 @@ import {
 } from "@/lib/decal-pricing";
 import { useCart } from "@/lib/cart-store";
 import type { DecalCartItem, DecalPanelLine } from "@/lib/cart-types";
+import {
+  EMPTY_UPLOAD_SLOT,
+  UploadBox,
+  uploadDesign,
+  type UploadSlot,
+} from "@/components/configurator/UploadBox";
+import { ACCEPT_REFERENCE_IMAGES } from "@/components/configurator/MultiImageUpload";
 
 type Panel = {
   id: string;
@@ -20,6 +27,8 @@ type Panel = {
   width: string;
   height: string;
   description: string;
+  imageUrl?: string;
+  note: string;
 };
 
 const EMPTY_PANEL_FORM = {
@@ -27,6 +36,7 @@ const EMPTY_PANEL_FORM = {
   width: "",
   height: "",
   description: "",
+  note: "",
 };
 
 export default function DecalCalculator() {
@@ -39,6 +49,7 @@ export default function DecalCalculator() {
   const [customPricePerSqFt, setCustomPricePerSqFt] = useState<string>("");
   const [discountPercent, setDiscountPercent] = useState<string>("0");
   const [notes, setNotes] = useState("");
+  const [panelImage, setPanelImage] = useState<UploadSlot>(EMPTY_UPLOAD_SLOT);
   const [toast, setToast] = useState<string | null>(null);
 
   const currentMaterial =
@@ -67,6 +78,10 @@ export default function DecalCalculator() {
       setToast("Please enter valid width and height in inches.");
       return;
     }
+    if (panelImage.isUploading) {
+      setToast("Please wait for the reference photo to finish uploading.");
+      return;
+    }
     setPanels((prev) => [
       ...prev,
       {
@@ -75,9 +90,12 @@ export default function DecalCalculator() {
         width: form.width,
         height: form.height,
         description: form.description.trim(),
+        imageUrl: panelImage.fileUrl ?? undefined,
+        note: form.note.trim(),
       },
     ]);
     setForm(EMPTY_PANEL_FORM);
+    setPanelImage(EMPTY_UPLOAD_SLOT);
     setToast(null);
   }
 
@@ -107,6 +125,8 @@ export default function DecalCalculator() {
         width: Number(p.width),
         height: Number(p.height),
         description: p.description || undefined,
+        imageUrl: p.imageUrl,
+        note: p.note || undefined,
       };
     });
 
@@ -292,6 +312,35 @@ export default function DecalCalculator() {
               />
             </div>
 
+            <div className="mt-3">
+              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-foreground-muted">
+                Reference Photo (Optional)
+              </label>
+              <UploadBox
+                slot={panelImage}
+                onSelect={(f) => uploadDesign(f, setPanelImage)}
+                onClear={() => setPanelImage(EMPTY_UPLOAD_SLOT)}
+                accept={ACCEPT_REFERENCE_IMAGES}
+                hint="PNG · JPG · WEBP · ≤20MB"
+              />
+            </div>
+
+            <div className="mt-3">
+              <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-foreground-muted">
+                Note (Optional)
+              </label>
+              <textarea
+                value={form.note}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, note: e.target.value }))
+                }
+                rows={2}
+                placeholder="Anything about this photo or panel we should know…"
+                className="w-full resize-none rounded-xl border border-border-soft bg-white/4 px-4 py-2.5 text-sm placeholder:text-foreground-muted/60 outline-none ring-highlight/40 focus:ring-2"
+                suppressHydrationWarning
+              />
+            </div>
+
             <button
               type="button"
               onClick={addPanel}
@@ -344,6 +393,11 @@ export default function DecalCalculator() {
                                 {p.description}
                               </div>
                             )}
+                            {p.note && (
+                              <div className="mt-0.5 text-[11px] italic text-foreground-muted/80">
+                                {p.note}
+                              </div>
+                            )}
                           </div>
                         </div>
                         <button
@@ -354,7 +408,24 @@ export default function DecalCalculator() {
                           Delete
                         </button>
                       </div>
-                      <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                      <div className="mt-2 grid grid-cols-4 gap-2 text-xs">
+                        <div>
+                          <div className="text-[10px] uppercase text-foreground-muted">
+                            Image
+                          </div>
+                          {p.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={p.imageUrl}
+                              alt="Panel reference"
+                              className="mt-0.5 h-8 w-8 rounded-md object-cover ring-1 ring-border-strong"
+                            />
+                          ) : (
+                            <div className="font-mono text-foreground-muted/50">
+                              —
+                            </div>
+                          )}
+                        </div>
                         <div>
                           <div className="text-[10px] uppercase text-foreground-muted">
                             Width

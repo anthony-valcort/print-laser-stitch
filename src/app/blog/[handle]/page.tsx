@@ -130,7 +130,7 @@ export default async function ArticlePage({
           </header>
 
           {article.image?.url && (
-            <div className="relative mt-8 aspect-[16/9] w-full overflow-hidden rounded-2xl border border-border-soft bg-white/5">
+            <div className="relative mt-8 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft bg-white/5">
               <Image
                 src={article.image.url}
                 alt={article.image.altText ?? article.title}
@@ -170,7 +170,7 @@ export default async function ArticlePage({
                   href={`/blog/${a.handle}`}
                   className="group flex flex-col overflow-hidden rounded-2xl border border-border-soft bg-surface transition hover:-translate-y-1 hover:border-[#18d3e8]/40"
                 >
-                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-white/5">
+                  <div className="relative aspect-16/10 w-full overflow-hidden bg-white/5">
                     {a.image?.url ? (
                       <Image
                         src={a.image.url}

@@ -2,12 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 
 const HOURS: { day: string; time: string }[] = [
-  { day: "Mon", time: "9am–5pm" },
-  { day: "Tue", time: "9am–5pm" },
-  { day: "Wed", time: "9am–5pm" },
-  { day: "Thu", time: "9am–5pm" },
-  { day: "Fri", time: "9am–5pm" },
-  { day: "Sat", time: "9am–5pm" },
+  { day: "Mon", time: "7:30am–5:30pm" },
+  { day: "Tue", time: "7:30am–5:30pm" },
+  { day: "Wed", time: "7:30am–5:30pm" },
+  { day: "Thu", time: "7:30am–5:30pm" },
+  { day: "Fri", time: "7:30am–5:30pm" },
+  { day: "Sat", time: "10am–1:30pm" },
   { day: "Sun", time: "Closed" },
 ];
 
@@ -193,6 +193,46 @@ export default function Footer() {
                 <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
               </svg>
               info@printlaserstitch.com
+            </a>
+            <a
+              href="tel:+17729852854"
+              className="mt-3 flex items-center gap-2 text-sm text-foreground-muted transition hover:text-[#18d3e8]"
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384" />
+              </svg>
+              (772) 985-2854
+            </a>
+            <a
+              href="https://www.google.com/maps/search/?api=1&query=3141+SE+Dominica+Terrace%2C+Stuart%2C+FL+34997"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 flex items-start gap-2 text-sm text-foreground-muted transition hover:text-[#18d3e8]"
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="mt-0.5 shrink-0"
+              >
+                <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <span>3141 SE Dominica Terrace, Stuart, FL 34997</span>
             </a>
           </div>
         </div>

@@ -244,7 +244,7 @@ export default function Footer() {
             <Link href="#" className="transition hover:text-foreground">
               Terms
             </Link>
-            <Link href="#" className="transition hover:text-foreground">
+            <Link href="/privacy" className="transition hover:text-foreground">
               Privacy
             </Link>
             <Link href="#" className="transition hover:text-foreground">

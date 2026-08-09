@@ -135,29 +135,28 @@ export default function HeaderClient({
             </Link>
           )}
           <Link
-            href="/products/vinyl-stickers"
-            className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold text-[#d9f000] transition hover:bg-[#d9f000]/20"
-          >
-            <span>✨</span>
-            Custom Stickers
-          </Link>
-          <Link
             href="/decal-quote"
             className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
           >
-            Quick Quote
+            Signage Quote
           </Link>
           <Link
             href="/signage-quotes"
             className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
           >
-            Decal Signage
+            Decal Calculator
           </Link>
           <Link
             href="/gallery"
             className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
           >
             Gallery
+          </Link>
+          <Link
+            href="/about"
+            className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
+          >
+            About
           </Link>
           <div
             className="relative shrink-0"
@@ -187,12 +186,6 @@ export default function HeaderClient({
             {moreOpen && (
               <div className="absolute right-0 top-full pt-2">
                 <div className="w-48 overflow-hidden rounded-2xl border border-border-soft bg-background-soft shadow-2xl shadow-black/40">
-                  <Link
-                    href="/about"
-                    className="block px-4 py-3 text-sm hover:bg-white/5"
-                  >
-                    About
-                  </Link>
                   <Link
                     href="/blog"
                     className="block px-4 py-3 text-sm hover:bg-white/5"
@@ -356,25 +349,18 @@ export default function HeaderClient({
               Home
             </Link>
             <Link
-              href="/products/vinyl-stickers"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-xl px-4 py-3 text-sm font-semibold text-[#d9f000] hover:bg-[#d9f000]/20"
-            >
-              ✨ Custom Stickers
-            </Link>
-            <Link
               href="/decal-quote"
               onClick={() => setMobileOpen(false)}
               className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
             >
-              🪟 Quick Quote
+              🪟 Signage Quote
             </Link>
             <Link
               href="/signage-quotes"
               onClick={() => setMobileOpen(false)}
               className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
             >
-              🪧 Decal Signage Calculator
+              🪧 Decal Calculator
             </Link>
             <Link
               href="/blog"

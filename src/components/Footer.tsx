@@ -127,8 +127,8 @@ export default function Footer() {
             items={[
               { label: "Home", href: "/" },
               { label: "All Products", href: "/collections" },
-              { label: "Quick Quote", href: "/decal-quote" },
-              { label: "Decal Signage", href: "/signage-quotes" },
+              { label: "Signage Quote", href: "/decal-quote" },
+              { label: "Decal Calculator", href: "/signage-quotes" },
               { label: "Blog", href: "/blog" },
               { label: "About Us", href: "/about" },
             ]}

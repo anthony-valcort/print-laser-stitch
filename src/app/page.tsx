@@ -297,7 +297,7 @@ export default async function Home() {
                   Window film · Wall vinyl
                 </span>
                 <h3 className="mt-4 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
-                  Quick Quote{" "}
+                  Signage Quote{" "}
                   <span className="bg-linear-to-r from-[#18d3e8] to-[#d9f000] bg-clip-text text-transparent">
                     Calculator
                   </span>
@@ -325,7 +325,7 @@ export default async function Home() {
                     href="/decal-quote"
                     className="inline-flex items-center gap-2 rounded-md cyan-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#18d3e8]/30 transition hover:brightness-110"
                   >
-                    Open Quick Quote
+                    Open Signage Quote
                     <Arrow />
                   </Link>
                 </div>

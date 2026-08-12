@@ -530,7 +530,7 @@ export async function POST(req: NextRequest) {
       }
       if (!Array.isArray(item.panels) || item.panels.length === 0) {
         return NextResponse.json(
-          { error: "Quick Quote needs at least one panel" },
+          { error: "Signage Quote needs at least one panel" },
           { status: 400 },
         );
       }
@@ -602,7 +602,7 @@ export async function POST(req: NextRequest) {
       }
 
       lineItems.push({
-        title: `Quick Quote · ${mat.label} · ${recomputed.totalAreaSqFt.toFixed(2)} sq ft`,
+        title: `Signage Quote · ${mat.label} · ${recomputed.totalAreaSqFt.toFixed(2)} sq ft`,
         price: recomputed.total.toFixed(2),
         quantity: 1,
         requires_shipping: true,
@@ -610,7 +610,7 @@ export async function POST(req: NextRequest) {
         properties,
       });
       noteParts.push(
-        `Quick Quote ${mat.label} ${recomputed.totalAreaSqFt.toFixed(2)} sqft`,
+        `Signage Quote ${mat.label} ${recomputed.totalAreaSqFt.toFixed(2)} sqft`,
       );
     }
   }

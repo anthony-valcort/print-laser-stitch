@@ -132,7 +132,7 @@ export default function DecalCalculator() {
 
     const cartItem: Omit<DecalCartItem, "id" | "addedAt"> = {
       kind: "decal",
-      title: `Quick Quote · ${currentMaterial.label}`,
+      title: `Signage Quote · ${currentMaterial.label}`,
       subtitle: `${panelLines.length} ${panelLines.length === 1 ? "panel" : "panels"} · ${result.totalAreaSqFt.toFixed(2)} sq ft`,
       thumbnail: "🪟",
       unitLabel: `$${result.pricePerSqFt.toFixed(2)} / sq ft`,
@@ -178,14 +178,14 @@ export default function DecalCalculator() {
             Home
           </Link>
           <span className="text-foreground-muted/40">/</span>
-          <span className="font-medium">Quick Quote</span>
+          <span className="font-medium">Signage Quote</span>
         </div>
       </div>
 
       <div className="mx-auto max-w-7xl px-3 py-6 sm:px-6 lg:px-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Quick Quote{" "}
+            Signage Quote{" "}
             <span className="bg-linear-to-r from-[#18d3e8] to-[#d9f000] bg-clip-text text-transparent">
               — Manual Entry
             </span>

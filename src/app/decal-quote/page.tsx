@@ -4,9 +4,9 @@ import Footer from "@/components/Footer";
 import DecalCalculator from "@/components/DecalCalculator";
 
 export const metadata: Metadata = {
-  title: "Quick Quote · Print Laser Stitch",
+  title: "Signage Quote · Print Laser Stitch",
   description:
-    "Quick Quote — Manual Entry. Add panels manually by entering dimensions and descriptions, pick your material, and get an instant quote with 7% Martin County tax.",
+    "Signage Quote — Manual Entry. Add panels manually by entering dimensions and descriptions, pick your material, and get an instant quote with 7% Martin County tax.",
 };
 
 export default function DecalQuotePage() {

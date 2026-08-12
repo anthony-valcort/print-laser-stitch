@@ -21,10 +21,27 @@ const rajdhani = Rajdhani({
   weight: ["400", "500", "600", "700"],
 });
 
+const SITE_URL = "https://www.printlaserstitch.com";
+const SITE_DESCRIPTION =
+  "Custom stickers, t-shirts, business cards, banners, embroidery, and more. Designed and printed for your brand.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Print Laser Stitch",
-  description:
-    "Custom stickers, t-shirts, business cards, banners, embroidery, and more. Designed and printed for your brand.",
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    title: "Print Laser Stitch",
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    siteName: "Print Laser Stitch",
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Print Laser Stitch",
+    description: SITE_DESCRIPTION,
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({

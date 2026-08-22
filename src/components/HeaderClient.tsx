@@ -192,6 +192,12 @@ export default function HeaderClient({
                   >
                     Blog
                   </Link>
+                  <Link
+                    href="/contact"
+                    className="block px-4 py-3 text-sm hover:bg-white/5"
+                  >
+                    Contact Us
+                  </Link>
                   <a
                     href="https://printlaserstitchuniversity.com/"
                     target="_blank"
@@ -398,6 +404,13 @@ export default function HeaderClient({
               className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
             >
               About Us
+            </Link>
+            <Link
+              href="/contact"
+              onClick={() => setMobileOpen(false)}
+              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
+            >
+              ✉️ Contact Us
             </Link>
             <a
               href="https://printlaserstitch.app/"

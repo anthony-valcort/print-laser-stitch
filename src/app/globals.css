@@ -288,6 +288,23 @@ body {
   animation: glitch 4s infinite;
 }
 
+/* One-shot mount-in for hero/card content — pairs with an inline
+   animation-delay for staggering. Fixed 24px rise, not viewport-relative. */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-fade-up {
+  animation: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-drift-1,
   .animate-drift-2,
@@ -296,7 +313,8 @@ body {
   .animate-icon-b,
   .animate-icon-c,
   .animate-icon-d,
-  .glitch-text {
+  .glitch-text,
+  .animate-fade-up {
     animation: none;
   }
 }

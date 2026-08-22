@@ -131,6 +131,7 @@ export default function Footer() {
               { label: "Decal Calculator", href: "/signage-quotes" },
               { label: "Blog", href: "/blog" },
               { label: "About Us", href: "/about" },
+              { label: "Contact Us", href: "/contact" },
             ]}
           />
 

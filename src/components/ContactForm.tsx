@@ -41,8 +41,7 @@ export default function ContactForm() {
   if (success) {
     return (
       <div className="animate-fade-up relative overflow-hidden rounded-3xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center shadow-2xl shadow-black/40">
-        <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-emerald-400/15 blur-3xl" />
-        <div className="relative">
+        <div>
           <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-500/20 text-2xl">
             <span className="animate-fade-up" style={{ animationDuration: "0.4s" }}>
               ✅
@@ -67,9 +66,6 @@ export default function ContactForm() {
 
   return (
     <div className="relative overflow-hidden rounded-3xl border border-border-soft bg-surface p-8 shadow-2xl shadow-black/40">
-      <div className="pointer-events-none absolute -left-16 -top-16 h-56 w-56 rounded-full bg-[#18d3e8]/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-16 -right-10 h-48 w-48 rounded-full bg-[#d94cb3]/10 blur-3xl" />
-
       <form onSubmit={handleSubmit} className="relative space-y-4">
         <Field label="Name" required icon={<UserIcon />}>
           <input

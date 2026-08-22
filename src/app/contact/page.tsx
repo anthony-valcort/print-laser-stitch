@@ -81,11 +81,8 @@ export default function ContactPage() {
     <>
       <Header />
       <main className="flex-1">
-        <section className="relative overflow-hidden">
-          <div className="pointer-events-none absolute -top-40 left-1/2 z-0 h-120 w-225 -translate-x-1/2 rounded-full opacity-30 blur-3xl accent-gradient animate-drift-1" />
-          <div className="pointer-events-none absolute -right-32 top-20 z-0 h-72 w-72 rounded-full bg-[#d94cb3]/15 blur-3xl animate-drift-2" />
-          <div className="dot-grid pointer-events-none absolute inset-0 z-0 opacity-40 [mask-image:radial-gradient(ellipse_60%_60%_at_50%_0%,black,transparent)]" />
-          <div className="relative z-10 mx-auto max-w-4xl px-4 pb-8 pt-20 text-center sm:px-6 lg:px-8 lg:pt-28">
+        <section className="relative">
+          <div className="mx-auto max-w-4xl px-4 pb-8 pt-20 text-center sm:px-6 lg:px-8 lg:pt-28">
             <span className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-border-soft bg-white/5 px-4 py-1 text-xs font-medium text-foreground-muted">
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#18d3e8] opacity-75" />

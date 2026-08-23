@@ -28,6 +28,7 @@ import {
 import { BLEED_IN } from "@/lib/template-fit/constants";
 import { saveTemplateFitPayload } from "@/lib/template-fit/session";
 import BlankTemplateDownload from "@/components/configurator/BlankTemplateDownload";
+import BlankTemplateDownloadMobile from "@/components/configurator/BlankTemplateDownloadMobile";
 
 export type GenericProductConfiguratorProps = {
   product: ShopifyProduct;
@@ -467,13 +468,15 @@ export default function GenericProductConfigurator({
             />
 
             {templateFitEnabled && (
-              <BlankTemplateDownload
-                options={product.options}
-                productTitle={product.title}
-                fixedSizeInches={fixedSizeInches}
-                sizeUnit={sizeUnit}
-                bleedIn={showBleedTrim ? BLEED_IN : 0}
-              />
+              <div className="hidden lg:block">
+                <BlankTemplateDownload
+                  options={product.options}
+                  productTitle={product.title}
+                  fixedSizeInches={fixedSizeInches}
+                  sizeUnit={sizeUnit}
+                  bleedIn={showBleedTrim ? BLEED_IN : 0}
+                />
+              </div>
             )}
 
             {howToOrderVideoId && (
@@ -780,6 +783,18 @@ export default function GenericProductConfigurator({
                 : "You'll be redirected to Shopify checkout."}
             </p>
           </div>
+
+          {templateFitEnabled && (
+            <div className="lg:hidden">
+              <BlankTemplateDownloadMobile
+                options={product.options}
+                productTitle={product.title}
+                fixedSizeInches={fixedSizeInches}
+                sizeUnit={sizeUnit}
+                bleedIn={showBleedTrim ? BLEED_IN : 0}
+              />
+            </div>
+          )}
         </div>
       </div>
 

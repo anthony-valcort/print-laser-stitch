@@ -3,6 +3,7 @@ import { Inter, Orbitron, Rajdhani } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/lib/cart-store";
 import AmbientBackground from "@/components/AmbientBackground";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -60,6 +61,7 @@ export default function RootLayout({
       >
         <AmbientBackground />
         <CartProvider>{children}</CartProvider>
+        <SpeedInsights />
       </body>
     </html>
   );

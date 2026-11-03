@@ -1,6 +1,7 @@
 "use client";
 
 import { parseSizeInches, type SizeUnit } from "@/lib/parse-size";
+import { tapFeedback } from "@/lib/interactions";
 
 /**
  * Tier-style option pickers for print products: size cards that show the
@@ -223,11 +224,14 @@ export function SizeCards({
           <button
             key={v}
             type="button"
-            onClick={() => setOption(opt.name, v)}
+            onClick={() => {
+              tapFeedback();
+              setOption(opt.name, v);
+            }}
             aria-pressed={active}
             className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition active:scale-[0.98] ${
               active
-                ? "border-[#d9f000] bg-[#d9f000]/10 text-[#d9f000] shadow-[0_0_24px_rgba(217,240,0,0.15)]"
+                ? "option-pop border-[#d9f000] bg-[#d9f000]/10 text-[#d9f000] shadow-[0_0_24px_rgba(217,240,0,0.15)]"
                 : "border-border-soft bg-white/3 text-foreground-muted hover:border-white/25 hover:bg-white/6"
             }`}
           >
@@ -303,11 +307,14 @@ export function QuantityTierCards({
           <button
             key={t.v}
             type="button"
-            onClick={() => setOption(opt.name, t.v)}
+            onClick={() => {
+              tapFeedback();
+              setOption(opt.name, t.v);
+            }}
             aria-pressed={active}
             className={`relative flex flex-col items-center rounded-xl border px-2 pb-2.5 pt-4 text-center transition active:scale-[0.98] ${
               active
-                ? "border-[#d9f000] bg-[#d9f000]/10 shadow-[0_0_24px_rgba(217,240,0,0.15)]"
+                ? "option-pop border-[#d9f000] bg-[#d9f000]/10 shadow-[0_0_24px_rgba(217,240,0,0.15)]"
                 : "border-border-soft bg-white/3 hover:border-white/25 hover:bg-white/6"
             }`}
           >
@@ -384,11 +391,14 @@ export function SidesPicker({
             <button
               key={v}
               type="button"
-              onClick={() => setOption(opt.name, v)}
+              onClick={() => {
+                tapFeedback();
+                setOption(opt.name, v);
+              }}
               aria-pressed={active}
               className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-sm font-semibold transition active:scale-[0.98] ${
                 active
-                  ? "border-[#d9f000] bg-[#d9f000]/10 text-[#d9f000]"
+                  ? "option-pop border-[#d9f000] bg-[#d9f000]/10 text-[#d9f000]"
                   : "border-border-soft bg-white/3 text-foreground hover:bg-white/6"
               }`}
             >

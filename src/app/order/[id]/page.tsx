@@ -139,18 +139,15 @@ export default async function OrderPage({ params }: { params: Params }) {
             <div className="flex items-start gap-2">
               <span className="mt-0.5 text-lg">⏳</span>
               <div className="flex-1">
+                {/* The checkout link is NOT shown here: this page is public by
+                    order number, and the checkout link can reveal the
+                    customer's email and address. Customers resume from their
+                    cart, their account, or the invoice email instead. */}
                 <p>
                   We&apos;re still waiting for your payment. If you closed the
-                  checkout window, you can resume here:
+                  checkout window, you can resume from your cart, your account
+                  orders page, or the payment link in your invoice email.
                 </p>
-                {order.invoiceUrl && (
-                  <a
-                    href={order.invoiceUrl}
-                    className="mt-3 inline-flex rounded-md accent-gradient px-5 py-2 font-headline text-xs font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 hover:brightness-110"
-                  >
-                    Resume payment →
-                  </a>
-                )}
               </div>
             </div>
           )}

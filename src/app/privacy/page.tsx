@@ -134,7 +134,7 @@ export default function PrivacyPage() {
             <p>
               Print Laser Stitch
               <br />
-              3141 SE Dominica Terrace, Stuart, FL 34997
+              3153 SE Dominica Terrace, Stuart, FL 34997
               <br />
               (772) 985-2854
               <br />

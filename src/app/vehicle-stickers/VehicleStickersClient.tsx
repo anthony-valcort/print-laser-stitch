@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, type CSSProperties } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart-store";
 import {
@@ -136,7 +136,7 @@ export default function VehicleStickersClient({
   return (
     <>
       {/* Page header */}
-      <div className="mx-auto max-w-7xl px-4 pb-4 pt-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl animate-fade-up px-4 pb-4 pt-8 sm:px-6 sm:pt-10 lg:px-8">
         <span className="inline-block rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
           Vehicle-specific decal kits
         </span>
@@ -152,7 +152,7 @@ export default function VehicleStickersClient({
       </div>
 
       {/* Sticky filters */}
-      <div className="sticky top-0 z-20 border-b border-border-soft bg-background/90 backdrop-blur">
+      <div className="sticky top-16 z-20 border-b border-border-soft bg-background/90 backdrop-blur">
         <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center gap-2">
             <input
@@ -160,26 +160,26 @@ export default function VehicleStickersClient({
               placeholder="Search make or model…"
               value={search}
               onChange={(e) => { setSearch(e.target.value); setSelected(null); }}
-              className="h-9 min-w-0 flex-1 rounded-lg border border-border-soft bg-surface px-3 font-headline text-sm outline-none focus:border-[#18d3e8] focus:ring-1 focus:ring-[#18d3e8]"
+              className="h-10 w-full min-w-0 basis-full rounded-lg border border-border-soft bg-surface px-3 font-headline text-base outline-none focus:border-[#18d3e8] focus:ring-1 focus:ring-[#18d3e8] sm:h-9 sm:basis-auto sm:flex-1 sm:text-sm"
             />
             <select value={make} onChange={(e) => handleMakeChange(e.target.value)}
-              className="h-9 rounded-lg border border-border-soft bg-surface px-3 font-headline text-sm outline-none focus:border-[#18d3e8]">
+              className="h-10 min-w-0 flex-1 rounded-lg border border-border-soft bg-surface px-2 font-headline text-base outline-none focus:border-[#18d3e8] sm:h-9 sm:flex-none sm:px-3 sm:text-sm">
               <option value="">All Makes</option>
               {makes.map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
             <select value={model} onChange={(e) => handleModelChange(e.target.value)} disabled={!make}
-              className="h-9 rounded-lg border border-border-soft bg-surface px-3 font-headline text-sm outline-none focus:border-[#18d3e8] disabled:opacity-40">
+              className="h-10 min-w-0 flex-1 rounded-lg border border-border-soft bg-surface px-2 font-headline text-base outline-none focus:border-[#18d3e8] sm:h-9 sm:flex-none sm:px-3 sm:text-sm disabled:opacity-40">
               <option value="">All Models</option>
               {models.map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
             <select value={year} onChange={(e) => { setYear(e.target.value); setSelected(null); }} disabled={!model}
-              className="h-9 rounded-lg border border-border-soft bg-surface px-3 font-headline text-sm outline-none focus:border-[#18d3e8] disabled:opacity-40">
+              className="h-10 min-w-0 flex-1 rounded-lg border border-border-soft bg-surface px-2 font-headline text-base outline-none focus:border-[#18d3e8] sm:h-9 sm:flex-none sm:px-3 sm:text-sm disabled:opacity-40">
               <option value="">All Years</option>
               {years.map((y) => <option key={y} value={y}>{y}</option>)}
             </select>
             {itemCount > 0 && (
               <Link href="/cart"
-                className="relative ml-auto flex h-9 items-center gap-2 rounded-lg bg-[#d9f000] px-4 font-headline text-sm font-bold text-black transition hover:brightness-110">
+                className="relative flex h-10 basis-full items-center justify-center gap-2 rounded-lg bg-[#d9f000] px-4 font-headline text-sm font-bold text-black transition hover:brightness-110 sm:ml-auto sm:h-9 sm:basis-auto">
                 🛒 View Cart
                 <span className="grid h-5 w-5 place-items-center rounded-full bg-black text-[10px] font-black text-[#d9f000]">
                   {itemCount}
@@ -196,9 +196,9 @@ export default function VehicleStickersClient({
         {selected && (
           <div className="mb-10 overflow-hidden rounded-2xl border border-[#18d3e8]/40 bg-surface shadow-[0_0_40px_rgba(24,211,232,0.08)]">
             {/* Header */}
-            <div className="flex items-center justify-between gap-4 border-b border-border-soft px-6 py-4">
+            <div className="flex items-start justify-between gap-3 border-b border-border-soft px-4 py-4 sm:items-center sm:gap-4 sm:px-6">
               <div>
-                <div className="font-display text-2xl font-black uppercase">
+                <div className="font-display text-xl font-black uppercase sm:text-2xl">
                   {selected.make} {selected.model}
                 </div>
                 <div className="font-headline text-sm text-foreground-muted">
@@ -212,7 +212,7 @@ export default function VehicleStickersClient({
             </div>
 
             {/* Year picker */}
-            <div className="border-b border-border-soft px-6 py-4">
+            <div className="border-b border-border-soft px-4 py-4 sm:px-6">
               <div className="mb-2 font-headline text-xs font-bold uppercase tracking-wider text-foreground-muted">Year</div>
               <div className="flex flex-wrap gap-2">
                 {[...selected.years].sort((a, b) => b - a).map((y) => (
@@ -229,7 +229,7 @@ export default function VehicleStickersClient({
             </div>
 
             {/* Part cards */}
-            <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 p-3 sm:gap-4 sm:p-6 lg:grid-cols-4">
               {ALL_PARTS.map((part) => {
                 const info = selected.parts[part];
                 if (!info) return null;
@@ -245,9 +245,9 @@ export default function VehicleStickersClient({
                     <button onClick={() => openDetail(part)} className="relative block w-full overflow-hidden focus:outline-none">
                       {imgs[0] ? (
                         <img src={imgs[0]} alt={PART_LABELS[part]}
-                          className="h-44 w-full object-cover transition group-hover:scale-[1.03]" />
+                          className="h-28 w-full object-cover transition duration-500 group-hover:scale-[1.05] sm:h-44" />
                       ) : (
-                        <div className="flex h-44 w-full items-center justify-center bg-white/5 text-6xl transition group-hover:scale-105">
+                        <div className="flex h-28 w-full items-center justify-center bg-white/5 text-5xl transition group-hover:scale-105 sm:h-44 sm:text-6xl">
                           {PART_ICONS[part]}
                         </div>
                       )}
@@ -264,25 +264,25 @@ export default function VehicleStickersClient({
                     </button>
 
                     {/* Info + actions */}
-                    <div className="flex flex-1 flex-col gap-3 p-4">
+                    <div className="flex flex-1 flex-col gap-2 p-3 sm:gap-3 sm:p-4">
                       <div>
                         <div className="font-headline text-sm font-bold">{PART_LABELS[part]}</div>
                         {info.skinName && (
                           <div className="text-xs text-foreground-muted">{info.skinName}</div>
                         )}
-                        <div className="font-headline text-2xl font-black text-[#d9f000]">
+                        <div className="font-headline text-xl font-black text-[#d9f000] sm:text-2xl">
                           ${info.price.toFixed(2)}
                         </div>
                       </div>
                       <div className="mt-auto flex gap-2">
                         <button onClick={() => openDetail(part)}
-                          className="flex-1 rounded-xl border border-border-soft py-2 font-headline text-xs font-semibold text-foreground-muted transition hover:border-[#18d3e8] hover:text-[#18d3e8]">
+                          className="hidden flex-1 rounded-xl border border-border-soft py-2 font-headline text-xs font-semibold text-foreground-muted transition hover:border-[#18d3e8] hover:text-[#18d3e8] sm:block">
                           Details
                         </button>
                         <button
                           onClick={() => addToCart(part)}
                           disabled={inCart || justAddedThis}
-                          className={`flex-1 rounded-xl py-2 font-headline text-xs font-black uppercase tracking-wide transition ${
+                          className={`flex-1 rounded-xl py-2.5 font-headline text-xs font-black uppercase tracking-wide transition sm:py-2 ${
                             inCart
                               ? "cursor-default bg-[#18d3e8]/15 text-[#18d3e8]"
                               : justAddedThis
@@ -300,7 +300,7 @@ export default function VehicleStickersClient({
 
             {/* View cart bar (shown after any item added) */}
             {itemCount > 0 && (
-              <div className="border-t border-border-soft bg-[#18d3e8]/5 px-6 py-3 flex items-center justify-between gap-4">
+              <div className="flex items-center justify-between gap-4 border-t border-border-soft bg-[#18d3e8]/5 px-4 py-3 sm:px-6">
                 <span className="font-headline text-sm text-[#18d3e8]">
                   {itemCount} item{itemCount !== 1 ? "s" : ""} in your cart
                 </span>
@@ -323,31 +323,33 @@ export default function VehicleStickersClient({
             <div className="mb-4 font-headline text-sm text-foreground-muted">
               {filtered.length} vehicle{filtered.length !== 1 ? "s" : ""} found
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {filtered.map((v) => {
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+              {filtered.map((v, i) => {
                 const isActive = selected?.id === v.id;
                 const partCount = Object.keys(v.parts).length;
                 return (
                   <button key={v.id} onClick={() => selectVehicle(v)}
-                    className={`group flex flex-col gap-3 rounded-xl border p-5 text-left transition hover:-translate-y-0.5 ${
+                    data-reveal="scale"
+                    style={{ "--reveal-delay": `${(i % 4) * 70}ms` } as CSSProperties}
+                    className={`group flex flex-col gap-2 rounded-xl border p-3 text-left hover:-translate-y-0.5 sm:gap-3 sm:p-5 ${
                       isActive
                         ? "border-[#18d3e8] bg-[#18d3e8]/10 shadow-[0_0_24px_rgba(24,211,232,0.2)]"
                         : "border-border-soft bg-surface hover:border-[#18d3e8]/50"
                     }`}>
                     {v.imageUrl ? (
                       <img src={v.imageUrl} alt={`${v.make} ${v.model}`}
-                        className="h-24 w-full rounded-lg object-cover" />
+                        className="h-20 w-full rounded-lg object-cover transition duration-500 group-hover:scale-[1.04] sm:h-24" />
                     ) : (
-                      <div className="flex h-24 w-full items-center justify-center rounded-lg bg-white/5 text-5xl">🚗</div>
+                      <div className="flex h-20 w-full items-center justify-center rounded-lg bg-white/5 text-4xl sm:h-24 sm:text-5xl">🚗</div>
                     )}
                     <div>
-                      <div className="font-display text-base font-black uppercase">{v.make}</div>
-                      <div className="font-headline text-sm font-semibold text-foreground-muted">{v.model}</div>
+                      <div className="font-display text-sm font-black uppercase sm:text-base">{v.make}</div>
+                      <div className="line-clamp-1 font-headline text-xs font-semibold text-foreground-muted sm:text-sm">{v.model}</div>
                       <div className="mt-1 font-headline text-[11px] text-foreground-muted/70">
                         {v.years[0]}–{v.years[v.years.length - 1]}
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="hidden flex-wrap gap-1 sm:flex">
                       {ALL_PARTS.filter((p) => v.parts[p]).map((p) => (
                         <span key={p}
                           className="rounded-full border border-[#d9f000]/30 bg-[#d9f000]/10 px-2 py-0.5 font-headline text-[10px] text-[#d9f000]">
@@ -355,7 +357,7 @@ export default function VehicleStickersClient({
                         </span>
                       ))}
                     </div>
-                    <div className="mt-auto font-headline text-[11px] font-bold uppercase tracking-wider text-[#18d3e8]">
+                    <div className="mt-auto font-headline text-[10px] font-bold uppercase tracking-wider text-[#18d3e8] sm:text-[11px]">
                       {partCount} set{partCount !== 1 ? "s" : ""} available →
                     </div>
                   </button>

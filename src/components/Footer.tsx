@@ -214,7 +214,7 @@ export default function Footer() {
               (772) 985-2854
             </a>
             <a
-              href="https://www.google.com/maps/search/?api=1&query=3141+SE+Dominica+Terrace%2C+Stuart%2C+FL+34997"
+              href="https://www.google.com/maps/search/?api=1&query=3153+SE+Dominica+Terrace%2C+Stuart%2C+FL+34997"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-3 flex items-start gap-2 text-sm text-foreground-muted transition hover:text-[#18d3e8]"
@@ -233,7 +233,7 @@ export default function Footer() {
                 <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
-              <span>3141 SE Dominica Terrace, Stuart, FL 34997</span>
+              <span>3153 SE Dominica Terrace, Stuart, FL 34997</span>
             </a>
           </div>
         </div>

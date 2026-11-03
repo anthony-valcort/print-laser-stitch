@@ -5,9 +5,10 @@ import FAQSection from "@/components/FAQSection";
 import ProductPageShell from "@/components/ProductPageShell";
 
 export const metadata: Metadata = {
-  title: "Engraved Speed Bottle Openers · Print Laser Stitch",
+  title: "Engraved Bottle Openers in Stuart, FL | Print Laser Stitch",
   description:
-    "Stainless steel speed bottle openers laser-engraved with your design. Perfect for bars, weddings, corporate gifts.",
+    "Stainless steel speed bottle openers laser-engraved with your design. Perfect for bars, weddings and corporate gifts. Made in Stuart, Florida.",
+  alternates: { canonical: "/products/engraved-bottle-openers" },
 };
 
 export const revalidate = 300;

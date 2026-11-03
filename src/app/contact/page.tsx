@@ -59,7 +59,7 @@ const INFO_CARDS = [
     ],
   },
   {
-    href: "https://www.google.com/maps/search/?api=1&query=3141+SE+Dominica+Terrace%2C+Stuart%2C+FL+34997",
+    href: "https://www.google.com/maps/search/?api=1&query=3153+SE+Dominica+Terrace%2C+Stuart%2C+FL+34997",
     external: true,
     accent: "from-[#18d3e8]/15 to-[#d94cb3]/0",
     ring: "hover:border-[#18d3e8]/50",
@@ -71,7 +71,7 @@ const INFO_CARDS = [
         <circle cx="12" cy="10" r="3" />
       </>
     ),
-    title: "3141 SE Dominica Terrace",
+    title: "3153 SE Dominica Terrace",
     sub: "Stuart, FL 34997",
   },
 ];

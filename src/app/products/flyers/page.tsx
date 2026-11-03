@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/products/flyers" },
 };
 
+// Tier-card pricing (size / sides / quantity) is auto-detected from the
+// product's Shopify options — see PrintTierPicker.
 export const revalidate = 300;
 
 export default function FlyersPage() {

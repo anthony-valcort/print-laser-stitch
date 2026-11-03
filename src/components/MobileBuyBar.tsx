@@ -12,10 +12,13 @@ export default function MobileBuyBar({
   total,
   targetId,
   label = "Review & add to cart",
+  note,
 }: {
   total: number;
   targetId: string;
   label?: string;
+  /** Short highlight under the total, e.g. bulk savings. */
+  note?: string;
 }) {
   const [targetVisible, setTargetVisible] = useState(true);
   const [scrolled, setScrolled] = useState(false);
@@ -64,6 +67,11 @@ export default function MobileBuyBar({
           <div className="font-display text-xl font-black tabular-nums text-[#d9f000]">
             {total > 0 ? `$${total.toFixed(2)}` : "—"}
           </div>
+          {note && (
+            <div className="truncate text-[11px] font-semibold text-[#18d3e8]">
+              {note}
+            </div>
+          )}
         </div>
         <button
           type="button"

@@ -47,7 +47,8 @@ export default function DecalCalculator() {
   const [form, setForm] = useState(EMPTY_PANEL_FORM);
   const [material, setMaterial] = useState<MaterialKey>("perforated-film");
   const [customPricePerSqFt, setCustomPricePerSqFt] = useState<string>("");
-  const [discountPercent, setDiscountPercent] = useState<string>("0");
+  // Discounts are no longer customer-editable (security fix).
+  const discountPercent = "0";
   const [notes, setNotes] = useState("");
   const [panelImage, setPanelImage] = useState<UploadSlot>(EMPTY_UPLOAD_SLOT);
   const [toast, setToast] = useState<string | null>(null);
@@ -503,21 +504,6 @@ export default function DecalCalculator() {
                     <span className="font-mono font-bold text-cyan-300">
                       ${result.subtotal.toFixed(2)}
                     </span>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-3">
-                    <label className="text-foreground-muted">
-                      Discount (%):
-                    </label>
-                    <input
-                      type="number"
-                      value={discountPercent}
-                      onChange={(e) => setDiscountPercent(e.target.value)}
-                      min={0}
-                      max={100}
-                      className="w-32 rounded-lg border border-cyan-400/40 bg-white/4 px-3 py-1.5 text-right text-sm outline-none ring-highlight/40 focus:ring-2"
-                      suppressHydrationWarning
-                    />
                   </div>
 
                   <div className="flex items-center justify-between">

@@ -5,9 +5,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CategoryGrid from "@/components/CategoryGrid";
-import ScrollReveal from "@/components/ScrollReveal";
 import CountUp from "@/components/CountUp";
-import MobileQuoteBar from "@/components/MobileQuoteBar";
 import { getAllCollections } from "@/lib/shopify-collections";
 
 export const revalidate = 300;
@@ -46,7 +44,6 @@ export default async function Home() {
   return (
     <>
       <Header />
-      <ScrollReveal />
       <main className="flex-1">
         {/* HERO — image first on phones (people buy with their eyes), split on desktop */}
         <section className="relative isolate overflow-x-clip">
@@ -672,7 +669,6 @@ export default async function Home() {
         </section>
       </main>
       <Footer />
-      <MobileQuoteBar />
     </>
   );
 }

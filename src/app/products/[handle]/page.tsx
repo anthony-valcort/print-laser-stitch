@@ -14,6 +14,8 @@ import { ShopifyError } from "@/lib/shopify";
 import { isSizeOption } from "@/components/configurator/colors";
 import { getTemplateFitOverrides } from "@/lib/product-template-fit-overrides";
 import { HOW_TO_ORDER_VIDEO_IDS } from "@/lib/how-to-order-videos";
+import ProductJsonLd from "@/components/ProductJsonLd";
+import { metaDescriptionFromHtml, productPath } from "@/lib/seo";
 
 /**
  * Does this Size option's values look like garment sizes (apparel) vs
@@ -53,11 +55,22 @@ export async function generateMetadata({
   try {
     const product = await getProductByHandle(handle);
     if (!product) return { title: "Product not found · Print Laser Stitch" };
+    const description =
+      metaDescriptionFromHtml(product.descriptionHtml) ||
+      `${product.title} from Print Laser Stitch in Stuart, Florida.`;
+    const image = product.featuredImage?.url;
     return {
-      title: `${product.title} · Print Laser Stitch`,
-      description: product.descriptionHtml
-        .replace(/<[^>]+>/g, "")
-        .slice(0, 160),
+      title: `${product.title} | Print Laser Stitch`,
+      description,
+      // Products with a dedicated page point Google there, so the two URLs
+      // don't compete as duplicates.
+      alternates: { canonical: productPath(product.handle) },
+      openGraph: {
+        title: product.title,
+        description,
+        url: productPath(product.handle),
+        ...(image ? { images: [{ url: image }] } : {}),
+      },
     };
   } catch {
     return { title: "Product · Print Laser Stitch" };
@@ -128,6 +141,7 @@ export default async function DynamicProductPage({
     <>
       <Header />
       <main className="flex-1">
+        <ProductJsonLd product={product} />
         {useSizeMatrix ? (
           <TShirtConfigurator
             product={product}

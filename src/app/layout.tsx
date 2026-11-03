@@ -3,6 +3,8 @@ import { Inter, Orbitron, Rajdhani } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/lib/cart-store";
 import AmbientBackground from "@/components/AmbientBackground";
+import JsonLd from "@/components/JsonLd";
+import { localBusinessJsonLd, websiteJsonLd } from "@/lib/seo";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -22,15 +24,19 @@ const rajdhani = Rajdhani({
 });
 
 const SITE_URL = "https://www.printlaserstitch.com";
+const SITE_TITLE = "Custom Printing & Embroidery in Stuart, FL | Print Laser Stitch";
 const SITE_DESCRIPTION =
-  "Custom stickers, t-shirts, business cards, banners, embroidery, and more. Designed and printed for your brand.";
+  "Stuart, FL print shop for custom embroidered polos, t-shirts, stickers, banners, signs and laser engraving. Instant online pricing and bulk discounts.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Print Laser Stitch",
+  title: SITE_TITLE,
   description: SITE_DESCRIPTION,
+  applicationName: "Print Laser Stitch",
   openGraph: {
-    title: "Print Laser Stitch",
+    type: "website",
+    locale: "en_US",
+    title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
     siteName: "Print Laser Stitch",
@@ -38,9 +44,14 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Print Laser Stitch",
+    title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
   },
 };
 
@@ -58,6 +69,7 @@ export default function RootLayout({
         className="min-h-full flex flex-col overflow-x-hidden bg-background text-foreground isolate"
         suppressHydrationWarning
       >
+        <JsonLd data={[localBusinessJsonLd(), websiteJsonLd()]} />
         <AmbientBackground />
         <CartProvider>{children}</CartProvider>
       </body>

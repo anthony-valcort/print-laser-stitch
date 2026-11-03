@@ -1,16 +1,36 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+
+/** Routes with their own buy/quote actions (or private pages) skip the bar. */
+const HIDDEN_PREFIXES = [
+  "/products/",
+  "/cart",
+  "/account",
+  "/admin",
+  "/order",
+  "/mobile-proof",
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/decal-quote",
+  "/signage-quotes",
+  "/vehicle-stickers",
+];
 
 /**
  * Phone-only sticky action bar: Call + Get a Quote. Slides in once the
  * visitor scrolls past the hero and tucks away when the footer is on screen.
  */
 export default function MobileQuoteBar() {
+  const pathname = usePathname() ?? "/";
+  const hidden = HIDDEN_PREFIXES.some((p) => pathname.startsWith(p));
   const [show, setShow] = useState(false);
 
   useEffect(() => {
+    if (hidden) return;
     const footer = document.querySelector("footer");
     let footerVisible = false;
     const update = () => setShow(window.scrollY > 520 && !footerVisible);
@@ -29,7 +49,9 @@ export default function MobileQuoteBar() {
       window.removeEventListener("scroll", update);
       io?.disconnect();
     };
-  }, []);
+  }, [hidden, pathname]);
+
+  if (hidden) return null;
 
   return (
     <div

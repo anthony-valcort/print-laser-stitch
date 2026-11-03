@@ -148,12 +148,12 @@ export default function SignageCalculator() {
           Back to home
         </Link>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 animate-fade-up text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
             <span className="h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />
             Print &amp; install quote generator
           </span>
-          <h1 className="mt-5 font-display text-4xl font-black uppercase tracking-tight sm:text-5xl lg:text-6xl">
+          <h1 className="mt-5 font-display text-[2.3rem] font-black uppercase leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
             Decal{" "}
             <span className="bg-linear-to-r from-[#d9f000] via-[#18d3e8] to-[#d94cb3] bg-clip-text text-transparent">
               Signage

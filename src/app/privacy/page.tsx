@@ -23,8 +23,8 @@ export default function PrivacyPage() {
     <>
       <Header />
       <main className="flex-1">
-        <article className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-          <header>
+        <article className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
+          <header className="animate-fade-up">
             <span className="font-headline text-[11px] uppercase tracking-[0.2em] text-[#d9f000]">
               Effective August 8, 2026
             </span>

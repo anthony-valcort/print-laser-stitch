@@ -5,6 +5,8 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { BLOG_REDIRECTS } from "@/lib/blog-redirects";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ReadingProgress from "@/components/ReadingProgress";
+import { fadeDelay, revealDelay } from "@/lib/reveal";
 import { getArticleByHandle, getBlogArticles } from "@/lib/shopify-blog";
 
 export const revalidate = 600;
@@ -97,6 +99,7 @@ export default async function ArticlePage({
   return (
     <>
       <Header />
+      <ReadingProgress />
       <main className="flex-1">
         {/* Breadcrumb */}
         <div className="border-b border-border-soft bg-background-soft/60">
@@ -119,13 +122,13 @@ export default async function ArticlePage({
           </div>
         </div>
 
-        <article className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-          <header>
+        <article className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
+          <header className="animate-fade-up">
             <span className="font-headline text-[11px] uppercase tracking-[0.2em] text-[#d9f000]">
               {formatDate(article.publishedAt)}
               {article.author ? ` · by ${article.author}` : ""}
             </span>
-            <h1 className="mt-4 font-display text-3xl font-black uppercase leading-[1.1] tracking-tight sm:text-4xl">
+            <h1 className="mt-4 font-display text-[1.7rem] font-black uppercase leading-[1.1] tracking-tight sm:text-4xl">
               {article.title}
             </h1>
             {article.excerpt && (
@@ -136,7 +139,10 @@ export default async function ArticlePage({
           </header>
 
           {article.image?.url && (
-            <div className="relative mt-8 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft bg-white/5">
+            <div
+              className="relative mt-6 aspect-video w-full animate-fade-up overflow-hidden rounded-2xl border border-border-soft bg-white/5 sm:mt-8"
+              style={fadeDelay(120)}
+            >
               <Image
                 src={article.image.url}
                 alt={article.image.altText ?? article.title}
@@ -154,7 +160,41 @@ export default async function ArticlePage({
             dangerouslySetInnerHTML={{ __html: article.contentHtml }}
           />
 
-          <div className="mt-12 border-t border-border-soft pt-8">
+          {/* Turn readers into customers */}
+          <div
+            data-reveal
+            className="relative mt-12 overflow-hidden rounded-3xl border border-[#d9f000]/30 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#18d3e8]/10 p-6 sm:p-8"
+          >
+            <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#d9f000]/15 blur-3xl" />
+            <div className="relative">
+              <span className="font-headline text-[11px] uppercase tracking-[0.2em] text-[#d9f000]">
+                Print Laser Stitch · Stuart, FL
+              </span>
+              <h2 className="mt-2 font-display text-2xl font-black uppercase tracking-tight">
+                Ready to start your project?
+              </h2>
+              <p className="mt-2 text-sm text-foreground-muted">
+                Get instant pricing online or talk to a real person at our
+                shop — we&apos;ll help you get it right the first time.
+              </p>
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/decal-quote"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl accent-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/25 transition hover:brightness-110 sm:rounded-md"
+                >
+                  Get a Quote
+                </Link>
+                <a
+                  href="tel:+17729852854"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-border-strong bg-white/5 px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-foreground transition hover:bg-white/10 sm:rounded-md"
+                >
+                  Call (772) 985-2854
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-10 border-t border-border-soft pt-8">
             <Link
               href="/blog"
               className="inline-flex items-center gap-2 rounded-full border border-border-strong bg-white/5 px-5 py-2 font-headline text-sm font-semibold uppercase tracking-wider hover:bg-white/10"
@@ -166,23 +206,25 @@ export default async function ArticlePage({
 
         {more.length > 0 && (
           <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-            <h2 className="mb-6 font-display text-2xl font-black uppercase tracking-tight">
+            <h2 className="mb-6 font-display text-2xl font-black uppercase tracking-tight" data-reveal>
               Keep reading
             </h2>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {more.map((a) => (
+            <div className="grid gap-3 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+              {more.map((a, i) => (
                 <Link
                   key={a.handle}
                   href={`/blog/${a.handle}`}
-                  className="group flex flex-col overflow-hidden rounded-2xl border border-border-soft bg-surface transition hover:-translate-y-1 hover:border-[#18d3e8]/40"
+                  data-reveal
+                  style={revealDelay(i * 90)}
+                  className="group flex flex-row overflow-hidden rounded-2xl border border-border-soft bg-surface hover:-translate-y-1 hover:border-[#18d3e8]/40 sm:flex-col"
                 >
-                  <div className="relative aspect-16/10 w-full overflow-hidden bg-white/5">
+                  <div className="relative aspect-square w-28 shrink-0 overflow-hidden bg-white/5 sm:aspect-16/10 sm:w-full">
                     {a.image?.url ? (
                       <Image
                         src={a.image.url}
                         alt={a.image.altText ?? a.title}
                         fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        sizes="(max-width: 640px) 112px, (max-width: 1024px) 50vw, 33vw"
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
@@ -191,7 +233,7 @@ export default async function ArticlePage({
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-1 flex-col gap-2 p-5">
+                  <div className="flex min-w-0 flex-1 flex-col gap-2 p-3 sm:p-5">
                     <span className="font-headline text-[10px] uppercase tracking-[0.2em] text-foreground-muted">
                       {formatDate(a.publishedAt)}
                     </span>

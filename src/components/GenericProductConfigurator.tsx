@@ -1,5 +1,6 @@
 "use client";
 
+import MobileBuyBar from "@/components/MobileBuyBar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -737,6 +738,7 @@ export default function GenericProductConfigurator({
             </div>
 
             <button
+              id="buy-button"
               type="button"
               onClick={
                 willUseTemplateFit ? handleContinueToTemplateFit : handleAddToCart
@@ -798,6 +800,7 @@ export default function GenericProductConfigurator({
         </div>
       </div>
 
+      <MobileBuyBar total={total} targetId="buy-button" label="Review order" />
       {toast && (
         <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full border border-border-strong bg-surface-elevated px-5 py-3 text-sm shadow-2xl shadow-black/40">
           {toast}

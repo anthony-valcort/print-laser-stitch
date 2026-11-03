@@ -5,9 +5,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CategoryGrid from "@/components/CategoryGrid";
-import ScrollReveal from "@/components/ScrollReveal";
 import CountUp from "@/components/CountUp";
-import MobileQuoteBar from "@/components/MobileQuoteBar";
 import { getAllCollections } from "@/lib/shopify-collections";
 
 export const revalidate = 300;
@@ -46,7 +44,6 @@ export default async function Home() {
   return (
     <>
       <Header />
-      <ScrollReveal />
       <main className="flex-1">
         {/* HERO — image first on phones (people buy with their eyes), split on desktop */}
         <section className="relative isolate overflow-x-clip">
@@ -319,13 +316,14 @@ export default async function Home() {
                   <span className="accent-gradient-text">whole crew.</span>
                 </h2>
                 <p className="mt-4 max-w-xl text-base text-foreground-muted">
-                  Embroidered polos with your logo for contractors, offices,
-                  restaurants and teams. The more you order, the more you save —
-                  bulk pricing is applied automatically at checkout.
+                  Polos, tees, long sleeves and tanks with your logo for
+                  contractors, offices, restaurants and teams. The more you
+                  order, the more you save — bulk pricing is applied
+                  automatically on every garment.
                 </p>
                 <ul className="mt-6 space-y-2 text-sm text-foreground/85">
                   <li className="flex items-center gap-2">
-                    <CheckIcon /> See your logo on the polo before you order
+                    <CheckIcon /> Mix sizes — every piece counts toward your discount
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckIcon /> Free design proof before we stitch
@@ -336,10 +334,10 @@ export default async function Home() {
                 </ul>
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                   <Link
-                    href="/products/embroidered-polos"
+                    href="/collections/custom-apparel"
                     className="group inline-flex items-center justify-center gap-2 rounded-xl accent-gradient px-6 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 transition hover:brightness-110 active:scale-[0.98] sm:rounded-md sm:py-3"
                   >
-                    Shop Embroidered Polos
+                    Shop Custom Apparel
                     <span className="transition-transform duration-300 group-hover:translate-x-1">
                       <Arrow />
                     </span>
@@ -378,7 +376,7 @@ export default async function Home() {
                         </span>
                       )}
                       <span className="font-headline text-[10px] uppercase tracking-[0.18em] text-foreground-muted sm:text-xs">
-                        {t.qty} polos
+                        {t.qty} pieces
                       </span>
                       <span
                         className={`mt-2 font-display text-3xl font-black sm:text-5xl ${color}`}
@@ -672,7 +670,6 @@ export default async function Home() {
         </section>
       </main>
       <Footer />
-      <MobileQuoteBar />
     </>
   );
 }

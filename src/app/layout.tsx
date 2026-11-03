@@ -3,6 +3,8 @@ import { Inter, Orbitron, Rajdhani } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/lib/cart-store";
 import AmbientBackground from "@/components/AmbientBackground";
+import ScrollReveal from "@/components/ScrollReveal";
+import MobileQuoteBar from "@/components/MobileQuoteBar";
 import JsonLd from "@/components/JsonLd";
 import { localBusinessJsonLd, websiteJsonLd } from "@/lib/seo";
 
@@ -72,6 +74,8 @@ export default function RootLayout({
         <JsonLd data={[localBusinessJsonLd(), websiteJsonLd()]} />
         <AmbientBackground />
         <CartProvider>{children}</CartProvider>
+        <ScrollReveal />
+        <MobileQuoteBar />
       </body>
     </html>
   );

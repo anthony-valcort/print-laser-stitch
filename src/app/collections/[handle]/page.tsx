@@ -4,6 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { fadeDelay, revealDelay } from "@/lib/reveal";
+import { GARMENT_VOLUME_TIERS, hasVolumePricing } from "@/lib/volume-discounts";
 import { getCollectionByHandle } from "@/lib/shopify-collections";
 import { ShopifyError } from "@/lib/shopify";
 
@@ -124,13 +126,13 @@ export default async function CollectionPage({
           </div>
         </div>
 
-        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="mb-10 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-            <div>
+        <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+          <div className="mb-8 flex flex-col gap-6 sm:mb-10 sm:gap-8 lg:flex-row lg:items-center lg:justify-between">
+            <div className="animate-fade-up">
               <h1
                 className={`font-display font-black uppercase tracking-tight ${
                   COLLECTION_HEADER_IMAGES[collection.handle]
-                    ? "text-4xl sm:text-5xl"
+                    ? "text-[2.1rem] leading-[1.05] sm:text-5xl"
                     : "text-3xl sm:text-4xl"
                 }`}
               >
@@ -154,7 +156,10 @@ export default async function CollectionPage({
             </div>
 
             {COLLECTION_HEADER_IMAGES[collection.handle] ? (
-              <div className="w-full shrink-0 sm:w-64 lg:w-72">
+              <div
+                className="mx-auto w-full max-w-60 shrink-0 animate-fade-up sm:mx-0 sm:w-64 sm:max-w-none lg:w-72"
+                style={fadeDelay(150)}
+              >
                 <Image
                   src={COLLECTION_HEADER_IMAGES[collection.handle]}
                   alt={`${collection.title} pricing reference`}
@@ -165,7 +170,10 @@ export default async function CollectionPage({
               </div>
             ) : (
               COLLECTION_HOW_TO_ORDER_VIDEO_IDS[collection.handle] && (
-                <div className="w-full shrink-0 lg:w-105">
+                <div
+                  className="w-full shrink-0 animate-fade-up lg:w-105"
+                  style={fadeDelay(150)}
+                >
                   <h2 className="font-display text-2xl font-black uppercase tracking-tight text-[#d9f000] sm:text-3xl">
                     How to Order
                   </h2>
@@ -188,12 +196,14 @@ export default async function CollectionPage({
               No products in this category yet. Check back soon.
             </div>
           ) : (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {collection.products.map((p) => (
+            <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4">
+              {collection.products.map((p, i) => (
                 <Link
                   key={p.id}
                   href={`/products/${p.handle}`}
-                  className="group relative flex flex-col overflow-hidden rounded-2xl border border-border-soft bg-surface transition hover:-translate-y-1 hover:border-[#d9f000]/40 hover:shadow-[0_0_40px_rgba(217,240,0,0.18)]"
+                  data-reveal="scale"
+                  style={revealDelay((i % 4) * 80)}
+                  className="group relative flex flex-col overflow-hidden rounded-2xl border border-border-soft bg-surface hover:-translate-y-1 hover:border-[#d9f000]/40 hover:shadow-[0_0_40px_rgba(217,240,0,0.18)]"
                 >
                   <div className="relative aspect-square w-full overflow-hidden bg-white/5">
                     {p.featuredImage?.url ? (
@@ -201,7 +211,7 @@ export default async function CollectionPage({
                         src={p.featuredImage.url}
                         alt={p.featuredImage.altText ?? p.title}
                         fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        sizes="(max-width: 1024px) 50vw, 25vw"
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
@@ -210,11 +220,17 @@ export default async function CollectionPage({
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-1 flex-col p-4">
-                    <div className="font-headline text-sm font-semibold leading-snug">
+                  <div className="flex flex-1 flex-col p-3 sm:p-4">
+                    <div className="line-clamp-3 font-headline text-[13px] font-semibold leading-snug sm:line-clamp-none sm:text-sm">
                       {p.title}
                     </div>
-                    <div className="mt-auto pt-3">
+                    {hasVolumePricing(p.title) && (
+                      <span className="mt-2 inline-flex w-fit items-center gap-1 rounded-full accent-gradient px-2 py-1 font-headline text-[9px] font-black uppercase tracking-wide text-black shadow-md shadow-[#d9f000]/20 sm:text-[10px]">
+                        <span aria-hidden>🏷️</span>
+                        Up to {Math.max(...GARMENT_VOLUME_TIERS.map((t) => t.percent))}% off bulk
+                      </span>
+                    )}
+                    <div className="mt-auto flex items-center justify-between gap-2 pt-2 sm:pt-3">
                       {p.minPrice ? (
                         <span className="font-headline text-sm font-bold text-[#18d3e8]">
                           From ${Number(p.minPrice).toFixed(2)}
@@ -224,6 +240,15 @@ export default async function CollectionPage({
                           View options
                         </span>
                       )}
+                      <span
+                        aria-hidden
+                        className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/5 text-foreground-muted transition group-hover:translate-x-0.5 group-hover:bg-[#d9f000] group-hover:text-black"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M5 12h14" />
+                          <path d="m12 5 7 7-7 7" />
+                        </svg>
+                      </span>
                     </div>
                   </div>
                 </Link>

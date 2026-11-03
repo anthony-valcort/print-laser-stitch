@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ProductJsonLd from "@/components/ProductJsonLd";
 import { getProductByHandle } from "@/lib/shopify-products";
 import { ShopifyError } from "@/lib/shopify";
 import GenericProductConfigurator, {
@@ -37,7 +38,12 @@ export default async function ProductPageShell({
     return <ProductMissingNotice handle={handle} error={fetchError} />;
   }
 
-  return <GenericProductConfigurator product={product} {...configProps} />;
+  return (
+    <>
+      <ProductJsonLd product={product} />
+      <GenericProductConfigurator product={product} {...configProps} />
+    </>
+  );
 }
 
 function ProductMissingNotice({

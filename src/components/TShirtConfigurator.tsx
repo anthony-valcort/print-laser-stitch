@@ -10,6 +10,11 @@ import {
   type PrintLocationKey,
 } from "@/lib/tshirt-pricing";
 import type { ShopifyMedia, ShopifyProduct } from "@/lib/shopify-products";
+import {
+  nextVolumeTier,
+  volumeDiscountPercent,
+  volumeTiersFor,
+} from "@/lib/volume-discounts";
 import { useCart } from "@/lib/cart-store";
 import type { TShirtCartItem, TShirtSizeLine } from "@/lib/cart-types";
 import {
@@ -290,6 +295,14 @@ export default function TShirtConfigurator({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [multiColor, colorLines, sizeQuantities, selectedOptions, product.variants]);
 
+  // Automatic volume discount (polos). The server re-applies the same rule
+  // at checkout from the real Shopify title — this is just for display.
+  const volumeTiers = volumeTiersFor(product.title);
+  const volumePct = volumeDiscountPercent(product.title, totalQuantity);
+  const volumeSavings = Math.round(totalPrice * volumePct) / 100;
+  const finalPrice = Math.round((totalPrice - volumeSavings) * 100) / 100;
+  const upcomingTier = nextVolumeTier(product.title, totalQuantity);
+
   // Build gallery: reference variant image first, then product media, dedup'd.
   const galleryImages = useMemo<ShopifyMedia[]>(() => {
     const imgs: ShopifyMedia[] = [];
@@ -436,7 +449,7 @@ export default function TShirtConfigurator({
               : "colors"
           }`
         : `${totalQuantity} pcs · ${sizeVariants.length} ${sizeVariants.length === 1 ? "size" : "sizes"}`,
-      totalPrice,
+      totalPrice: finalPrice,
       quantity: totalQuantity,
       productTitle: product.title,
       selectedOptions,
@@ -899,14 +912,52 @@ export default function TShirtConfigurator({
                         })}
                 </div>
               )}
+              {volumePct > 0 && (
+                <div className="mb-2 flex items-baseline justify-between gap-2 text-sm font-semibold text-white">
+                  <span>Volume discount ({volumePct}% off)</span>
+                  <span>−${volumeSavings.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex items-baseline justify-between gap-2">
                 <span className="text-sm font-medium text-white/90">
                   {totalQuantity} {totalQuantity === 1 ? "shirt" : "shirts"}
                 </span>
                 <span className="text-3xl font-bold text-white">
-                  ${totalPrice.toFixed(2)}
+                  {volumePct > 0 && (
+                    <span className="mr-2 text-base font-medium text-white/60 line-through">
+                      ${totalPrice.toFixed(2)}
+                    </span>
+                  )}
+                  ${finalPrice.toFixed(2)}
                 </span>
               </div>
+              {volumeTiers.length > 0 && (
+                <div className="mt-3 rounded-xl bg-black/20 p-3 text-xs text-white/90">
+                  <div className="mb-1.5 font-semibold uppercase tracking-wider">
+                    Bulk pricing
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {[...volumeTiers].reverse().map((t) => (
+                      <span
+                        key={t.minQty}
+                        className={`rounded-full px-2.5 py-1 font-semibold ${
+                          volumePct === t.percent
+                            ? "bg-white text-black"
+                            : "bg-white/10"
+                        }`}
+                      >
+                        {t.minQty}+ pcs · {t.percent}% off
+                      </span>
+                    ))}
+                  </div>
+                  {upcomingTier && totalQuantity > 0 && (
+                    <div className="mt-2 font-medium">
+                      Add {upcomingTier.qtyNeeded} more to save{" "}
+                      {upcomingTier.percent}%.
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="mt-1 text-right text-xs font-medium text-white/80">
                 5-12 business days, for rush orders please contact
                 info@printlaserstitch.com
@@ -945,7 +996,7 @@ export default function TShirtConfigurator({
               ) : (
                 <>
                   <span>🛒</span>
-                  Add to Cart · ${totalPrice.toFixed(2)}
+                  Add to Cart · ${finalPrice.toFixed(2)}
                 </>
               )}
             </button>

@@ -19,7 +19,8 @@
 
 import {
   GARMENT_VOLUME_TIERS,
-mix-and-match  type VolumeTier,
+  hasVolumePricing,
+  type VolumeTier,
 } from "@/lib/volume-discounts";
 
 /** Pieces required across the whole apparel mix. */

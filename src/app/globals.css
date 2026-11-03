@@ -411,3 +411,54 @@ body {
     animation: none;
   }
 }
+
+/* ---- Interaction feedback -------------------------------------------- */
+/* The cart icon reacts when something lands in it, so adding to cart has a
+   visible destination instead of silently updating a number. */
+@keyframes cart-bump {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.18) rotate(-6deg); }
+  65% { transform: scale(0.96) rotate(3deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+.cart-bump {
+  animation: cart-bump 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes cart-badge-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  55% { transform: scale(1.35); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.cart-badge-pop {
+  animation: cart-badge-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* A selected option settles into place rather than just changing colour. */
+@keyframes option-pop {
+  0% { transform: scale(0.97); }
+  55% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+.option-pop {
+  animation: option-pop 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Confirms a step is done (upload accepted, minimum met). */
+@keyframes check-in {
+  0% { transform: scale(0.2) rotate(-25deg); opacity: 0; }
+  60% { transform: scale(1.2) rotate(6deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.check-in {
+  animation: check-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cart-bump,
+  .cart-badge-pop,
+  .option-pop,
+  .check-in {
+    animation: none;
+  }
+}

@@ -26,6 +26,13 @@ import { Section } from "@/components/configurator/Section";
 import { ColorSwatch } from "@/components/configurator/ColorSwatch";
 import { ProductGallery } from "@/components/configurator/ProductGallery";
 import {
+  LogoMockupControls,
+  LogoOverlay,
+  defaultPlacement,
+  useLogoPreviewUrl,
+  type LogoPlacement,
+} from "@/components/configurator/LogoMockup";
+import {
   EMPTY_UPLOAD_SLOT,
   UploadBox,
   uploadDesign,
@@ -321,6 +328,25 @@ export default function TShirtConfigurator({
     return imgs;
   }, [referenceVariant, product.media, product.featuredImage]);
 
+  // "See your logo on the shirt" preview — embroidered apparel / polos,
+  // where the logo goes on the left chest. Visual only.
+  const mockupEnabled = /\bpolos?\b|embroider/i.test(product.title);
+  const { url: logoPreviewUrl, unsupported: logoPreviewUnsupported } =
+    useLogoPreviewUrl(mockupEnabled ? frontUpload.file : null);
+  const mainImageUrl = galleryImages[galleryIdx]?.url ?? galleryImages[0]?.url;
+  const [logoPlacement, setLogoPlacement] = useState<LogoPlacement>(() =>
+    defaultPlacement(mainImageUrl),
+  );
+  // Each photo frames the shirt differently, so re-center on the chest when
+  // the photo changes (keeping the customer's chosen size).
+  useEffect(() => {
+    setLogoPlacement((p) => ({ ...defaultPlacement(mainImageUrl), width: p.width }));
+  }, [mainImageUrl]);
+  // Show the selected color's photo as soon as a logo is added.
+  useEffect(() => {
+    if (logoPreviewUrl) setGalleryIdx(0);
+  }, [logoPreviewUrl]);
+
   // When the reference variant changes (fabric/sleeve), jump to its image.
   useEffect(() => {
     setGalleryIdx(0);
@@ -506,7 +532,37 @@ export default function TShirtConfigurator({
               idx={galleryIdx}
               setIdx={setGalleryIdx}
               title={product.title}
+              overlay={
+                logoPreviewUrl ? (
+                  <LogoOverlay
+                    logoUrl={logoPreviewUrl}
+                    placement={logoPlacement}
+                    onChange={setLogoPlacement}
+                  />
+                ) : undefined
+              }
             />
+
+            {logoPreviewUrl && (
+              <div className="mt-3">
+                <LogoMockupControls
+                  placement={logoPlacement}
+                  onChange={setLogoPlacement}
+                  onReset={() =>
+                    setLogoPlacement((p) => ({
+                      ...defaultPlacement(mainImageUrl),
+                      width: p.width,
+                    }))
+                  }
+                />
+              </div>
+            )}
+            {logoPreviewUnsupported && (
+              <p className="mt-3 rounded-2xl border border-border-soft bg-surface p-4 text-xs text-foreground-muted">
+                Your file is uploaded and ready for production. The on-shirt
+                preview works with PNG, JPG, SVG or PDF files.
+              </p>
+            )}
 
             {howToOrderVideoId && (
               <div className="mt-6">

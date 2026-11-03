@@ -114,7 +114,9 @@ export default function MixAndMatch({
               : "bg-white/10 text-foreground"
           }`}
         >
-          {status.pieces}/{MIX_MINIMUM}
+          {unlocked
+            ? `${status.pieces} pcs`
+            : `${status.pieces}/${MIX_MINIMUM}`}
         </span>
       </div>
 

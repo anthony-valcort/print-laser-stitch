@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { fadeDelay, revealDelay } from "@/lib/reveal";
 import { getBlogArticles } from "@/lib/shopify-blog";
 
 export const revalidate = 600;
@@ -40,16 +41,22 @@ export default async function BlogPage() {
         <section className="relative overflow-hidden border-b border-border-soft">
           <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[#18d3e8]/15 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-[#d94cb3]/15 blur-3xl" />
-          <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
+          <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+            <span className="inline-flex animate-fade-up items-center gap-2 rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />
               The print desk
             </span>
-            <h1 className="mt-4 font-display text-4xl font-black uppercase tracking-tight sm:text-5xl">
+            <h1
+              className="mt-4 animate-fade-up font-display text-4xl font-black uppercase tracking-tight sm:text-5xl"
+              style={fadeDelay(100)}
+            >
               From the{" "}
               <span className="accent-gradient-text">workshop</span>
             </h1>
-            <p className="mt-3 max-w-2xl text-sm text-foreground-muted sm:text-base">
+            <p
+              className="mt-3 max-w-2xl animate-fade-up text-sm text-foreground-muted sm:text-base"
+              style={fadeDelay(180)}
+            >
               Practical guides, hard-won lessons and behind-the-scenes notes on
               printing, wraps, DTF and apparel — straight from our team.
             </p>
@@ -65,11 +72,12 @@ export default async function BlogPage() {
             </p>
           </section>
         ) : (
-          <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
             {/* Featured — most recent */}
             <Link
               href={`/blog/${featured.handle}`}
-              className="group relative grid overflow-hidden rounded-3xl border border-border-soft bg-surface transition hover:border-[#d9f000]/40 hover:shadow-[0_0_50px_rgba(217,240,0,0.15)] lg:grid-cols-2"
+              className="group relative grid animate-fade-up overflow-hidden rounded-3xl border border-border-soft bg-surface transition hover:border-[#d9f000]/40 hover:shadow-[0_0_50px_rgba(217,240,0,0.15)] lg:grid-cols-2"
+              style={fadeDelay(240)}
             >
               <div className="relative aspect-[16/10] w-full overflow-hidden bg-white/5 lg:aspect-auto lg:h-full">
                 {featured.image?.url ? (
@@ -87,11 +95,11 @@ export default async function BlogPage() {
                   </div>
                 )}
               </div>
-              <div className="flex flex-col justify-center gap-4 p-7 sm:p-10">
+              <div className="flex flex-col justify-center gap-3 p-5 sm:gap-4 sm:p-10">
                 <span className="font-headline text-[11px] uppercase tracking-[0.2em] text-[#d9f000]">
                   Latest post · {formatDate(featured.publishedAt)}
                 </span>
-                <h2 className="font-display text-2xl font-black uppercase leading-tight tracking-tight sm:text-3xl">
+                <h2 className="font-display text-xl font-black uppercase leading-tight tracking-tight sm:text-3xl">
                   {featured.title}
                 </h2>
                 {featured.excerpt && (
@@ -107,20 +115,22 @@ export default async function BlogPage() {
             </Link>
 
             {rest.length > 0 && (
-              <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {rest.map((a) => (
+              <div className="mt-6 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+                {rest.map((a, i) => (
                   <Link
                     key={a.handle}
                     href={`/blog/${a.handle}`}
-                    className="group flex flex-col overflow-hidden rounded-2xl border border-border-soft bg-surface transition hover:-translate-y-1 hover:border-[#18d3e8]/40 hover:shadow-[0_0_40px_rgba(24,211,232,0.15)]"
+                    data-reveal
+                    style={revealDelay((i % 3) * 90)}
+                    className="group flex flex-row overflow-hidden rounded-2xl border border-border-soft bg-surface hover:-translate-y-1 hover:border-[#18d3e8]/40 hover:shadow-[0_0_40px_rgba(24,211,232,0.15)] sm:flex-col"
                   >
-                    <div className="relative aspect-[16/10] w-full overflow-hidden bg-white/5">
+                    <div className="relative aspect-square w-28 shrink-0 overflow-hidden bg-white/5 sm:aspect-[16/10] sm:w-full">
                       {a.image?.url ? (
                         <Image
                           src={a.image.url}
                           alt={a.image.altText ?? a.title}
                           fill
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          sizes="(max-width: 640px) 112px, (max-width: 1024px) 50vw, 33vw"
                           className="object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       ) : (
@@ -129,19 +139,19 @@ export default async function BlogPage() {
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-1 flex-col gap-3 p-5">
+                    <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-3 sm:gap-3 sm:p-5">
                       <span className="font-headline text-[10px] uppercase tracking-[0.2em] text-foreground-muted">
                         {formatDate(a.publishedAt)}
                       </span>
-                      <h3 className="font-headline text-base font-semibold leading-snug group-hover:text-[#18d3e8]">
+                      <h3 className="line-clamp-3 font-headline text-sm font-semibold leading-snug group-hover:text-[#18d3e8] sm:line-clamp-none sm:text-base">
                         {a.title}
                       </h3>
                       {a.excerpt && (
-                        <p className="line-clamp-2 text-sm text-foreground-muted">
+                        <p className="hidden text-sm text-foreground-muted sm:line-clamp-2">
                           {a.excerpt}
                         </p>
                       )}
-                      <span className="mt-auto inline-flex items-center gap-1.5 pt-2 font-headline text-xs font-bold uppercase tracking-wider text-foreground/70 group-hover:text-[#18d3e8]">
+                      <span className="mt-auto hidden items-center gap-1.5 pt-2 font-headline text-xs font-bold uppercase tracking-wider text-foreground/70 group-hover:text-[#18d3e8] sm:inline-flex">
                         Read more
                         <Arrow size={12} />
                       </span>

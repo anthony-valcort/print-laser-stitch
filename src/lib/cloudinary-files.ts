@@ -46,6 +46,14 @@ function makePublicId(filename: string): string {
   return `design-uploads/${slugifyFilename(filename)}-${stamp}-${rand}`;
 }
 
+/** File extensions the site accepts. Included in the upload signature as
+ * `allowed_formats`, so Cloudinary itself rejects anything else even if a
+ * client bypasses our checks. Videos are for the admin gallery. */
+export const ALLOWED_UPLOAD_FORMATS = [
+  "png", "jpg", "jpeg", "webp", "gif", "svg", "pdf", "ai",
+  "mp4", "mov", "webm",
+];
+
 /** Phase 1 — issue a signed Cloudinary upload target the browser can POST to
  * directly, bypassing our server for the actual file bytes. */
 export async function createStagedUpload(filename: string): Promise<StagedTarget> {
@@ -53,8 +61,9 @@ export async function createStagedUpload(filename: string): Promise<StagedTarget
 
   const timestamp = Math.floor(Date.now() / 1000);
   const publicId = makePublicId(filename);
+  const allowedFormats = ALLOWED_UPLOAD_FORMATS.join(",");
   const signature = signParams(
-    { public_id: publicId, timestamp: String(timestamp) },
+    { allowed_formats: allowedFormats, public_id: publicId, timestamp: String(timestamp) },
     apiSecret,
   );
 
@@ -62,6 +71,7 @@ export async function createStagedUpload(filename: string): Promise<StagedTarget
     url: `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`,
     resourceUrl: publicId,
     parameters: [
+      { name: "allowed_formats", value: allowedFormats },
       { name: "api_key", value: apiKey },
       { name: "timestamp", value: String(timestamp) },
       { name: "signature", value: signature },

@@ -4,9 +4,10 @@ import Footer from "@/components/Footer";
 import SignageCalculator from "@/components/SignageCalculator";
 
 export const metadata: Metadata = {
-  title: "Decal Signage Calculator · Print Laser Stitch",
+  title: "Sign & Decal Pricing Calculator | Print Laser Stitch, Stuart FL",
   description:
-    "Print & installation quote generator. Enter dimensions, pick a service plan, and get an instant quote.",
+    "Instant quotes for printed signs and decals: print only, design and print, or full installation around Stuart and the Treasure Coast.",
+  alternates: { canonical: "/signage-quotes" },
 };
 
 export default function SignageQuotesPage() {

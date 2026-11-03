@@ -5,9 +5,10 @@ import FAQSection from "@/components/FAQSection";
 import ProductPageShell from "@/components/ProductPageShell";
 
 export const metadata: Metadata = {
-  title: "Custom Engraved Cups & Tumblers · Print Laser Stitch",
+  title: "Laser Engraved Tumblers in Stuart, FL | Print Laser Stitch",
   description:
-    "Ship us your tumblers and we'll laser-engrave your custom design. Tier pricing from 1–15 up to 46–85 cups.",
+    "Send us your tumblers or cups and we'll laser-engrave your logo or design. Tiered pricing for 1 to 85 cups, from our Stuart, Florida shop.",
+  alternates: { canonical: "/products/engraved-cups" },
 };
 
 export const revalidate = 300;

@@ -8,9 +8,10 @@ import { getBlogArticles } from "@/lib/shopify-blog";
 export const revalidate = 600;
 
 export const metadata: Metadata = {
-  title: "Blog · Print Laser Stitch",
+  title: "Printing & Embroidery Tips Blog | Print Laser Stitch",
   description:
-    "Guides, tips and behind-the-scenes from the Print Laser Stitch print shop — window graphics, vehicle wraps, DTF, apparel and more.",
+    "Guides and behind-the-scenes from our Stuart, Florida print shop: window graphics, vehicle wraps, DTF, custom apparel and more.",
+  alternates: { canonical: "/blog" },
 };
 
 function formatDate(iso: string): string {

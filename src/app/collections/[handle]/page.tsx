@@ -35,10 +35,11 @@ export async function generateMetadata({
     if (!collection)
       return { title: "Category not found · Print Laser Stitch" };
     return {
-      title: `${collection.title} · Print Laser Stitch`,
+      title: `${/^custom\b/i.test(collection.title) ? "" : "Custom "}${collection.title} | Print Laser Stitch, Stuart FL`,
       description:
         collection.description.replace(/<[^>]+>/g, "").slice(0, 160) ||
-        `Browse ${collection.title} at Print Laser Stitch.`,
+        `Shop ${collection.title.toLowerCase()} from Print Laser Stitch in Stuart, Florida — instant online pricing and bulk discounts.`,
+      alternates: { canonical: `/collections/${collection.handle}` },
     };
   } catch {
     return { title: "Category · Print Laser Stitch" };

@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import { uploadBufferToCloudinary } from "@/lib/cloudinary-files";
+import { isAllowedDesignUrl } from "@/lib/allowed-design-hosts";
 import { FLATTEN_DPI } from "@/lib/template-fit/constants";
 
 type Rotation = 0 | 90 | 180 | 270;
@@ -48,6 +49,12 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    if (!isAllowedDesignUrl(imageUrl)) {
+      return NextResponse.json(
+        { error: "Image must come from an approved upload host" },
+        { status: 400 },
+      );
+    }
     const sourceResp = await fetch(imageUrl);
     if (!sourceResp.ok) {
       throw new Error(`Could not fetch source image (${sourceResp.status})`);

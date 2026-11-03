@@ -103,7 +103,7 @@ const PRODUCT_BY_HANDLE = `
         name
         values
       }
-      variants(first: 100) {
+      variants(first: 250) {
         nodes {
           id
           title

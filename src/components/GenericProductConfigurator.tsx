@@ -30,6 +30,16 @@ import { BLEED_IN } from "@/lib/template-fit/constants";
 import { saveTemplateFitPayload } from "@/lib/template-fit/session";
 import BlankTemplateDownload from "@/components/configurator/BlankTemplateDownload";
 import BlankTemplateDownloadMobile from "@/components/configurator/BlankTemplateDownloadMobile";
+import {
+  QuantityTierCards,
+  SidesPicker,
+  SizeCards,
+  hasTieredOptions,
+  isQuantityTierOption,
+  perPieceLabel,
+  tierCountLabel,
+  tieredOptionKind,
+} from "@/components/configurator/PrintTierPicker";
 
 export type GenericProductConfiguratorProps = {
   product: ShopifyProduct;
@@ -91,6 +101,15 @@ export type GenericProductConfiguratorProps = {
    * finished-size edge and a safe-area guide.
    */
   showBleedTrim?: boolean;
+  /**
+   * Show Size / Print Sides / Quantity as visual tier cards (size shapes
+   * with "from" prices, quantity cards with per-piece price and savings)
+   * instead of plain option buttons. Leave unset to auto-detect: on for
+   * any product with a dimensional Size option or a quantity-tier option,
+   * which is every print product in the catalog. Set false to force the
+   * plain buttons back.
+   */
+  tieredPrintPricing?: boolean;
 };
 
 // Detect a Shopify option that controls print sides — Flyers calls it
@@ -146,6 +165,7 @@ export default function GenericProductConfigurator({
   fixedSizeInches,
   sizeUnit = "in",
   showBleedTrim = true,
+  tieredPrintPricing,
 }: GenericProductConfiguratorProps) {
   const router = useRouter();
   const { addItem } = useCart();
@@ -204,6 +224,14 @@ export default function GenericProductConfigurator({
   const variantPrice = currentVariant ? Number(currentVariant.price) : 0;
   const effectiveQty = hasQuantityOption ? 1 : Math.max(1, quantity);
   const total = variantPrice * effectiveQty;
+  const showTiers = tieredPrintPricing ?? hasTieredOptions(product.options);
+  const tierEach = showTiers
+    ? perPieceLabel(selectedOptions, product.options, total)
+    : null;
+  const tierCount = showTiers
+    ? tierCountLabel(selectedOptions, product.options)
+    : null;
+  const tierQtyName = product.options.find(isQuantityTierOption)?.name;
 
   // Build gallery: variant image first, then product media (images +
   // videos), dedup'd.
@@ -515,7 +543,9 @@ export default function GenericProductConfigurator({
                   ${variantPrice.toFixed(2)}
                 </span>
                 <span className="text-sm font-medium text-foreground-muted">
-                  per unit
+                  {tierCount
+                    ? `for ${tierCount}${tierEach ? ` · ${tierEach}` : ""}`
+                    : "per unit"}
                 </span>
               </div>
             </div>
@@ -537,6 +567,42 @@ export default function GenericProductConfigurator({
             {/* All product options — auto-rendered by type */}
             {product.options.map((opt) => {
               const value = selectedOptions[opt.name];
+              if (showTiers) {
+                const pickerProps = {
+                  opt,
+                  variants: product.variants,
+                  selected: selectedOptions,
+                  setOption,
+                  sizeUnit,
+                  qtyOptionName: tierQtyName,
+                };
+                const kind = tieredOptionKind(opt);
+                if (kind === "quantity") {
+                  return (
+                    <Section key={opt.id} title="How many?" value={tierCount ?? value}>
+                      <QuantityTierCards {...pickerProps} />
+                    </Section>
+                  );
+                }
+                if (kind === "sides") {
+                  return (
+                    <Section key={opt.id} title={opt.name} value={value}>
+                      <SidesPicker {...pickerProps} />
+                    </Section>
+                  );
+                }
+                if (kind === "size") {
+                  return (
+                    <Section
+                      key={opt.id}
+                      title={opt.name}
+                      value={value?.replace(/\s*\([^)]*\)/, "")}
+                    >
+                      <SizeCards {...pickerProps} />
+                    </Section>
+                  );
+                }
+              }
               if (isColorOption(opt.name)) {
                 return (
                   <Section
@@ -731,6 +797,11 @@ export default function GenericProductConfigurator({
                   ${total.toFixed(2)}
                 </span>
               </div>
+              {tierEach && (
+                <div className="mt-0.5 text-right text-sm font-semibold text-white">
+                  {tierEach}
+                </div>
+              )}
               <div className="mt-1 text-right text-xs font-medium text-white/80">
                 5-12 business days, for rush orders please contact
                 info@printlaserstitch.com
@@ -800,7 +871,12 @@ export default function GenericProductConfigurator({
         </div>
       </div>
 
-      <MobileBuyBar total={total} targetId="buy-button" label="Review order" />
+      <MobileBuyBar
+        total={total}
+        targetId="buy-button"
+        label="Review order"
+        note={tierEach ?? undefined}
+      />
       {toast && (
         <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full border border-border-strong bg-surface-elevated px-5 py-3 text-sm shadow-2xl shadow-black/40">
           {toast}

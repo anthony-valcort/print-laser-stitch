@@ -5,9 +5,9 @@ import FAQSection from "@/components/FAQSection";
 import ProductPageShell from "@/components/ProductPageShell";
 
 export const metadata: Metadata = {
-  title: "Custom Flyer Printing in Stuart, FL | Print Laser Stitch",
+  title: "Custom Flyer, Brochure & Postcard Printing in Stuart, FL | Print Laser Stitch",
   description:
-    "Full-color flyers in 4×6, 5×7 and 4×5.5, single or double-sided, printed in Stuart, Florida. Bulk pricing from 100 to 1,000 with instant online quotes.",
+    "Full-color flyers, brochures and postcards in 12 sizes from 4×4 to 13×19, single or double-sided at the same price. 100 to 10,000 pieces with instant online pricing, printed for Stuart, Florida businesses.",
   alternates: { canonical: "/products/flyers" },
 };
 
@@ -20,12 +20,13 @@ export default function FlyersPage() {
       <main className="flex-1">
         <ProductPageShell
           handle="flyers"
-          badge="Bulk flyers · 5–12 business days"
+          badge="100–10,000 pcs · 5–12 business days"
           minQuantity={1}
           uploadMode="auto"
           fallbackEmoji="📄"
           howToOrderVideoId="iSvRIeYYNl4"
           requiresTemplateFit
+          tieredPrintPricing
         />
         <FAQSection />
       </main>

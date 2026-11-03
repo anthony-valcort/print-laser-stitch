@@ -303,7 +303,7 @@ export default async function Home() {
         </section>
 
         {/* Team & business orders — automatic polo volume discounts */}
-        <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+        <section className="mx-auto max-w-7xl overflow-x-clip px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
           <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br from-surface via-background-soft to-surface p-6 sm:p-12">
             <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#d9f000]/15 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-[#d94cb3]/15 blur-3xl" />
@@ -462,7 +462,7 @@ export default async function Home() {
         </section>
 
         {/* Instant quote tools — signage + decal calculators */}
-        <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+        <section className="mx-auto max-w-7xl overflow-x-clip px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
           <div className="mb-8 text-center sm:mb-10" data-reveal>
             <span className="inline-block rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
               Instant pricing

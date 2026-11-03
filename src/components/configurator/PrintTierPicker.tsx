@@ -1,11 +1,18 @@
 "use client";
 
-import { parseSizeInches } from "@/lib/parse-size";
+import { parseSizeInches, type SizeUnit } from "@/lib/parse-size";
 
 /**
- * Tier-style pickers for print products whose Shopify variants already
- * encode Size × (Print Sides) × Quantity, e.g. Flyers. Every price shown is
- * read straight from the variants, so the cards stay in sync with Shopify.
+ * Tier-style option pickers for print products: size cards that show the
+ * real proportions and a "from" price, quantity cards with the per-piece
+ * price and the saving against the smallest tier, and a front/back picker.
+ *
+ * Every price shown is read from the product's own Shopify variants, so
+ * the cards can never drift from what checkout charges.
+ *
+ * Shopify option names vary a lot across Anthony's catalog ("Quantity",
+ * "Bulk Quantity (Pack)", "Size - Qty - Price", "Qty + Prices", "Size &
+ * Paper"…), so options are matched on shape rather than exact name.
  */
 
 type Opt = { id: string; name: string; values: string[] };
@@ -15,9 +22,78 @@ type Variant = {
   selectedOptions: { name: string; value: string }[];
 };
 
-export const isQuantityOptionName = (n: string) => /^quantity$/i.test(n.trim());
-export const isSidesOptionName = (n: string) =>
-  /^(print\s*sides|sides|layout)$/i.test(n.trim());
+type PickerProps = {
+  opt: Opt;
+  variants: Variant[];
+  selected: Record<string, string>;
+  setOption: (name: string, value: string) => void;
+  sizeUnit?: SizeUnit;
+  /** Name of the product's quantity-tier option, when it has one. */
+  qtyOptionName?: string;
+};
+
+/* ---------------------------------------------------------------- parsing */
+
+/**
+ * Piece count in a quantity-tier label: "250" → 250, "500Pcs" → 500,
+ * "5 Cups" → 5. Ranges ("1-15 Cups") have no single count, so they return
+ * null and the card falls back to showing the label with no per-piece math.
+ */
+export function parseTierQty(label: string): number | null {
+  const s = label.replace(/,/g, "");
+  if (/^\s*\d+(?:\.\d+)?\s*(?:-|–|to\s)\s*\d/i.test(s)) return null;
+  const m = s.match(/\d+(?:\.\d+)?/);
+  return m ? Number(m[0]) : null;
+}
+
+/** First number in a label, for sorting tiers low → high. */
+function tierSortKey(label: string): number {
+  const m = label.replace(/,/g, "").match(/\d+(?:\.\d+)?/);
+  return m ? Number(m[0]) : Number.POSITIVE_INFINITY;
+}
+
+/**
+ * True for an option that encodes quantity tiers — matched on the name
+ * mentioning quantity/qty AND every value carrying a number, so a "Qty"
+ * option with non-numeric values is left as plain buttons.
+ */
+export function isQuantityTierOption(opt: { name: string; values: string[] }) {
+  if (!/\bqty\b|quantit/i.test(opt.name)) return false;
+  if (opt.values.length < 2) return false;
+  return opt.values.every((v) => /\d/.test(v));
+}
+
+/** True for a front/back-style option. */
+export function isSidesOption(opt: { name: string; values: string[] }) {
+  return /^(print\s*sides|sides|layout)$/i.test(opt.name.trim());
+}
+
+/** True for an option whose values are real width × height dimensions. */
+export function isDimensionOption(opt: { name: string; values: string[] }) {
+  if (isQuantityTierOption(opt)) return false;
+  return opt.values.some((v) => parseSizeInches(v) !== null);
+}
+
+/** Which of a product's options (if any) the tier cards should render. */
+export function tieredOptionKind(
+  opt: { name: string; values: string[] },
+): "quantity" | "sides" | "size" | null {
+  if (isQuantityTierOption(opt)) return "quantity";
+  if (isSidesOption(opt)) return "sides";
+  if (isDimensionOption(opt)) return "size";
+  return null;
+}
+
+/** True when a product has at least one option worth showing as tier cards. */
+export function hasTieredOptions(options: { name: string; values: string[] }[]) {
+  return options.some((o) => tieredOptionKind(o) !== null);
+}
+
+/* -------------------------------------------------------------- formatting */
+
+const money = (n: number) =>
+  `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const each = (n: number) => `$${n < 0.1 ? n.toFixed(3) : n.toFixed(2)}`;
 
 function priceFor(
   variants: Variant[],
@@ -31,19 +107,29 @@ function priceFor(
   return v ? Number(v.price) : null;
 }
 
-const money = (n: number) =>
-  `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const each = (n: number) => `$${n < 0.1 ? n.toFixed(3) : n.toFixed(2)}`;
-const fmtIn = (n: number) => String(n);
-
-/** "5 Inch x 7 Inch (Invitation/Event)" → { dims: "5 × 7″", nick: "Invitation/Event" } */
-function splitSizeLabel(label: string) {
-  const s = parseSizeInches(label);
-  const nick = label.match(/\(([^)]+)\)/)?.[1] ?? null;
+/**
+ * "5 Inch x 7 Inch (Invitation/Event)" → 5 × 7″, "Invitation/Event"
+ * `18" x 12" Single-Sided`            → 18 × 12″, "Single-Sided"
+ * Anything left over after the dimensions becomes the sub-label, so two
+ * sizes that differ only in their trailing words stay distinguishable.
+ */
+function splitSizeLabel(label: string, unit: SizeUnit) {
+  const size = parseSizeInches(label);
+  if (!size) return { size, dims: label, nick: null as string | null };
+  const mark = unit === "ft" ? "′" : "″";
+  const paren = label.match(/\(([^)]+)\)/)?.[1];
+  const rest = label
+    .replace(/\([^)]*\)/g, " ")
+    .replace(
+      /\d+(?:\.\d+)?\s*(?:in(?:ch(?:es)?)?\.?|["″”])?\s*[x×]\s*\d+(?:\.\d+)?\s*(?:in(?:ch(?:es)?)?\.?|["″”])?/i,
+      " ",
+    )
+    .replace(/\s+/g, " ")
+    .trim();
   return {
-    size: s,
-    dims: s ? `${fmtIn(s.width)} × ${fmtIn(s.height)}″` : label,
-    nick,
+    size,
+    dims: `${size.width} × ${size.height}${mark}`,
+    nick: paren ?? (rest.length > 1 ? rest : null),
   };
 }
 
@@ -56,16 +142,33 @@ export function sortedSizeValues(values: string[]): string[] {
   });
 }
 
+/** "$0.24 each" for the current selection, or null when there's no tier. */
 export function perPieceLabel(
   selected: Record<string, string>,
   options: Opt[],
   total: number,
 ): string | null {
-  const q = options.find((o) => isQuantityOptionName(o.name));
-  const qty = q ? Number(selected[q.name]) : NaN;
-  if (!Number.isFinite(qty) || qty <= 0 || total <= 0) return null;
+  const q = options.find(isQuantityTierOption);
+  if (!q) return null;
+  const qty = parseTierQty(selected[q.name] ?? "");
+  if (!qty || qty <= 1 || total <= 0) return null;
   return `${each(total / qty)} each`;
 }
+
+/** "1,000 pcs" for the price header, or null. */
+export function tierCountLabel(
+  selected: Record<string, string>,
+  options: Opt[],
+): string | null {
+  const q = options.find(isQuantityTierOption);
+  if (!q) return null;
+  const raw = selected[q.name];
+  if (!raw) return null;
+  const qty = parseTierQty(raw);
+  return qty ? `${qty.toLocaleString("en-US")} pcs` : raw;
+}
+
+/* ----------------------------------------------------------------- pickers */
 
 function Shape({ w, h }: { w: number; h: number }) {
   const box = 30;
@@ -85,32 +188,36 @@ export function SizeCards({
   variants,
   selected,
   setOption,
-}: {
-  opt: Opt;
-  variants: Variant[];
-  selected: Record<string, string>;
-  setOption: (name: string, value: string) => void;
-}) {
-  const qtyName = Object.keys(selected).find(isQuantityOptionName);
+  sizeUnit = "in",
+  qtyOptionName,
+}: PickerProps) {
+  const qtyName = qtyOptionName;
+  const qtyValues = qtyName
+    ? [
+        ...new Set(
+          variants
+            .flatMap((x) => x.selectedOptions)
+            .filter((o) => o.name === qtyName)
+            .map((o) => o.value),
+        ),
+      ]
+    : [];
+
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
       {sortedSizeValues(opt.values).map((v) => {
-        const { size, dims, nick } = splitSizeLabel(v);
+        const { size, dims, nick } = splitSizeLabel(v, sizeUnit);
         const active = v === selected[opt.name];
-        // Cheapest price for this size with the customer's other choices.
-        const qtyValues = qtyName
-          ? variants
-              .flatMap((x) => x.selectedOptions)
-              .filter((o) => o.name === qtyName)
-              .map((o) => o.value)
-          : [];
-        const from = qtyName
-          ? Math.min(
-              ...[...new Set(qtyValues)]
-                .map((q) => priceFor(variants, selected, { [opt.name]: v, [qtyName]: q }))
-                .filter((p): p is number => p !== null),
-            )
-          : priceFor(variants, selected, { [opt.name]: v });
+        const candidates = qtyName
+          ? qtyValues
+              .map((q) =>
+                priceFor(variants, selected, { [opt.name]: v, [qtyName]: q }),
+              )
+              .filter((p): p is number => p !== null)
+          : [priceFor(variants, selected, { [opt.name]: v })].filter(
+              (p): p is number => p !== null,
+            );
+        const from = candidates.length ? Math.min(...candidates) : null;
         return (
           <button
             key={v}
@@ -125,15 +232,22 @@ export function SizeCards({
           >
             {size && <Shape w={size.width} h={size.height} />}
             <span className="min-w-0">
-              <span className={`block font-headline text-sm font-bold ${active ? "text-[#d9f000]" : "text-foreground"}`}>
+              <span
+                className={`block font-headline text-sm font-bold ${
+                  active ? "text-[#d9f000]" : "text-foreground"
+                }`}
+              >
                 {dims}
               </span>
               {nick && (
-                <span className="block truncate text-[11px] leading-tight">{nick}</span>
+                <span className="block truncate text-[11px] leading-tight">
+                  {nick}
+                </span>
               )}
-              {from !== null && Number.isFinite(from) && (
+              {from !== null && (
                 <span className="block text-[11px] font-semibold text-[#18d3e8]">
-                  from {money(from)}
+                  {qtyValues.length > 1 ? "from " : ""}
+                  {money(from)}
                 </span>
               )}
             </span>
@@ -149,29 +263,33 @@ export function QuantityTierCards({
   variants,
   selected,
   setOption,
-}: {
-  opt: Opt;
-  variants: Variant[];
-  selected: Record<string, string>;
-  setOption: (name: string, value: string) => void;
-}) {
+}: PickerProps) {
   const tiers = [...opt.values]
-    .sort((a, b) => Number(a) - Number(b))
+    .sort((a, b) => tierSortKey(a) - tierSortKey(b))
     .map((v) => {
-      const qty = Number(v);
+      const qty = parseTierQty(v);
       const total = priceFor(variants, selected, { [opt.name]: v });
-      return { v, qty, total, unit: total !== null && qty > 0 ? total / qty : null };
+      return {
+        v,
+        qty,
+        total,
+        unit: total !== null && qty && qty > 0 ? total / qty : null,
+      };
     });
   const baseUnit = tiers.find((t) => t.unit !== null)?.unit ?? null;
-  const bestUnit = Math.min(...tiers.map((t) => t.unit ?? Infinity));
+  const units = tiers.map((t) => t.unit).filter((u): u is number => u !== null);
+  const bestUnit = units.length ? Math.min(...units) : null;
 
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
       {tiers.map((t) => {
         const active = t.v === selected[opt.name];
         const save =
-          baseUnit && t.unit !== null ? Math.round((1 - t.unit / baseUnit) * 100) : 0;
-        const best = t.unit !== null && t.unit === bestUnit && tiers.length > 1;
+          baseUnit && t.unit !== null
+            ? Math.round((1 - t.unit / baseUnit) * 100)
+            : 0;
+        const best =
+          t.unit !== null && t.unit === bestUnit && units.length > 1;
         return (
           <button
             key={t.v}
@@ -187,24 +305,46 @@ export function QuantityTierCards({
             {(best || save > 0) && (
               <span
                 className={`absolute -top-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-0.5 font-headline text-[9px] font-black uppercase tracking-wide ${
-                  best ? "accent-gradient text-black" : "bg-[#18d3e8]/15 text-[#18d3e8]"
+                  best
+                    ? "accent-gradient text-black"
+                    : "bg-[#18d3e8]/15 text-[#18d3e8]"
                 }`}
               >
                 {best ? "Best value" : `Save ${save}%`}
               </span>
             )}
-            <span className={`font-display text-xl font-black tabular-nums ${active ? "text-[#d9f000]" : "text-foreground"}`}>
-              {t.qty.toLocaleString("en-US")}
-            </span>
-            <span className="text-[10px] uppercase tracking-[0.18em] text-foreground-muted">pcs</span>
+            {t.qty ? (
+              <>
+                <span
+                  className={`font-display text-xl font-black tabular-nums ${
+                    active ? "text-[#d9f000]" : "text-foreground"
+                  }`}
+                >
+                  {t.qty.toLocaleString("en-US")}
+                </span>
+                <span className="text-[10px] uppercase tracking-[0.18em] text-foreground-muted">
+                  pcs
+                </span>
+              </>
+            ) : (
+              <span
+                className={`font-headline text-sm font-bold leading-tight ${
+                  active ? "text-[#d9f000]" : "text-foreground"
+                }`}
+              >
+                {t.v}
+              </span>
+            )}
             {t.total !== null && (
               <>
                 <span className="mt-1.5 text-sm font-bold tabular-nums text-foreground">
                   {money(t.total)}
                 </span>
-                <span className="text-[11px] tabular-nums text-foreground-muted">
-                  {each(t.unit!)} each
-                </span>
+                {t.unit !== null && (
+                  <span className="text-[11px] tabular-nums text-foreground-muted">
+                    {each(t.unit)} each
+                  </span>
+                )}
               </>
             )}
           </button>
@@ -219,13 +359,10 @@ export function SidesPicker({
   variants,
   selected,
   setOption,
-}: {
-  opt: Opt;
-  variants: Variant[];
-  selected: Record<string, string>;
-  setOption: (name: string, value: string) => void;
-}) {
-  const prices = opt.values.map((v) => priceFor(variants, selected, { [opt.name]: v }));
+}: PickerProps) {
+  const prices = opt.values.map((v) =>
+    priceFor(variants, selected, { [opt.name]: v }),
+  );
   const samePrice =
     prices.length > 1 && prices.every((p) => p !== null && p === prices[0]);
   return (

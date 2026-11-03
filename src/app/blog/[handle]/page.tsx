@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
+import { BLOG_REDIRECTS } from "@/lib/blog-redirects";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getArticleByHandle, getBlogArticles } from "@/lib/shopify-blog";
@@ -16,6 +17,8 @@ export async function generateMetadata({
   params: Params;
 }): Promise<Metadata> {
   const { handle } = await params;
+  const redirectTo = BLOG_REDIRECTS[handle];
+  if (redirectTo) permanentRedirect(`/blog/${redirectTo}`);
   try {
     const article = await getArticleByHandle(handle);
     if (!article) return { title: "Post not found · Print Laser Stitch" };
@@ -70,6 +73,8 @@ export default async function ArticlePage({
   params: Params;
 }) {
   const { handle } = await params;
+  const redirectTo = BLOG_REDIRECTS[handle];
+  if (redirectTo) permanentRedirect(`/blog/${redirectTo}`);
 
   let article = null;
   try {

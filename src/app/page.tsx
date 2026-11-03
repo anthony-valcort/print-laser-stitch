@@ -1,9 +1,13 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CategoryGrid from "@/components/CategoryGrid";
+import ScrollReveal from "@/components/ScrollReveal";
+import CountUp from "@/components/CountUp";
+import MobileQuoteBar from "@/components/MobileQuoteBar";
 import { getAllCollections } from "@/lib/shopify-collections";
 
 export const revalidate = 300;
@@ -12,80 +16,67 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const WRAP_SERVICES = [
-  {
-    icon: "🚗",
-    title: "Full Vehicle Wraps",
-    desc: "Complete color-change wraps using premium 3M & Avery cast vinyl. Matte, gloss, satin or chrome finishes.",
-    accent: "yellow" as const,
-    href: "/collections",
-  },
-  {
-    icon: "🎨",
-    title: "Partial Wraps & Decals",
-    desc: "Hood wraps, roof wraps, door graphics and custom accent decals — stand out without a full wrap.",
-    accent: "cyan" as const,
-    href: "/collections",
-  },
-  {
-    icon: "🛡️",
-    title: "Paint Protection Film",
-    desc: "Invisible PPF shields your paint from rock chips, scratches and UV fade. Self-healing gloss or matte finish.",
-    accent: "magenta" as const,
-    href: "/collections",
-  },
-  {
-    icon: "🪟",
-    title: "Window Tinting",
-    desc: "Ceramic and carbon window film for heat rejection, UV blocking and privacy — with a clean OEM look.",
-    accent: "yellow" as const,
-    href: "/collections",
-  },
-  {
-    icon: "🚚",
-    title: "Fleet & Commercial Graphics",
-    desc: "Brand your entire fleet with consistent, professional vehicle graphics that turn every drive into an ad.",
-    accent: "cyan" as const,
-    href: "/collections",
-  },
-  {
-    icon: "✨",
-    title: "Color Change Wraps",
-    desc: "Forged carbon, camo, brushed metal and custom-printed designs — transform your ride inside a day.",
-    accent: "magenta" as const,
-    href: "/collections",
-  },
+const SERVICES_TICKER = [
+  "Custom Embroidery",
+  "Screen Printing",
+  "DTF Transfers",
+  "Laser Engraving",
+  "Vinyl Stickers",
+  "Signs & Banners",
+  "Vehicle Graphics",
+  "Business Cards",
+  "Team Uniforms",
+  "Custom Hats",
 ];
 
+const TEAM_TIERS = [
+  { qty: "24+", pct: 10, accent: "cyan" as const },
+  { qty: "48+", pct: 15, accent: "yellow" as const, featured: true },
+  { qty: "100+", pct: 20, accent: "magenta" as const },
+];
+
+/** Inline CSS variable for staggered scroll reveals. */
+function delay(ms: number): CSSProperties {
+  return { "--reveal-delay": `${ms}ms` } as CSSProperties;
+}
+
 export default async function Home() {
-  let productCategories: Awaited<ReturnType<typeof getAllCollections>> = [];
-  const result = await getAllCollections().catch(() => []);
-  productCategories = result;
+  const productCategories = await getAllCollections().catch(() => []);
 
   return (
     <>
       <Header />
+      <ScrollReveal />
       <main className="flex-1">
-        {/* HERO — split layout: text left, Hero.jpeg right */}
-        <section className="relative overflow-x-clip isolate">
-          <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 pt-16 sm:px-6 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:pt-24">
-            {/* Left — copy */}
-            <div className="text-center lg:text-left">
+        {/* HERO — image first on phones (people buy with their eyes), split on desktop */}
+        <section className="relative isolate overflow-x-clip">
+          <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-4 pb-12 pt-6 sm:px-6 sm:pt-12 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:pb-20 lg:pt-24">
+            {/* Copy */}
+            <div className="order-2 text-center lg:order-1 lg:text-left">
               {/* The page's main heading (what Google reads first): services +
                   location, styled as the small eyebrow pill. */}
-              <h1 className="inline-flex items-center gap-2 rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#18d3e8]" />
+              <h1
+                className="inline-flex animate-fade-up items-center gap-2 rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[10px] font-semibold uppercase tracking-[0.18em] text-[#18d3e8] sm:text-[11px] sm:tracking-[0.2em]"
+                style={{ animationDelay: "60ms" }}
+              >
+                <span className="relative flex h-1.5 w-1.5 shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#18d3e8] opacity-60 motion-reduce:animate-none" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />
+                </span>
                 Custom printing, embroidery &amp; engraving · Stuart, FL
               </h1>
 
-              <p className="glitch-text mx-auto mt-5 max-w-2xl font-display text-4xl font-black uppercase leading-[1.05] tracking-tight sm:text-5xl lg:mx-0 lg:text-6xl">
-                Bringing your{" "}
-                <span className="accent-gradient-text">vision</span>
-                <br className="hidden sm:inline" />{" "}
-                to life.
-              </p>
+              <div className="animate-fade-up" style={{ animationDelay: "160ms" }}>
+                <p className="glitch-text mx-auto mt-5 max-w-2xl font-display text-[2.6rem] font-black uppercase leading-[1.02] tracking-tight sm:text-5xl lg:mx-0 lg:text-6xl">
+                  Bringing your <span className="sheen-text">vision</span>
+                  <br className="hidden sm:inline" /> to life.
+                </p>
+              </div>
 
-              <p className="mx-auto mt-5 max-w-xl text-base text-foreground-muted sm:text-lg lg:mx-0">
+              <p
+                className="mx-auto mt-5 max-w-xl animate-fade-up text-[15px] leading-relaxed text-foreground-muted sm:text-lg lg:mx-0"
+                style={{ animationDelay: "260ms" }}
+              >
                 Premium custom printing, laser engraving and embroidery from
                 our Stuart, Florida shop — built for businesses, teams,
                 creators and car enthusiasts across the Treasure Coast. From
@@ -93,53 +84,134 @@ export default async function Home() {
                 it for you.
               </p>
 
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+              <div
+                className="mt-7 grid animate-fade-up grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center sm:justify-center lg:justify-start"
+                style={{ animationDelay: "360ms" }}
+              >
                 <Link
                   href="/decal-quote"
-                  className="inline-flex items-center gap-2 rounded-md accent-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 transition hover:brightness-110"
+                  className="group inline-flex animate-glow items-center justify-center gap-2 rounded-xl accent-gradient px-5 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black transition hover:brightness-110 active:scale-[0.98] sm:rounded-md sm:px-6 sm:py-3"
                 >
                   Get a Quote
-                  <Arrow />
+                  <span className="transition-transform duration-300 group-hover:translate-x-1">
+                    <Arrow />
+                  </span>
                 </Link>
                 <Link
                   href="#categories"
-                  className="inline-flex items-center gap-2 rounded-md cyan-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#18d3e8]/30 transition hover:brightness-110"
+                  className="group inline-flex items-center justify-center gap-2 rounded-xl cyan-gradient px-5 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#18d3e8]/30 transition hover:brightness-110 active:scale-[0.98] sm:rounded-md sm:px-6 sm:py-3"
                 >
-                  Browse Products
-                  <Arrow />
+                  <span className="sm:hidden">Shop</span>
+                  <span className="hidden sm:inline">Browse Products</span>
+                  <span className="transition-transform duration-300 group-hover:translate-x-1">
+                    <Arrow />
+                  </span>
                 </Link>
                 <Link
                   href="/gallery"
-                  className="inline-flex items-center gap-2 rounded-md border border-border-strong bg-white/5 px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-foreground transition hover:bg-white/10"
+                  className="group col-span-2 inline-flex items-center justify-center gap-2 rounded-xl border border-border-strong bg-white/5 px-5 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-foreground transition hover:bg-white/10 active:scale-[0.98] sm:col-span-1 sm:rounded-md sm:px-6 sm:py-3"
                 >
                   View Our Gallery
-                  <Arrow />
+                  <span className="transition-transform duration-300 group-hover:translate-x-1">
+                    <Arrow />
+                  </span>
                 </Link>
               </div>
+
+              {/* Trust row */}
+              <ul
+                className="mt-7 flex animate-fade-up flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-foreground-muted sm:text-sm lg:justify-start"
+                style={{ animationDelay: "460ms" }}
+              >
+                <li>
+                  <a
+                    href="https://yelp.to/v94oy-jn5w"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 transition hover:text-foreground"
+                  >
+                    <span className="tracking-tight text-[#d9f000]" aria-hidden>
+                      ★★★★★
+                    </span>
+                    Top-rated on Yelp
+                  </a>
+                </li>
+                <li className="inline-flex items-center gap-1.5">
+                  <CheckIcon /> Free design proof
+                </li>
+                <li className="inline-flex items-center gap-1.5">
+                  <CheckIcon /> Locally owned in Stuart
+                </li>
+              </ul>
             </div>
 
-            {/* Right — Hero image */}
-            <div className="relative">
-              <div className="pointer-events-none absolute -inset-4 -z-10 rounded-4xl bg-linear-to-br from-[#d9f000]/20 via-[#18d3e8]/20 to-[#d94cb3]/20 opacity-60 blur-2xl" />
-              <div className="relative overflow-hidden rounded-2xl border border-[#d9f000]/30 shadow-2xl shadow-[#d9f000]/20">
-                <Image
-                  src="/Hero.jpeg"
-                  alt="Print Laser Stitch — printing, embroidery, vehicle wraps, apparel and engraving samples"
-                  width={768}
-                  height={512}
-                  className="h-auto w-full"
-                  priority
-                />
+            {/* Hero image */}
+            <div className="relative order-1 lg:order-2">
+              <div className="pointer-events-none absolute -inset-4 -z-10 rounded-4xl bg-linear-to-br from-[#d9f000]/25 via-[#18d3e8]/20 to-[#d94cb3]/25 opacity-70 blur-2xl" />
+              <div className="lg:animate-float">
+                <div className="group relative overflow-hidden rounded-2xl border border-[#d9f000]/30 shadow-2xl shadow-[#d9f000]/20">
+                  <Image
+                    src="/Hero.jpeg"
+                    alt="Print Laser Stitch — printing, embroidery, vehicle wraps, apparel and engraving samples"
+                    width={768}
+                    height={512}
+                    sizes="(min-width: 1024px) 600px, 100vw"
+                    className="h-auto w-full transition-transform duration-700 group-hover:scale-[1.03]"
+                    priority
+                  />
+                  {/* Light sweep on hover */}
+                  <div className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/15 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
+                </div>
               </div>
             </div>
           </div>
         </section>
 
+        {/* Services ticker */}
+        <section
+          aria-label="Our services"
+          className="relative overflow-hidden border-y border-border-soft bg-background-soft/70 py-4"
+        >
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-linear-to-r from-background to-transparent sm:w-32" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-linear-to-l from-background to-transparent sm:w-32" />
+          <div className="flex w-max animate-marquee hover:[animation-play-state:paused]">
+            {[0, 1].map((copy) => (
+              <ul
+                key={copy}
+                aria-hidden={copy === 1}
+                className="flex shrink-0 items-center"
+              >
+                {SERVICES_TICKER.map((s, i) => (
+                  <li
+                    key={s}
+                    className="flex items-center gap-6 pr-6 font-display text-sm font-black uppercase tracking-wide text-foreground/80 sm:gap-8 sm:pr-8 sm:text-base"
+                  >
+                    {s}
+                    <span
+                      aria-hidden
+                      className={
+                        i % 3 === 0
+                          ? "text-[#d9f000]"
+                          : i % 3 === 1
+                            ? "text-[#18d3e8]"
+                            : "text-[#d94cb3]"
+                      }
+                    >
+                      ✦
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ))}
+          </div>
+        </section>
+
         {/* Custom Sticker Builder — flagship tool with instant proof */}
-        <section className="mx-auto max-w-7xl px-4 pb-4 pt-2 sm:px-6 lg:px-8">
+        <section className="mx-auto max-w-7xl px-4 pb-4 pt-10 sm:px-6 sm:pt-14 lg:px-8">
           <Link
             href="/products/vinyl-stickers"
-            className="group relative isolate flex min-h-40 flex-row overflow-hidden rounded-2xl bg-[#ffb366] shadow-lg shadow-black/20 transition hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/30 sm:min-h-0"
+            data-reveal
+            className="group relative isolate flex min-h-40 flex-row overflow-hidden rounded-2xl bg-[#ffb366] shadow-lg shadow-black/20 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/30 sm:min-h-0"
           >
             <div
               aria-hidden
@@ -178,7 +250,9 @@ export default async function Home() {
               </ul>
               <span className="mt-1 inline-flex w-fit items-center gap-2 rounded-full shop-now-gradient px-4 py-1.5 font-headline text-[11px] font-extrabold uppercase tracking-wide text-white shadow-lg shadow-black/25 transition group-hover:brightness-110 sm:mt-4 sm:px-6 sm:py-3 sm:text-sm">
                 Start Designing
-                <Arrow />
+                <span className="transition-transform duration-300 group-hover:translate-x-1">
+                  <Arrow />
+                </span>
               </span>
             </div>
 
@@ -189,21 +263,19 @@ export default async function Home() {
                   alt="Custom vinyl stickers"
                   fill
                   sizes="(max-width: 640px) 46vw, 40vw"
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="object-cover transition-transform duration-700 group-hover:rotate-1 group-hover:scale-110"
                 />
               </div>
             </div>
           </Link>
         </section>
 
-
-
         {/* Make your selection — image-driven product grid */}
         <section
           id="categories"
-          className="mx-auto max-w-7xl px-4 pb-12 pt-8 sm:px-6 lg:px-8"
+          className="mx-auto max-w-7xl scroll-mt-20 px-4 pb-12 pt-10 sm:px-6 lg:px-8"
         >
-          <div className="mb-10 text-center">
+          <div className="mb-8 text-center sm:mb-10" data-reveal>
             <span className="inline-block rounded-full border border-[#d9f000]/30 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
               Make your selection
             </span>
@@ -230,16 +302,111 @@ export default async function Home() {
           )}
         </section>
 
+        {/* Team & business orders — automatic polo volume discounts */}
+        <section className="mx-auto max-w-7xl overflow-x-clip px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br from-surface via-background-soft to-surface p-6 sm:p-12">
+            <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-[#d9f000]/15 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-[#d94cb3]/15 blur-3xl" />
+
+            <div className="relative grid items-center gap-10 lg:grid-cols-[1.1fr_1fr]">
+              <div data-reveal="left">
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#d9f000]/40 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#d9f000]" />
+                  Team &amp; business orders
+                </span>
+                <h2 className="mt-4 font-display text-3xl font-black uppercase leading-[1.02] tracking-tight sm:text-5xl">
+                  Outfit your{" "}
+                  <span className="accent-gradient-text">whole crew.</span>
+                </h2>
+                <p className="mt-4 max-w-xl text-base text-foreground-muted">
+                  Embroidered polos with your logo for contractors, offices,
+                  restaurants and teams. The more you order, the more you save —
+                  bulk pricing is applied automatically at checkout.
+                </p>
+                <ul className="mt-6 space-y-2 text-sm text-foreground/85">
+                  <li className="flex items-center gap-2">
+                    <CheckIcon /> See your logo on the polo before you order
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckIcon /> Free design proof before we stitch
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckIcon /> Made in our Stuart, FL shop
+                  </li>
+                </ul>
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <Link
+                    href="/products/embroidered-polos"
+                    className="group inline-flex items-center justify-center gap-2 rounded-xl accent-gradient px-6 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 transition hover:brightness-110 active:scale-[0.98] sm:rounded-md sm:py-3"
+                  >
+                    Shop Embroidered Polos
+                    <span className="transition-transform duration-300 group-hover:translate-x-1">
+                      <Arrow />
+                    </span>
+                  </Link>
+                  <Link
+                    href="/contact"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-border-strong bg-white/5 px-6 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-foreground transition hover:bg-white/10 sm:rounded-md sm:py-3"
+                  >
+                    Request a Bulk Quote
+                  </Link>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                {TEAM_TIERS.map((t, i) => {
+                  const color =
+                    t.accent === "yellow"
+                      ? "text-[#d9f000]"
+                      : t.accent === "cyan"
+                        ? "text-[#18d3e8]"
+                        : "text-[#d94cb3]";
+                  return (
+                    <div
+                      key={t.qty}
+                      data-reveal="scale"
+                      style={delay(i * 120)}
+                      className={`relative flex flex-col items-center rounded-2xl border bg-background/70 px-2 py-5 text-center backdrop-blur hover:-translate-y-1 sm:px-4 sm:py-8 ${
+                        t.featured
+                          ? "border-[#d9f000]/50 shadow-xl shadow-[#d9f000]/15"
+                          : "border-border-soft"
+                      }`}
+                    >
+                      {t.featured && (
+                        <span className="absolute -top-2.5 rounded-full accent-gradient px-2 py-0.5 font-headline text-[9px] font-bold uppercase tracking-wider text-black sm:text-[10px]">
+                          Popular
+                        </span>
+                      )}
+                      <span className="font-headline text-[10px] uppercase tracking-[0.18em] text-foreground-muted sm:text-xs">
+                        {t.qty} polos
+                      </span>
+                      <span
+                        className={`mt-2 font-display text-3xl font-black sm:text-5xl ${color}`}
+                      >
+                        <CountUp to={t.pct} suffix="%" />
+                      </span>
+                      <span className="mt-1 font-headline text-[10px] font-bold uppercase tracking-wider sm:text-xs">
+                        off
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Vehicle Sticker Kits — find decals for your exact vehicle */}
         <section className="mx-auto max-w-7xl px-4 pb-4 pt-2 sm:px-6 lg:px-8">
           <Link
             href="/vehicle-stickers"
-            className="group relative block overflow-hidden rounded-3xl border border-[#18d3e8]/30 bg-linear-to-br from-[#18d3e8]/10 via-surface to-[#d9f000]/10 p-8 transition hover:border-[#18d3e8]/50 sm:p-12"
+            data-reveal
+            className="group relative block overflow-hidden rounded-3xl border border-[#18d3e8]/30 bg-linear-to-br from-[#18d3e8]/10 via-surface to-[#d9f000]/10 p-6 hover:border-[#18d3e8]/50 sm:p-12"
           >
             <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#18d3e8]/20 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#d9f000]/15 blur-3xl" />
             <div className="relative grid items-center gap-8 lg:grid-cols-[1.4fr_1fr]">
-              <div>
+              <div className="order-2 lg:order-1">
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#18d3e8]/40 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />
                   Vehicle-specific decal kits
@@ -256,7 +423,7 @@ export default async function Home() {
                   <span className="text-foreground">your exact vehicle</span>.
                   Hood sets, bedsides, full kits and more.
                 </p>
-                <ul className="mt-6 grid gap-2 text-sm text-foreground/85 sm:grid-cols-2">
+                <ul className="mt-6 grid grid-cols-2 gap-2 text-sm text-foreground/85">
                   <li className="flex items-center gap-2">
                     <CheckIcon /> Hood Set
                   </li>
@@ -270,21 +437,23 @@ export default async function Home() {
                     <CheckIcon /> Back Decals
                   </li>
                 </ul>
-                <span className="mt-8 inline-flex items-center gap-2 rounded-md cyan-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#18d3e8]/30 transition group-hover:brightness-110">
+                <span className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl cyan-gradient px-6 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#18d3e8]/30 transition group-hover:brightness-110 sm:inline-flex sm:w-auto sm:rounded-md sm:py-3">
                   Find Your Vehicle
-                  <Arrow />
+                  <span className="transition-transform duration-300 group-hover:translate-x-1">
+                    <Arrow />
+                  </span>
                 </span>
               </div>
-              <div className="relative">
+              <div className="relative order-1 lg:order-2">
                 {/* Matches the source image's native 3:2 ratio so object-cover
                     has no need to crop any of it away. */}
-                <div className="relative mx-auto aspect-3/2 w-full max-w-sm overflow-hidden rounded-2xl border border-border-soft bg-background/60 shadow-2xl shadow-black/40 backdrop-blur transition group-hover:scale-105 lg:max-w-none">
+                <div className="relative mx-auto aspect-3/2 w-full max-w-md overflow-hidden rounded-2xl border border-border-soft bg-background/60 shadow-2xl shadow-black/40 backdrop-blur transition-transform duration-500 group-hover:scale-105 lg:max-w-none">
                   <Image
                     src="/car wrap decal.png"
                     alt="Custom vehicle sticker kit example"
                     fill
                     className="object-cover"
-                    sizes="(min-width: 1024px) 480px, 400px"
+                    sizes="(min-width: 1024px) 480px, 100vw"
                   />
                 </div>
               </div>
@@ -292,143 +461,125 @@ export default async function Home() {
           </Link>
         </section>
 
-        {/* Quick Quote (multi-panel + material) CTA */}
-        <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl border border-[#18d3e8]/30 bg-linear-to-br from-[#18d3e8]/10 via-surface to-[#18d3e8]/5 p-8 sm:p-12">
-            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#18d3e8]/20 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#18d3e8]/10 blur-3xl" />
+        {/* Instant quote tools — signage + decal calculators */}
+        <section className="mx-auto max-w-7xl overflow-x-clip px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+          <div className="mb-8 text-center sm:mb-10" data-reveal>
+            <span className="inline-block rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
+              Instant pricing
+            </span>
+            <h2 className="mt-3 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
+              Price it in{" "}
+              <span className="accent-gradient-text">seconds.</span>
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-sm text-foreground-muted">
+              No waiting on an email — enter your sizes and see your price
+              right away.
+            </p>
+          </div>
 
-            <div className="relative grid items-center gap-10 lg:grid-cols-2">
-              <div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#18d3e8]/40 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
+          <div className="grid gap-5 lg:grid-cols-2">
+            {/* Signage Quote */}
+            <div
+              data-reveal="left"
+              className="relative flex flex-col overflow-hidden rounded-3xl border border-[#18d3e8]/30 bg-linear-to-br from-[#18d3e8]/10 via-surface to-[#18d3e8]/5 p-6 sm:p-10"
+            >
+              <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#18d3e8]/20 blur-3xl" />
+              <div className="relative flex flex-1 flex-col">
+                <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#18d3e8]/40 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />
                   Window film · Wall vinyl
                 </span>
-                <h3 className="mt-4 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
+                <h3 className="mt-4 font-display text-2xl font-black uppercase tracking-tight sm:text-3xl">
                   Signage Quote{" "}
                   <span className="bg-linear-to-r from-[#18d3e8] to-[#d9f000] bg-clip-text text-transparent">
                     Calculator
                   </span>
                 </h3>
-                <p className="mt-4 text-base text-foreground-muted">
+                <p className="mt-3 text-sm text-foreground-muted sm:text-base">
                   Add panels for doors, windows, walls, wood, or metal — pick
                   a vinyl material and get instant pricing with 7% Martin
                   County tax included.
                 </p>
 
-                <ul className="mt-6 space-y-2 text-sm text-foreground/85">
-                  <li className="flex items-center gap-2">
-                    <CheckIcon /> Add multiple panels in one quote
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckIcon /> 5 vinyl materials + special order
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckIcon /> Discount + 7% tax handled automatically
-                  </li>
-                </ul>
-
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <Link
-                    href="/decal-quote"
-                    className="inline-flex items-center gap-2 rounded-md cyan-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#18d3e8]/30 transition hover:brightness-110"
-                  >
-                    Open Signage Quote
-                    <Arrow />
-                  </Link>
-                </div>
-              </div>
-
-              {/* Sample quote */}
-              <div className="relative">
-                <div className="mx-auto max-w-sm rounded-2xl border border-border-soft bg-background/80 p-5 shadow-2xl shadow-black/40 backdrop-blur">
+                <div className="mt-6 rounded-2xl border border-border-soft bg-background/80 p-4 text-sm shadow-2xl shadow-black/40 backdrop-blur sm:p-5">
                   <div className="mb-3 flex items-center gap-2 font-headline text-xs uppercase tracking-[0.2em] text-foreground-muted">
-                    <span className="h-2 w-2 rounded-full bg-[#d9f000]" />
+                    <span className="h-2 w-2 rounded-full bg-[#18d3e8]" />
                     Sample Quote
                   </div>
-                  <div className="space-y-2.5 text-sm">
+                  <div className="space-y-2">
                     <CalcRow label="🚪 Door" value="12″ × 12″" />
                     <CalcRow label="Material" value="Full Vinyl" />
-                    <CalcRow label="Subtotal" value="$16.00" />
                     <CalcRow label="Tax (7%)" value="$1.12" />
-                    <div className="my-3 border-t border-border-soft" />
+                    <div className="my-2 border-t border-border-soft" />
                     <div className="flex items-center justify-between text-base">
                       <span className="font-semibold">Total</span>
                       <span className="font-bold text-[#18d3e8]">$17.12</span>
                     </div>
                   </div>
                 </div>
+
+                <Link
+                  href="/decal-quote"
+                  className="group mt-6 inline-flex items-center justify-center gap-2 rounded-xl cyan-gradient px-6 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#18d3e8]/30 transition hover:brightness-110 active:scale-[0.98] sm:w-fit sm:rounded-md sm:py-3"
+                >
+                  Open Signage Quote
+                  <span className="transition-transform duration-300 group-hover:translate-x-1">
+                    <Arrow />
+                  </span>
+                </Link>
               </div>
             </div>
-          </div>
-        </section>
 
-        {/* Decal Signage Calculator (service plan) CTA */}
-        <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl border border-[#d9f000]/30 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#d94cb3]/10 p-8 sm:p-12">
-            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#d9f000]/20 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#d94cb3]/15 blur-3xl" />
-
-            <div className="relative grid items-center gap-10 lg:grid-cols-2">
-              <div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#d9f000]/40 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
+            {/* Decal Signage Calculator */}
+            <div
+              data-reveal="right"
+              style={delay(100)}
+              className="relative flex flex-col overflow-hidden rounded-3xl border border-[#d9f000]/30 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#d94cb3]/10 p-6 sm:p-10"
+            >
+              <div className="pointer-events-none absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-[#d94cb3]/15 blur-3xl" />
+              <div className="relative flex flex-1 flex-col">
+                <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#d9f000]/40 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#d9f000]" />
-                  Print &amp; install quote generator
+                  Print &amp; install quote
                 </span>
-                <h3 className="mt-4 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
+                <h3 className="mt-4 font-display text-2xl font-black uppercase tracking-tight sm:text-3xl">
                   Decal Signage{" "}
                   <span className="bg-linear-to-r from-[#d9f000] to-[#d94cb3] bg-clip-text text-transparent">
                     Calculator
                   </span>
                 </h3>
-                <p className="mt-4 text-base text-foreground-muted">
-                  Enter width and length, pick a service tier (Print Only,
-                  Design &amp; Print, or Full Install), and get an instant
-                  quote.
+                <p className="mt-3 text-sm text-foreground-muted sm:text-base">
+                  Enter width and length, pick a service tier — Print Only
+                  ($10/sq ft), Design &amp; Print ($12) or Full Install ($18) —
+                  and get an instant quote.
                 </p>
 
-                <ul className="mt-6 space-y-2 text-sm text-foreground/85">
-                  <li className="flex items-center gap-2">
-                    <CheckIcon /> Toggle between feet and inches
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckIcon /> 3 service tiers: $10 / $12 / $18 per sq ft
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckIcon /> Custom discount support
-                  </li>
-                </ul>
-
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <Link
-                    href="/signage-quotes"
-                    className="inline-flex items-center gap-2 rounded-md accent-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 transition hover:brightness-110"
-                  >
-                    Open Calculator
-                    <Arrow />
-                  </Link>
-                </div>
-              </div>
-
-              {/* Sample quote */}
-              <div className="relative">
-                <div className="mx-auto max-w-sm rounded-2xl border border-border-soft bg-background/80 p-5 shadow-2xl shadow-black/40 backdrop-blur">
+                <div className="mt-6 rounded-2xl border border-border-soft bg-background/80 p-4 text-sm shadow-2xl shadow-black/40 backdrop-blur sm:p-5">
                   <div className="mb-3 flex items-center gap-2 font-headline text-xs uppercase tracking-[0.2em] text-foreground-muted">
                     <span className="h-2 w-2 rounded-full bg-[#d9f000]" />
                     Sample Quote
                   </div>
-                  <div className="space-y-2.5 text-sm">
+                  <div className="space-y-2">
                     <CalcRow label="Width × Length" value="1′ × 1.7′" />
                     <CalcRow label="Service" value="Full Install" />
                     <CalcRow label="Rate" value="$18.00 / sq ft" />
-                    <CalcRow label="Quantity" value="1" />
-                    <div className="my-3 border-t border-border-soft" />
+                    <div className="my-2 border-t border-border-soft" />
                     <div className="flex items-center justify-between text-base">
                       <span className="font-semibold">Grand Total</span>
                       <span className="font-bold text-[#d9f000]">$30.60</span>
                     </div>
                   </div>
                 </div>
+
+                <Link
+                  href="/signage-quotes"
+                  className="group mt-6 inline-flex items-center justify-center gap-2 rounded-xl accent-gradient px-6 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 transition hover:brightness-110 active:scale-[0.98] sm:w-fit sm:rounded-md sm:py-3"
+                >
+                  Open Calculator
+                  <span className="transition-transform duration-300 group-hover:translate-x-1">
+                    <Arrow />
+                  </span>
+                </Link>
               </div>
             </div>
           </div>
@@ -440,11 +591,12 @@ export default async function Home() {
             href="https://printlaserstitchuniversity.com/"
             target="_blank"
             rel="noopener noreferrer"
-            className="group relative block overflow-hidden rounded-3xl border border-[#d94cb3]/30 bg-linear-to-br from-[#d94cb3]/10 via-surface to-[#18d3e8]/10 p-8 transition hover:border-[#d94cb3]/50 sm:p-12"
+            data-reveal
+            className="group relative block overflow-hidden rounded-3xl border border-[#d94cb3]/30 bg-linear-to-br from-[#d94cb3]/10 via-surface to-[#18d3e8]/10 p-6 hover:border-[#d94cb3]/50 sm:p-12"
           >
             <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#d94cb3]/20 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#18d3e8]/15 blur-3xl" />
-            <div className="relative grid items-center gap-8 lg:grid-cols-[1fr_1.4fr]">
+            <div className="relative grid items-center gap-6 sm:gap-8 lg:grid-cols-[1fr_1.4fr]">
               <div className="order-2 lg:order-1">
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#d94cb3]/40 bg-[#d94cb3]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d94cb3]">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#d94cb3]" />
@@ -461,18 +613,20 @@ export default async function Home() {
                   learning hub for tutorials, walkthroughs and courses from the
                   Print Laser Stitch team.
                 </p>
-                <span className="mt-8 inline-flex items-center gap-2 rounded-md bg-linear-to-r from-[#d94cb3] to-[#18d3e8] px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d94cb3]/30 transition group-hover:brightness-110">
+                <span className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-[#d94cb3] to-[#18d3e8] px-6 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d94cb3]/30 transition group-hover:brightness-110 sm:inline-flex sm:w-auto sm:rounded-md sm:py-3">
                   Visit the University
-                  <Arrow />
+                  <span className="transition-transform duration-300 group-hover:translate-x-1">
+                    <Arrow />
+                  </span>
                 </span>
               </div>
               <div className="order-1 lg:order-2">
-                <div className="relative mx-auto aspect-square max-w-xs overflow-hidden rounded-2xl border border-border-soft bg-background/60 shadow-2xl shadow-black/40 backdrop-blur transition group-hover:scale-[1.02]">
+                <div className="relative mx-auto aspect-square max-w-[13rem] overflow-hidden rounded-2xl border border-border-soft bg-background/60 shadow-2xl shadow-black/40 backdrop-blur transition-transform duration-500 group-hover:rotate-1 group-hover:scale-[1.03] sm:max-w-xs">
                   <Image
                     src="/university-logo.jpeg"
                     alt="Print Laser Stitch University"
                     fill
-                    sizes="(max-width: 1024px) 80vw, 360px"
+                    sizes="(max-width: 1024px) 60vw, 360px"
                     className="object-cover"
                   />
                 </div>
@@ -484,36 +638,41 @@ export default async function Home() {
         {/* Why order with us — promise band */}
         <section className="border-t border-border-soft bg-background-soft/60">
           <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-            <div className="grid divide-y divide-border-soft overflow-hidden rounded-2xl border border-border-soft bg-surface sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4 lg:divide-x">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
               <PromiseItem
                 num="01"
                 title="Free design proof"
                 text="See your artwork before we ever print it."
                 accent="yellow"
+                index={0}
               />
               <PromiseItem
                 num="02"
                 title="Fast turnaround"
                 text="Most orders printed within 5–12 business days."
                 accent="cyan"
+                index={1}
               />
               <PromiseItem
                 num="03"
                 title="Reprint guarantee"
                 text="Not right? We'll redo it — no hassle."
                 accent="magenta"
+                index={2}
               />
               <PromiseItem
                 num="04"
                 title="Florida print shop"
                 text="Locally run and operated in Martin County, FL."
                 accent="yellow"
+                index={3}
               />
             </div>
           </div>
         </section>
       </main>
       <Footer />
+      <MobileQuoteBar />
     </>
   );
 }
@@ -588,11 +747,13 @@ function PromiseItem({
   title,
   text,
   accent,
+  index,
 }: {
   num: string;
   title: string;
   text: string;
   accent: "yellow" | "cyan" | "magenta";
+  index: number;
 }) {
   const color =
     accent === "yellow"
@@ -601,14 +762,18 @@ function PromiseItem({
         ? "text-[#18d3e8]"
         : "text-[#d94cb3]";
   return (
-    <div className="flex flex-col gap-2 p-6">
+    <div
+      data-reveal
+      style={delay(index * 90)}
+      className="flex flex-col gap-2 rounded-2xl border border-border-soft bg-surface p-4 hover:-translate-y-1 hover:border-border-strong sm:p-6"
+    >
       <span className={`font-display text-2xl font-black ${color}`}>
         {num}
       </span>
-      <div className="font-headline text-sm font-bold uppercase tracking-wider">
+      <div className="font-headline text-xs font-bold uppercase tracking-wider sm:text-sm">
         {title}
       </div>
-      <div className="text-sm text-foreground-muted">{text}</div>
+      <div className="text-xs text-foreground-muted sm:text-sm">{text}</div>
     </div>
   );
 }

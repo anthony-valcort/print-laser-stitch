@@ -318,3 +318,96 @@ body {
     animation: none;
   }
 }
+
+/* ── Scroll-reveal (paired with <ScrollReveal />) ─────────────────────────
+   Hidden state only applies when scripting is on and the visitor hasn't
+   asked for reduced motion, so content can never get stuck invisible. */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(28px);
+    /* translate/scale/box-shadow keep Tailwind hover effects smooth */
+    transition:
+      opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms),
+      transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) var(--reveal-delay, 0ms),
+      translate 0.3s ease,
+      scale 0.3s ease,
+      box-shadow 0.3s ease,
+      border-color 0.3s ease;
+    will-change: opacity, transform;
+  }
+  [data-reveal="scale"] {
+    transform: translateY(18px) scale(0.95);
+  }
+  [data-reveal="left"] {
+    transform: translateX(-36px);
+  }
+  [data-reveal="right"] {
+    transform: translateX(36px);
+  }
+  /* Phones/tablets: slide up instead of sideways (no horizontal overflow) */
+  @media (max-width: 1023px) {
+    [data-reveal="left"],
+    [data-reveal="right"] {
+      transform: translateY(28px);
+    }
+  }
+  [data-reveal].is-revealed {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Infinite services ticker */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@utility animate-marquee {
+  animation: marquee 38s linear infinite;
+}
+
+/* Soft breathing glow for the primary CTA */
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 10px 30px -8px rgba(217, 240, 0, 0.35);
+  }
+  50% {
+    box-shadow: 0 12px 44px -6px rgba(217, 240, 0, 0.6);
+  }
+}
+@utility animate-glow {
+  animation: glow-pulse 3.2s ease-in-out infinite;
+}
+
+/* Moving sheen across gradient text */
+@keyframes sheen {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+@utility sheen-text {
+  background-image: linear-gradient(90deg, #d9f000 0%, #18d3e8 50%, #d9f000 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: sheen 6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-glow,
+  .sheen-text,
+  .animate-float {
+    animation: none;
+  }
+}

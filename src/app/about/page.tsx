@@ -4,9 +4,10 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "About Us · Print Laser Stitch",
+  title: "About Us | Print Laser Stitch, Stuart FL",
   description:
-    "Meet Anthony and the team behind Print Laser Stitch — a small print shop in Stuart, Florida built on late nights, tight deadlines, and the belief that your project matters.",
+    "Meet Anthony and the team behind Print Laser Stitch, a print, embroidery and laser engraving shop in Stuart, Florida built on care for every project.",
+  alternates: { canonical: "/about" },
 };
 
 const TEAM = [

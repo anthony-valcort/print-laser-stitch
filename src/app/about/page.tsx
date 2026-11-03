@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { fadeDelay, revealDelay } from "@/lib/reveal";
 
 export const metadata: Metadata = {
   title: "About Us | Print Laser Stitch, Stuart FL",
@@ -89,16 +90,25 @@ export default function AboutPage() {
         {/* Hero */}
         <section className="relative overflow-hidden">
           <div className="pointer-events-none absolute -top-40 left-1/2 z-0 h-120 w-225 -translate-x-1/2 rounded-full opacity-30 blur-3xl accent-gradient" />
-          <div className="relative mx-auto max-w-4xl px-4 pb-12 pt-20 text-center sm:px-6 lg:px-8 lg:pt-28">
-            <span className="inline-flex items-center gap-2 rounded-full border border-border-soft bg-white/5 px-4 py-1 text-xs font-medium text-foreground-muted">
-              <span className="h-2 w-2 rounded-full bg-[#18d3e8]" />
+          <div className="relative mx-auto max-w-4xl px-4 pb-10 pt-12 text-center sm:px-6 sm:pb-12 sm:pt-20 lg:px-8 lg:pt-28">
+            <span className="inline-flex animate-fade-up items-center gap-2 rounded-full border border-border-soft bg-white/5 px-4 py-1 text-xs font-medium text-foreground-muted">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#18d3e8] opacity-60 motion-reduce:animate-none" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#18d3e8]" />
+              </span>
               Stuart, Florida · Family-owned
             </span>
-            <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+            <h1
+              className="mt-6 animate-fade-up font-display text-[2.1rem] font-black uppercase leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl"
+              style={fadeDelay(100)}
+            >
               The story behind{" "}
               <span className="accent-gradient-text">Print Laser Stitch</span>
             </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base text-foreground-muted sm:text-lg">
+            <p
+              className="mx-auto mt-5 max-w-2xl animate-fade-up text-[15px] leading-relaxed text-foreground-muted sm:text-lg"
+              style={fadeDelay(200)}
+            >
               Built on late nights, tight deadlines, and a deep belief that
               your project matters just as much to us as it does to you.
             </p>
@@ -107,12 +117,15 @@ export default function AboutPage() {
 
         {/* Founder story */}
         <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl border border-[#d9f000]/30 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#18d3e8]/10 p-8 sm:p-12">
+          <div
+            data-reveal
+            className="relative overflow-hidden rounded-3xl border border-[#d9f000]/30 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#18d3e8]/10 p-6 sm:p-12"
+          >
             <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#d9f000]/15 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#18d3e8]/10 blur-3xl" />
 
-            <div className="relative grid items-start gap-10 lg:grid-cols-[auto_1fr]">
-              <div className="grid h-32 w-32 place-items-center rounded-3xl accent-gradient text-5xl font-black text-black shadow-2xl shadow-[#d9f000]/30">
+            <div className="relative grid items-start gap-6 sm:gap-10 lg:grid-cols-[auto_1fr]">
+              <div className="grid h-20 w-20 place-items-center rounded-2xl accent-gradient text-3xl font-black text-black shadow-2xl shadow-[#d9f000]/30 sm:h-32 sm:w-32 sm:rounded-3xl sm:text-5xl">
                 A
               </div>
               <div>
@@ -122,7 +135,7 @@ export default function AboutPage() {
                 <h2 className="mt-3 text-2xl font-bold sm:text-3xl">
                   Hey, I&apos;m Anthony
                 </h2>
-                <div className="mt-4 space-y-4 text-base leading-relaxed text-foreground/90">
+                <div className="mt-4 space-y-4 text-[15px] leading-relaxed text-foreground/90 sm:text-base">
                   <p>
                     I&apos;m the owner of Print Laser Stitch — a small print
                     shop here in Stuart, Florida, built from the ground up on
@@ -150,8 +163,8 @@ export default function AboutPage() {
         </section>
 
         {/* Meet the team */}
-        <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mb-12 text-center">
+        <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+          <div className="mb-8 text-center sm:mb-12" data-reveal>
             <span className="inline-block rounded-full border border-border-soft bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-accent">
               Meet the team
             </span>
@@ -166,19 +179,25 @@ export default function AboutPage() {
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {TEAM.map((member) => (
+            {TEAM.map((member, i) => (
               <article
                 key={member.name}
-                className="group relative overflow-hidden rounded-3xl border border-border-soft bg-surface p-6 transition hover:-translate-y-1 hover:border-accent/40 hover:shadow-2xl hover:shadow-accent-strong/10"
+                data-reveal="scale"
+                style={revealDelay((i % 3) * 100)}
+                className="group relative overflow-hidden rounded-3xl border border-border-soft bg-surface p-5 hover:-translate-y-1 hover:border-accent/40 hover:shadow-2xl hover:shadow-accent-strong/10 sm:p-6"
               >
-                <div
-                  className={`mb-5 grid h-20 w-20 place-items-center rounded-2xl bg-linear-to-br ${member.accent} text-2xl font-black text-black shadow-lg`}
-                >
-                  {member.initial}
-                </div>
-                <h3 className="text-xl font-bold">{member.name}</h3>
-                <div className="mt-1 text-xs font-semibold uppercase tracking-wider text-accent">
-                  {member.role}
+                <div className="flex items-center gap-4 sm:block">
+                  <div
+                    className={`grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-linear-to-br ${member.accent} text-xl font-black text-black shadow-lg transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-110 sm:mb-5 sm:h-20 sm:w-20 sm:text-2xl`}
+                  >
+                    {member.initial}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">{member.name}</h3>
+                    <div className="mt-1 text-xs font-semibold uppercase tracking-wider text-accent">
+                      {member.role}
+                    </div>
+                  </div>
                 </div>
                 <p className="mt-4 text-sm leading-relaxed text-foreground-muted">
                   {member.bio}
@@ -190,8 +209,8 @@ export default function AboutPage() {
 
         {/* Process */}
         <section className="border-t border-border-soft bg-background-soft/40">
-          <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-            <div className="mb-12 text-center">
+          <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+            <div className="mb-8 text-center sm:mb-12" data-reveal>
               <span className="inline-block rounded-full border border-border-soft bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-accent">
                 How we work
               </span>
@@ -201,16 +220,20 @@ export default function AboutPage() {
               </h2>
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-5">
               {PROCESS_STEPS.map((step, idx) => (
                 <div
                   key={step.n}
-                  className="group relative rounded-2xl border border-border-soft bg-surface p-6 transition hover:-translate-y-1 hover:border-accent/40"
+                  data-reveal
+                  style={revealDelay(idx * 90)}
+                  className={`group relative rounded-2xl border border-border-soft bg-surface p-4 hover:-translate-y-1 hover:border-accent/40 sm:p-6 ${
+                    idx === PROCESS_STEPS.length - 1 ? "col-span-2 lg:col-span-1" : ""
+                  }`}
                 >
                   <div className="absolute right-4 top-4 text-xs font-bold text-accent/60">
                     {step.n}
                   </div>
-                  <div className="text-3xl">{step.icon}</div>
+                  <div className="text-3xl transition-transform duration-500 group-hover:scale-125">{step.icon}</div>
                   <div className="mt-3 text-sm font-bold">{step.title}</div>
                   <p className="mt-2 text-xs leading-relaxed text-foreground-muted">
                     {step.text}
@@ -225,24 +248,28 @@ export default function AboutPage() {
         </section>
 
         {/* Values */}
-        <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+          <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
             <ValueCard
+              index={0}
               icon="❤️"
               title="Real humans"
               text="Not a call center. A real person picks up the phone, every time."
             />
             <ValueCard
+              index={1}
               icon="✨"
               title="In-house quality"
               text="Every order is printed, stitched, or engraved in our Florida shop — never outsourced."
             />
             <ValueCard
+              index={2}
               icon="⚡"
               title="Fast turnaround"
               text="5–12 business days for most orders. Need it sooner? Email info@printlaserstitch.com for rush options."
             />
             <ValueCard
+              index={3}
               icon="🤝"
               title="Built on trust"
               text="One shirt or a thousand — we treat your project like it's our own business."
@@ -252,7 +279,10 @@ export default function AboutPage() {
 
         {/* Contact CTA */}
         <section className="border-t border-border-soft bg-background-soft/40">
-          <div className="mx-auto max-w-5xl px-4 py-20 text-center sm:px-6 lg:px-8">
+          <div
+            data-reveal
+            className="mx-auto max-w-5xl px-4 py-14 text-center sm:px-6 sm:py-20 lg:px-8"
+          >
             <span className="inline-block rounded-full border border-border-soft bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-accent">
               Let&apos;s talk
             </span>
@@ -267,7 +297,7 @@ export default function AboutPage() {
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
               <a
                 href="tel:7729852854"
-                className="rounded-2xl border border-border-soft bg-surface p-6 text-left transition hover:-translate-y-0.5 hover:border-accent/40"
+                className="rounded-2xl border border-[#d9f000]/30 bg-surface p-5 text-left transition hover:-translate-y-0.5 hover:border-accent/60 sm:p-6"
               >
                 <div className="text-xs font-semibold uppercase tracking-wider text-foreground-muted">
                   Phone
@@ -277,7 +307,7 @@ export default function AboutPage() {
                   Tap to call →
                 </div>
               </a>
-              <div className="rounded-2xl border border-border-soft bg-surface p-6 text-left">
+              <div className="rounded-2xl border border-border-soft bg-surface p-5 text-left sm:p-6">
                 <div className="text-xs font-semibold uppercase tracking-wider text-foreground-muted">
                   Hours
                 </div>
@@ -286,7 +316,7 @@ export default function AboutPage() {
                   9 AM – 5 PM EST
                 </div>
               </div>
-              <div className="rounded-2xl border border-border-soft bg-surface p-6 text-left">
+              <div className="rounded-2xl border border-border-soft bg-surface p-5 text-left sm:p-6">
                 <div className="text-xs font-semibold uppercase tracking-wider text-foreground-muted">
                   Visit
                 </div>
@@ -300,7 +330,7 @@ export default function AboutPage() {
             <div className="mt-10">
               <Link
                 href="/products/vinyl-stickers"
-                className="inline-flex items-center gap-2 rounded-md accent-gradient px-7 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 hover:brightness-110"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl accent-gradient px-7 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 transition hover:brightness-110 active:scale-[0.98] sm:w-auto sm:rounded-md"
               >
                 Start your order
                 <svg
@@ -330,18 +360,24 @@ function ValueCard({
   icon,
   title,
   text,
+  index,
 }: {
   icon: string;
   title: string;
   text: string;
+  index: number;
 }) {
   return (
-    <div className="rounded-2xl border border-border-soft bg-surface p-6">
-      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/5 text-2xl">
+    <div
+      data-reveal
+      style={revealDelay(index * 90)}
+      className="group rounded-2xl border border-border-soft bg-surface p-4 hover:-translate-y-1 hover:border-border-strong sm:p-6"
+    >
+      <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white/5 text-2xl transition-transform duration-500 group-hover:scale-110 sm:h-12 sm:w-12">
         {icon}
       </div>
-      <div className="mt-4 text-base font-bold">{title}</div>
-      <p className="mt-2 text-sm leading-relaxed text-foreground-muted">
+      <div className="mt-3 text-sm font-bold sm:mt-4 sm:text-base">{title}</div>
+      <p className="mt-2 text-xs leading-relaxed text-foreground-muted sm:text-sm">
         {text}
       </p>
     </div>

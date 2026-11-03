@@ -184,8 +184,8 @@ export default function DecalCalculator() {
       </div>
 
       <div className="mx-auto max-w-7xl px-3 py-6 sm:px-6 lg:px-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+        <div className="mb-6 animate-fade-up">
+          <h1 className="font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
             Signage Quote{" "}
             <span className="bg-linear-to-r from-[#18d3e8] to-[#d9f000] bg-clip-text text-transparent">
               — Manual Entry

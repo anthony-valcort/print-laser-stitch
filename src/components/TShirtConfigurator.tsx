@@ -2,9 +2,11 @@
 "use client";
 
 import MobileBuyBar from "@/components/MobileBuyBar";
+import AnimatedPrice from "@/components/AnimatedPrice";
+import { flyToCart, successFeedback } from "@/lib/interactions";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   PRINT_LOCATIONS,
   TSHIRT_MIN_QUANTITY,
@@ -28,6 +30,10 @@ import {
   BulkPricingLadder,
   BulkProgress,
 } from "@/components/configurator/BulkPricing";
+import MixAndMatch, {
+  useCartGarmentLines,
+} from "@/components/configurator/MixAndMatch";
+import { canAddToMix, mixDiscountPercent } from "@/lib/apparel-mix";
 import { ColorSwatch } from "@/components/configurator/ColorSwatch";
 import { ProductGallery } from "@/components/configurator/ProductGallery";
 import {
@@ -68,6 +74,7 @@ export default function TShirtConfigurator({
 }: ApparelConfiguratorProps) {
   const router = useRouter();
   const { addItem } = useCart();
+  const galleryRef = useRef<HTMLDivElement>(null);
   const minQuantity = minQuantityProp ?? TSHIRT_MIN_QUANTITY;
   // Separate "Size" out from the other options — Size becomes a per-size
   // quantity matrix instead of a single picker.
@@ -310,7 +317,19 @@ export default function TShirtConfigurator({
   // Automatic volume discount (polos). The server re-applies the same rule
   // at checkout from the real Shopify title — this is just for display.
   const volumeTiers = volumeTiersFor(product.title);
-  const volumePct = volumeDiscountPercent(product.title, totalQuantity);
+  const cartGarmentLines = useCartGarmentLines(product.title);
+  const otherPiecesForPricing = cartGarmentLines.reduce(
+    (a, l) => a + l.quantity,
+    0,
+  );
+  // The bulk tier counts every garment in the order, so 12 polos already in
+  // the cart plus 12 tees here earns the 24-piece tier on both.
+  const volumePct = Math.max(
+    volumeDiscountPercent(product.title, totalQuantity),
+    volumeTiersFor(product.title).length > 0
+      ? mixDiscountPercent(totalQuantity + otherPiecesForPricing)
+      : 0,
+  );
   const volumeSavings = Math.round(totalPrice * volumePct) / 100;
   const finalPrice = Math.round((totalPrice - volumeSavings) * 100) / 100;
   const upcomingTier = nextVolumeTier(product.title, totalQuantity);
@@ -422,7 +441,19 @@ export default function TShirtConfigurator({
     !needsBack || (!!backUpload.fileUrl && !backUpload.isUploading);
   const anyUploading = frontUpload.isUploading || backUpload.isUploading;
 
-  const qtyOk = totalQuantity >= minQuantity;
+  // Mix & Match: a style below its own minimum still goes through when the
+  // rest of the apparel in the cart carries the order to 12 pieces.
+  const otherGarmentPieces = cartGarmentLines.reduce(
+    (a, l) => a + l.quantity,
+    0,
+  );
+  const mixCheck = canAddToMix({
+    thisStyleQty: totalQuantity,
+    otherGarmentPieces,
+    productTitle: product.title,
+    ownMinimum: minQuantity,
+  });
+  const qtyOk = mixCheck.ok;
   const canCheckout =
     qtyOk &&
     frontReady &&
@@ -540,6 +571,8 @@ export default function TShirtConfigurator({
     };
 
     addItem(cartItem);
+    successFeedback();
+    flyToCart(galleryRef.current?.querySelector("img") ?? null);
     router.push("/cart");
   }
 
@@ -574,7 +607,7 @@ export default function TShirtConfigurator({
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)] lg:gap-12">
           {/* LEFT: Sticky gallery */}
-          <div className="lg:sticky lg:top-20 lg:self-start">
+          <div ref={galleryRef} className="lg:sticky lg:top-20 lg:self-start">
             <ProductGallery
               images={displayImages}
               idx={galleryIdx}
@@ -647,9 +680,10 @@ export default function TShirtConfigurator({
                 {product.title}
               </h1>
               <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <span className="text-3xl font-bold accent-gradient-text">
-                  ${(perShirtPrice * (1 - volumePct / 100)).toFixed(2)}
-                </span>
+                <AnimatedPrice
+                  value={perShirtPrice * (1 - volumePct / 100)}
+                  className="text-3xl font-bold accent-gradient-text"
+                />
                 {volumePct > 0 && (
                   <span className="text-base font-medium text-foreground-muted line-through">
                     ${perShirtPrice.toFixed(2)}
@@ -745,9 +779,13 @@ export default function TShirtConfigurator({
             {sizeOption && !multiColor && (
               <Section
                 title={`${sizeOption.name} & quantity`}
-                value={`${totalQuantity} / min ${minQuantity}`}
+                value={
+                  otherPiecesForPricing > 0
+                    ? `${totalQuantity} + ${otherPiecesForPricing} in cart`
+                    : `${totalQuantity} / min ${minQuantity}`
+                }
                 icon={
-                  totalQuantity >= minQuantity ? (
+                  mixCheck.ok ? (
                     <span className="text-emerald-400">✓</span>
                   ) : (
                     <span className="text-amber-400">!</span>
@@ -785,16 +823,17 @@ export default function TShirtConfigurator({
                     );
                   })}
                 </div>
-                {totalQuantity > 0 && totalQuantity < minQuantity && (
-                  <p className="mt-2 text-[11px] text-amber-300">
-                    Add {minQuantity - totalQuantity} more to reach the
-                    minimum order of {minQuantity}.
-                  </p>
-                )}
+                {totalQuantity > 0 &&
+                  totalQuantity < minQuantity &&
+                  !mixCheck.ok && (
+                    <p className="mt-2 text-[11px] text-amber-300">
+                      {mixCheck.reason}
+                    </p>
+                  )}
                 {volumeTiers.length > 0 && (
                   <BulkProgress
                     tiers={volumeTiers}
-                    totalQuantity={totalQuantity}
+                    totalQuantity={totalQuantity + otherPiecesForPricing}
                     subtotal={totalPrice}
                     unitPrice={perShirtPrice}
                   />
@@ -807,9 +846,13 @@ export default function TShirtConfigurator({
             {sizeOption && multiColor && (
               <Section
                 title="Colors & quantity"
-                value={`${totalQuantity} / min ${minQuantity}`}
+                value={
+                  otherPiecesForPricing > 0
+                    ? `${totalQuantity} + ${otherPiecesForPricing} in cart`
+                    : `${totalQuantity} / min ${minQuantity}`
+                }
                 icon={
-                  totalQuantity >= minQuantity ? (
+                  mixCheck.ok ? (
                     <span className="text-emerald-400">✓</span>
                   ) : (
                     <span className="text-amber-400">!</span>
@@ -916,16 +959,17 @@ export default function TShirtConfigurator({
                   </div>
                 )}
 
-                {totalQuantity > 0 && totalQuantity < minQuantity && (
-                  <p className="mt-2 text-[11px] text-amber-300">
-                    Add {minQuantity - totalQuantity} more to reach the
-                    minimum order of {minQuantity}.
-                  </p>
-                )}
+                {totalQuantity > 0 &&
+                  totalQuantity < minQuantity &&
+                  !mixCheck.ok && (
+                    <p className="mt-2 text-[11px] text-amber-300">
+                      {mixCheck.reason}
+                    </p>
+                  )}
                 {volumeTiers.length > 0 && (
                   <BulkProgress
                     tiers={volumeTiers}
-                    totalQuantity={totalQuantity}
+                    totalQuantity={totalQuantity + otherPiecesForPricing}
                     subtotal={totalPrice}
                     unitPrice={perShirtPrice}
                   />
@@ -933,6 +977,13 @@ export default function TShirtConfigurator({
               </Section>
             )}
 
+            {volumeTiers.length > 0 && (
+              <MixAndMatch
+                productTitle={product.title}
+                currentQty={totalQuantity}
+                ownMinimum={minQuantity}
+              />
+            )}
 
             {/* Print location (only shown for products that have it) */}
             {showPrintLocations && (
@@ -1078,7 +1129,7 @@ export default function TShirtConfigurator({
                       ${totalPrice.toFixed(2)}
                     </span>
                   )}
-                  ${finalPrice.toFixed(2)}
+                  <AnimatedPrice value={finalPrice} />
                 </span>
               </div>
               {volumePct > 0 && (
@@ -1122,7 +1173,8 @@ export default function TShirtConfigurator({
               ) : !qtyOk ? (
                 totalQuantity === 0
                   ? "Pick sizes & quantities to continue"
-                  : `Add ${minQuantity - totalQuantity} more to reach min ${minQuantity}`
+                  : (mixCheck.reason ??
+                    `Add ${minQuantity - totalQuantity} more to reach min ${minQuantity}`)
               ) : !frontReady || !backReady ? (
                 <>
                   <span>⬆</span>

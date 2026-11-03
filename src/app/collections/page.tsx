@@ -3,6 +3,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CategoryGrid from "@/components/CategoryGrid";
+import { fadeDelay } from "@/lib/reveal";
 import { getAllCollections } from "@/lib/shopify-collections";
 
 export const metadata: Metadata = {
@@ -28,16 +29,22 @@ export default async function CollectionsPage() {
     <>
       <Header />
       <main className="flex-1">
-        <section className="mx-auto max-w-7xl px-4 pb-16 pt-12 sm:px-6 lg:px-8">
-          <div className="mb-10 text-center">
-            <span className="inline-block rounded-full border border-[#d9f000]/30 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
+        <section className="mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12 lg:px-8">
+          <div className="mb-8 text-center sm:mb-10">
+            <span className="inline-block animate-fade-up rounded-full border border-[#d9f000]/30 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
               Shop by category
             </span>
-            <h1 className="mt-3 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
+            <h1
+              className="mt-3 animate-fade-up font-display text-3xl font-black uppercase tracking-tight sm:text-4xl"
+              style={fadeDelay(100)}
+            >
               What can we{" "}
               <span className="accent-gradient-text">make for you?</span>
             </h1>
-            <p className="mx-auto mt-3 max-w-2xl text-sm text-foreground-muted">
+            <p
+              className="mx-auto mt-3 max-w-2xl animate-fade-up text-sm text-foreground-muted"
+              style={fadeDelay(180)}
+            >
               {collections.length > 0
                 ? `${collections.length} categories — pick one to see every product inside.`
                 : "Browse our full range of custom print, engraving and apparel products."}

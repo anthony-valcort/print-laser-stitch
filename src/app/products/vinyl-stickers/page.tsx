@@ -6,9 +6,10 @@ import FAQSection from "@/components/FAQSection";
 import AlreadyCustomerCTA from "@/components/AlreadyCustomerCTA";
 
 export const metadata: Metadata = {
-  title: "Custom Vinyl Stickers · Print Laser Stitch",
+  title: "Custom Vinyl Stickers in Stuart, FL | Print Laser Stitch",
   description:
-    "Premium custom vinyl stickers — waterproof, UV-protected, 5–12 business days. Build your order with our live pricing calculator.",
+    "Waterproof, UV-protected custom vinyl stickers, die-cut or kiss-cut, from a Stuart, Florida print shop. Instant online pricing; 5–12 business days.",
+  alternates: { canonical: "/products/vinyl-stickers" },
 };
 
 export default function VinylStickersPage() {

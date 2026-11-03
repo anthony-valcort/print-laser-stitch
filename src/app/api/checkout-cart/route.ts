@@ -19,7 +19,12 @@ import { gidToNumericId, shopifyAdminFetch } from "@/lib/shopify";
 import { getCurrentCustomer } from "@/lib/customer-session";
 import { normalizeInvoiceUrl, waitForInvoiceReady } from "@/lib/shopify-checkout";
 import { isStickerScopedCode, lookupDiscountCode } from "@/lib/discount-lookup";
-import { volumeDiscountPercent } from "@/lib/volume-discounts";
+import { hasVolumePricing, volumeDiscountPercent } from "@/lib/volume-discounts";
+import {
+  MIX_MINIMUM,
+  mixDiscountPercent,
+  mixPieceCount,
+} from "@/lib/apparel-mix";
 import { isAllowedDesignUrl } from "@/lib/allowed-design-hosts";
 import {
   QUANTITY_OPTIONS,
@@ -178,6 +183,43 @@ export async function POST(req: NextRequest) {
         { status: 502 },
       );
     }
+  }
+
+  // Mix & Match: every decorated garment in the cart counts as ONE apparel
+  // order, so a mix of polos and tees shares the 12-piece minimum and earns
+  // the bulk tier on the combined total. Counted here from real Shopify
+  // product titles and quantities — never from anything the browser claims.
+  const mixLines = body.items.flatMap((item) =>
+    item.kind === "tshirt"
+      ? [
+          {
+            productTitle:
+              variantPrices.get(item.sizeVariants[0]?.variantId ?? "")
+                ?.productTitle ?? "",
+            quantity: item.sizeVariants.reduce(
+              (a, sv) => a + Math.max(0, Math.floor(Number(sv.quantity) || 0)),
+              0,
+            ),
+          },
+        ]
+      : [],
+  );
+  const mixPieces = mixPieceCount(mixLines);
+  const mixPercent = mixDiscountPercent(mixPieces);
+  const isMixedOrder =
+    new Set(
+      mixLines.filter((l) => l.quantity > 0).map((l) => l.productTitle),
+    ).size > 1;
+
+  // A mixed apparel order still has to clear the shared minimum. Single-style
+  // orders keep their own per-product minimum, enforced on the product page.
+  if (isMixedOrder && mixPieces > 0 && mixPieces < MIX_MINIMUM) {
+    return NextResponse.json(
+      {
+        error: `Mix & Match apparel needs ${MIX_MINIMUM} pieces in total — you have ${mixPieces}. Add ${MIX_MINIMUM - mixPieces} more from any garment.`,
+      },
+      { status: 400 },
+    );
   }
 
   // Build draft-order line items by expanding each cart item.
@@ -361,14 +403,25 @@ export async function POST(req: NextRequest) {
       const firstLookup = firstVariantId
         ? variantPrices.get(firstVariantId)
         : undefined;
-      const volumePct = firstLookup
+      // Bulk tier comes from the combined apparel count when the order mixes
+      // styles, so 12 polos + 12 tees earns the same 10% as 24 of one style.
+      // A single-style order is unchanged (its own quantity IS the mix).
+      const ownPct = firstLookup
         ? volumeDiscountPercent(firstLookup.productTitle, itemQty)
         : 0;
+      const combinedPct =
+        firstLookup && hasVolumePricing(firstLookup.productTitle)
+          ? mixPercent
+          : 0;
+      const volumePct = Math.max(ownPct, combinedPct);
+      const countedQty = volumePct === combinedPct && combinedPct > ownPct
+        ? mixPieces
+        : itemQty;
       const volumeDiscount: DraftAppliedDiscount | undefined =
         volumePct > 0
           ? {
               description: "Volume discount",
-              title: `Volume discount (${volumePct}% off ${itemQty} pcs)`,
+              title: `Volume discount (${volumePct}% off ${countedQty} pcs)`,
               value_type: "percentage",
               value: String(volumePct),
             }

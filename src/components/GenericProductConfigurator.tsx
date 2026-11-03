@@ -3,7 +3,7 @@
 import MobileBuyBar from "@/components/MobileBuyBar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ShopifyMedia, ShopifyProduct } from "@/lib/shopify-products";
 import { useCart } from "@/lib/cart-store";
 import type { ProductCartItem } from "@/lib/cart-types";
@@ -30,6 +30,8 @@ import { BLEED_IN } from "@/lib/template-fit/constants";
 import { saveTemplateFitPayload } from "@/lib/template-fit/session";
 import BlankTemplateDownload from "@/components/configurator/BlankTemplateDownload";
 import BlankTemplateDownloadMobile from "@/components/configurator/BlankTemplateDownloadMobile";
+import AnimatedPrice from "@/components/AnimatedPrice";
+import { flyToCart, successFeedback } from "@/lib/interactions";
 import {
   QuantityTierCards,
   SidesPicker,
@@ -169,6 +171,7 @@ export default function GenericProductConfigurator({
 }: GenericProductConfiguratorProps) {
   const router = useRouter();
   const { addItem } = useCart();
+  const galleryRef = useRef<HTMLDivElement>(null);
   const firstAvailable =
     product.variants.find((v) => v.availableForSale) ?? product.variants[0];
 
@@ -370,6 +373,8 @@ export default function GenericProductConfigurator({
     };
 
     addItem(cartItem);
+    successFeedback();
+    flyToCart(galleryRef.current?.querySelector("img") ?? null);
     router.push("/cart");
   }
 
@@ -487,7 +492,7 @@ export default function GenericProductConfigurator({
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)] lg:gap-12">
           {/* LEFT: Sticky gallery */}
-          <div className="lg:sticky lg:top-20 lg:self-start">
+          <div ref={galleryRef} className="lg:sticky lg:top-20 lg:self-start">
             <ProductGallery
               images={galleryImages}
               idx={galleryIdx}
@@ -539,9 +544,10 @@ export default function GenericProductConfigurator({
                 {product.title}
               </h1>
               <div className="mt-3 flex items-baseline gap-3">
-                <span className="text-3xl font-bold accent-gradient-text">
-                  ${variantPrice.toFixed(2)}
-                </span>
+                <AnimatedPrice
+                  value={variantPrice}
+                  className="text-3xl font-bold accent-gradient-text"
+                />
                 <span className="text-sm font-medium text-foreground-muted">
                   {tierCount
                     ? `for ${tierCount}${tierEach ? ` · ${tierEach}` : ""}`
@@ -793,9 +799,10 @@ export default function GenericProductConfigurator({
                     ? Object.values(selectedOptions).slice(0, 3).join(" / ")
                     : `${effectiveQty} × ${Object.values(selectedOptions).slice(0, 3).join(" / ")}`}
                 </span>
-                <span className="text-3xl font-bold text-white">
-                  ${total.toFixed(2)}
-                </span>
+                <AnimatedPrice
+                  value={total}
+                  className="text-3xl font-bold text-white"
+                />
               </div>
               {tierEach && (
                 <div className="mt-0.5 text-right text-sm font-semibold text-white">

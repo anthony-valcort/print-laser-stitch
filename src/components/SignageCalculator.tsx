@@ -55,7 +55,9 @@ export default function SignageCalculator() {
   const [width, setWidth] = useState<string>("");
   const [length, setLength] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
-  const [discountPercent, setDiscountPercent] = useState<string>("0");
+  // Discounts are no longer customer-editable (security fix); kept at 0 so
+  // the rest of the calculator code is unchanged.
+  const discountPercent = "0";
   const [servicePlan, setServicePlan] =
     useState<ServicePlanKey>("full-install");
   const [notes, setNotes] = useState<string>("");
@@ -228,7 +230,7 @@ export default function SignageCalculator() {
                 />
               </div>
 
-              {/* Quantity + Discount */}
+              {/* Quantity */}
               <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-foreground-muted">
@@ -252,27 +254,6 @@ export default function SignageCalculator() {
                     >
                       +
                     </button>
-                  </div>
-                </div>
-                <div>
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-foreground-muted">
-                    Discount (%)
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={discountPercent}
-                      onChange={(e) => setDiscountPercent(e.target.value)}
-                      min={0}
-                      max={100}
-                      step={1}
-                      placeholder="0"
-                      className="w-full rounded-2xl border border-border-soft bg-background/60 px-4 py-3 text-center text-lg font-bold tabular-nums outline-none ring-[#18d3e8]/40 focus:ring-2"
-                      suppressHydrationWarning
-                    />
-                    <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-foreground-muted">
-                      %
-                    </span>
                   </div>
                 </div>
               </div>

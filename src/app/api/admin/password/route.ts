@@ -11,6 +11,7 @@ import {
   sha256,
   getAdminPasswordHash,
   setAdminPasswordHash,
+  safeEqual,
 } from "@/lib/vehicle-shopify";
 
 export async function POST(req: NextRequest) {
@@ -23,9 +24,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
 
-  if (body.newPassword.length < 6) {
+  if (body.newPassword.length < 12) {
     return NextResponse.json(
-      { error: "New password must be at least 6 characters" },
+      { error: "New password must be at least 12 characters" },
       { status: 400 },
     );
   }
@@ -33,11 +34,8 @@ export async function POST(req: NextRequest) {
   const currentHash = sha256(body.currentPassword);
   const storedHash = await getAdminPasswordHash();
 
-  // Also accept legacy base64 token format during transition
-  const legacyOk =
-    body.currentPassword === (process.env.ADMIN_PASSWORD ?? "admin123");
-
-  if (currentHash !== storedHash && !legacyOk) {
+  if (!storedHash || !safeEqual(currentHash, storedHash)) {
+    await new Promise((r) => setTimeout(r, 1500));
     return NextResponse.json({ error: "Current password is incorrect" }, { status: 401 });
   }
 

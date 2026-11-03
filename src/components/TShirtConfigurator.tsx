@@ -333,7 +333,50 @@ export default function TShirtConfigurator({
   const mockupEnabled = /\bpolos?\b|embroider/i.test(product.title);
   const { url: logoPreviewUrl, unsupported: logoPreviewUnsupported } =
     useLogoPreviewUrl(mockupEnabled ? frontUpload.file : null);
-  const mainImageUrl = galleryImages[galleryIdx]?.url ?? galleryImages[0]?.url;
+  // Pick a clean photo of the chosen color for the preview: the photo most of
+  // that color's variants use (skips one-off promo graphics). If the color
+  // has no photo yet, fall back to the most-used photo of any color.
+  const mockupColor =
+    referenceColor ?? (colorOption ? selectedOptions[colorOption.name] ?? null : null);
+  const mockupPhoto = useMemo(() => {
+    const mostUsed = (onlyThisColor: boolean) => {
+      const counts = new Map<string, { n: number; url: string; altText: string | null }>();
+      for (const v of product.variants) {
+        if (!v.image) continue;
+        if (
+          onlyThisColor &&
+          !(colorOption && mockupColor && v.selectedOptions.some(
+            (o) => o.name === colorOption.name && o.value === mockupColor,
+          ))
+        ) continue;
+        const prev = counts.get(v.image.url);
+        counts.set(v.image.url, {
+          n: (prev?.n ?? 0) + 1,
+          url: v.image.url,
+          altText: v.image.altText,
+        });
+      }
+      let best: { n: number; url: string; altText: string | null } | null = null;
+      for (const c of counts.values()) if (!best || c.n > best.n) best = c;
+      return best;
+    };
+    const own = mostUsed(true);
+    const photo = own ?? mostUsed(false);
+    return photo
+      ? {
+          media: { type: "image" as const, url: photo.url, altText: photo.altText },
+          matchesColor: !!own,
+        }
+      : null;
+  }, [product.variants, colorOption, mockupColor]);
+  const displayImages = useMemo<ShopifyMedia[]>(
+    () =>
+      logoPreviewUrl && mockupPhoto
+        ? [mockupPhoto.media, ...galleryImages.filter((i) => i.url !== mockupPhoto.media.url)]
+        : galleryImages,
+    [logoPreviewUrl, mockupPhoto, galleryImages],
+  );
+  const mainImageUrl = displayImages[galleryIdx]?.url ?? displayImages[0]?.url;
   const [logoPlacement, setLogoPlacement] = useState<LogoPlacement>(() =>
     defaultPlacement(mainImageUrl),
   );
@@ -528,7 +571,7 @@ export default function TShirtConfigurator({
           {/* LEFT: Sticky gallery */}
           <div className="lg:sticky lg:top-20 lg:self-start">
             <ProductGallery
-              images={galleryImages}
+              images={displayImages}
               idx={galleryIdx}
               setIdx={setGalleryIdx}
               title={product.title}
@@ -543,6 +586,12 @@ export default function TShirtConfigurator({
               }
             />
 
+            {logoPreviewUrl && mockupPhoto && !mockupPhoto.matchesColor && mockupColor && (
+              <p className="mt-3 text-xs text-foreground-muted">
+                We don&apos;t have a {mockupColor} photo yet, so your logo is
+                shown on another color. Your polos will be {mockupColor}.
+              </p>
+            )}
             {logoPreviewUrl && (
               <div className="mt-3">
                 <LogoMockupControls

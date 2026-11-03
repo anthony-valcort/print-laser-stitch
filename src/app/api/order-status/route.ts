@@ -67,7 +67,8 @@ export async function GET(req: NextRequest) {
       status: d.status,
       isPaid: d.status === "completed",
       orderId: d.order_id,
-      invoiceUrl: d.invoice_url,
+      // invoiceUrl intentionally omitted: draft ids are guessable and the
+      // checkout link can expose customer email and address.
       total: Number(d.total_price),
       currency: d.currency,
       createdAt: d.created_at,

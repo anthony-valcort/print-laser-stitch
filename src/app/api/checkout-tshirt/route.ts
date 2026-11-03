@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
+import { volumeDiscountPercent } from "@/lib/volume-discounts";
 import { gidToNumericId, shopifyAdminFetch } from "@/lib/shopify";
 import { detectMinQuantityFromTitle } from "@/lib/shopify-products";
 import { requireCustomerOr401 } from "@/lib/customer-session";
@@ -270,17 +271,27 @@ export async function POST(req: NextRequest) {
   // Build one line item per size. variant_id keeps Anthony's inventory
   // tracking accurate; price defaults to the Shopify variant price (no
   // separate print fee).
+  // Automatic volume discount (polos), from the real Shopify title.
+  const volumePct = volumeDiscountPercent(productTitle, totalQty);
   const lineItems = priced.map(({ sv, price }) => ({
     variant_id: Number(gidToNumericId(sv.variantId)),
     quantity: Number(sv.quantity),
     price: price.toFixed(2),
     properties: sharedProperties,
+    ...(volumePct > 0
+      ? {
+          applied_discount: {
+            description: "Volume discount",
+            title: `Volume discount (${volumePct}% off ${totalQty} pcs)`,
+            value_type: "percentage",
+            value: String(volumePct),
+          },
+        }
+      : {}),
   }));
-
-  const totalAmount = priced.reduce(
-    (sum, { sv, price }) => sum + price * Number(sv.quantity),
-    0,
-  );
+  const totalAmount =
+    priced.reduce((sum, { sv, price }) => sum + price * Number(sv.quantity), 0) *
+    (1 - volumePct / 100);
 
   const optsSummary = body.selectedOptions
     ? Object.entries(body.selectedOptions)

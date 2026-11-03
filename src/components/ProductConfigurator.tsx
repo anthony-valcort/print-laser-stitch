@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
+import MobileBuyBar from "@/components/MobileBuyBar";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -828,6 +829,7 @@ export default function ProductConfigurator() {
 
               {/* CTA */}
               <button
+                id="buy-button"
                 type="button"
                 onClick={handleCheckoutClick}
                 disabled={ctaDisabled}
@@ -867,6 +869,7 @@ export default function ProductConfigurator() {
         </div>
       </div>
 
+      <MobileBuyBar total={price.perUnit * orderQty} targetId="buy-button" label="Upload & proof" />
       {toast && (
         <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full border border-border-strong bg-surface-elevated px-5 py-3 text-sm shadow-2xl shadow-black/40">
           {toast}

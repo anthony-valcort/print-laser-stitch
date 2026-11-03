@@ -345,6 +345,13 @@ body {
   [data-reveal="right"] {
     transform: translateX(36px);
   }
+  /* Phones/tablets: slide up instead of sideways (no horizontal overflow) */
+  @media (max-width: 1023px) {
+    [data-reveal="left"],
+    [data-reveal="right"] {
+      transform: translateY(28px);
+    }
+  }
   [data-reveal].is-revealed {
     opacity: 1;
     transform: none;

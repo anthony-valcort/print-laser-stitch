@@ -19,6 +19,7 @@ import { gidToNumericId, shopifyAdminFetch } from "@/lib/shopify";
 import { getCurrentCustomer } from "@/lib/customer-session";
 import { normalizeInvoiceUrl, waitForInvoiceReady } from "@/lib/shopify-checkout";
 import { isStickerScopedCode, lookupDiscountCode } from "@/lib/discount-lookup";
+import { volumeDiscountPercent } from "@/lib/volume-discounts";
 import { isAllowedDesignUrl } from "@/lib/allowed-design-hosts";
 import {
   QUANTITY_OPTIONS,
@@ -349,6 +350,30 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      // Automatic volume discount (polos: 10% at 24+, 15% at 48+, 20% at
+      // 100+). Uses the real Shopify product title and the server-counted
+      // quantity, so the browser can't pick its own discount.
+      const itemQty = item.sizeVariants.reduce(
+        (a, sv) => a + Math.max(0, Math.floor(Number(sv.quantity) || 0)),
+        0,
+      );
+      const firstVariantId = item.sizeVariants[0]?.variantId;
+      const firstLookup = firstVariantId
+        ? variantPrices.get(firstVariantId)
+        : undefined;
+      const volumePct = firstLookup
+        ? volumeDiscountPercent(firstLookup.productTitle, itemQty)
+        : 0;
+      const volumeDiscount: DraftAppliedDiscount | undefined =
+        volumePct > 0
+          ? {
+              description: "Volume discount",
+              title: `Volume discount (${volumePct}% off ${itemQty} pcs)`,
+              value_type: "percentage",
+              value: String(volumePct),
+            }
+          : undefined;
+
       let totalShirts = 0;
       for (const sv of item.sizeVariants) {
         const lookup = variantPrices.get(sv.variantId);
@@ -371,6 +396,7 @@ export async function POST(req: NextRequest) {
           quantity: qty,
           price: lookup.price.toFixed(2),
           properties: lineProperties,
+          ...(volumeDiscount ? { applied_discount: volumeDiscount } : {}),
         });
         totalShirts += qty;
       }
@@ -384,7 +410,7 @@ export async function POST(req: NextRequest) {
       noteParts.push(
         `${item.productTitle} × ${totalShirts}${
           colorsUsed.length ? ` (${colorsUsed.join(", ")})` : ""
-        }`,
+        }${volumePct > 0 ? ` (${volumePct}% volume discount)` : ""}`,
       );
     } else if (item.kind === "product") {
       const lookup = variantPrices.get(item.variantId);
@@ -556,7 +582,8 @@ export async function POST(req: NextRequest) {
           description: p.description,
         })),
         material: mat.key,
-        discountPercent: Number(item.discountPercent) || 0,
+        // Never trust a discount sent by the browser (security fix).
+        discountPercent: 0,
       });
 
       const panelLines = item.panels.map((p) => {

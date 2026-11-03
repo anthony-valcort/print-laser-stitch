@@ -438,7 +438,9 @@ export async function POST(req: NextRequest) {
         unit,
         quantity: qty,
         servicePlan: plan.key,
-        discountPercent: Number(item.discountPercent) || 0,
+        // Never trust a discount sent by the browser — customers could set it
+        // to 100%. Discounts must come from a validated discount code instead.
+        discountPercent: 0,
       });
 
       const dimLabel = `${w}${unit} × ${l}${unit}`;

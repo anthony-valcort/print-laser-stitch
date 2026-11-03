@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Image from "next/image";
 import type { ShopifyMedia } from "@/lib/shopify-products";
 
@@ -9,12 +10,16 @@ export function ProductGallery({
   setIdx,
   title,
   fallbackEmoji = "📦",
+  overlay,
 }: {
   images: ShopifyMedia[];
   idx: number;
   setIdx: (i: number) => void;
   title: string;
   fallbackEmoji?: string;
+  /** Drawn on top of the main photo (e.g. the customer's logo preview).
+   * Not shown over videos. */
+  overlay?: ReactNode;
 }) {
   const main = images[idx] ?? images[0];
 
@@ -41,7 +46,9 @@ export function ProductGallery({
               priority
             />
           )
-        ) : (
+        ) : null}
+        {main && main.type !== "video" && overlay}
+        {!main && (
           <div className="grid h-full place-items-center text-7xl text-foreground-muted/40">
             {fallbackEmoji}
           </div>

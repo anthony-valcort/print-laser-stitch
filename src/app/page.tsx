@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -6,6 +7,10 @@ import CategoryGrid from "@/components/CategoryGrid";
 import { getAllCollections } from "@/lib/shopify-collections";
 
 export const revalidate = 300;
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const WRAP_SERVICES = [
   {
@@ -66,23 +71,26 @@ export default async function Home() {
           <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 pt-16 sm:px-6 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:pt-24">
             {/* Left — copy */}
             <div className="text-center lg:text-left">
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />
-                We print · We engrave · We stitch
-              </span>
+              {/* The page's main heading (what Google reads first): services +
+                  location, styled as the small eyebrow pill. */}
+              <h1 className="inline-flex items-center gap-2 rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#18d3e8]" />
+                Custom printing, embroidery &amp; engraving · Stuart, FL
+              </h1>
 
-              <h1 className="glitch-text mx-auto mt-5 max-w-2xl font-display text-4xl font-black uppercase leading-[1.05] tracking-tight sm:text-5xl lg:mx-0 lg:text-6xl">
+              <p className="glitch-text mx-auto mt-5 max-w-2xl font-display text-4xl font-black uppercase leading-[1.05] tracking-tight sm:text-5xl lg:mx-0 lg:text-6xl">
                 Bringing your{" "}
                 <span className="accent-gradient-text">vision</span>
                 <br className="hidden sm:inline" />{" "}
                 to life.
-              </h1>
+              </p>
 
               <p className="mx-auto mt-5 max-w-xl text-base text-foreground-muted sm:text-lg lg:mx-0">
-                Premium custom printing, laser engraving and stitching — built
-                for businesses, creators and car enthusiasts. From vinyl
-                stickers to embroidered polos, we print, stitch or etch it for
-                you.
+                Premium custom printing, laser engraving and embroidery from
+                our Stuart, Florida shop — built for businesses, teams,
+                creators and car enthusiasts across the Treasure Coast. From
+                vinyl stickers to embroidered polos, we print, stitch or etch
+                it for you.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">

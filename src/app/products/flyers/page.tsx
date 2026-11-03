@@ -5,9 +5,10 @@ import FAQSection from "@/components/FAQSection";
 import ProductPageShell from "@/components/ProductPageShell";
 
 export const metadata: Metadata = {
-  title: "Custom Flyers · Print Laser Stitch",
+  title: "Custom Flyer Printing in Stuart, FL | Print Laser Stitch",
   description:
-    "Full-color flyers in 4×6, 5×7, and 4×5.5 — front-only or double-sided. Bulk pricing from 100 to 1,000.",
+    "Full-color flyers in 4×6, 5×7 and 4×5.5, single or double-sided, printed in Stuart, Florida. Bulk pricing from 100 to 1,000 with instant online quotes.",
+  alternates: { canonical: "/products/flyers" },
 };
 
 export const revalidate = 300;

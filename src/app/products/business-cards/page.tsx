@@ -6,9 +6,10 @@ import ProductPageShell from "@/components/ProductPageShell";
 import { getTemplateFitOverrides } from "@/lib/product-template-fit-overrides";
 
 export const metadata: Metadata = {
-  title: "Standard Business Cards · Print Laser Stitch",
+  title: "Business Card Printing in Stuart, FL | Print Laser Stitch",
   description:
-    "3.5×2″ 15pt premium business cards, matte or glossy finish. Bulk pricing from 250 to 5,000 cards.",
+    "Premium 3.5×2″ 15pt business cards, matte or glossy, printed in Stuart, Florida. Bulk pricing from 250 to 5,000 cards with instant online ordering.",
+  alternates: { canonical: "/products/business-cards" },
 };
 
 export const revalidate = 300;

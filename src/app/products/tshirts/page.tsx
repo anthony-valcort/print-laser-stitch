@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import ProductJsonLd from "@/components/ProductJsonLd";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -8,9 +9,10 @@ import { getProductByHandle } from "@/lib/shopify-products";
 import { ShopifyError } from "@/lib/shopify";
 
 export const metadata: Metadata = {
-  title: "Custom T-Shirts · Print Laser Stitch",
+  title: "Custom T-Shirt Printing in Stuart, FL | Print Laser Stitch",
   description:
-    "Soft-touch DTG and screen-printed cotton tees in every color and size. Upload your design — 5–12 business days.",
+    "Custom printed t-shirts in every color and size from our Stuart, Florida shop. Upload your design, get instant pricing, delivered in 5–12 business days.",
+  alternates: { canonical: "/products/tshirts" },
 };
 
 // Page is statically rendered and refreshed in the background every 5 minutes.
@@ -38,6 +40,7 @@ export default async function TShirtsPage() {
     <>
       <Header />
       <main className="flex-1">
+        {product && <ProductJsonLd product={product} />}
         {product ? (
           <TShirtConfigurator product={product} />
         ) : (

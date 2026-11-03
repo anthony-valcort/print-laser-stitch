@@ -4,9 +4,10 @@ import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
 
 export const metadata: Metadata = {
-  title: "Contact Us · Print Laser Stitch",
+  title: "Contact Us | Print Laser Stitch, Stuart, FL",
   description:
-    "Get in touch with Print Laser Stitch — send us a message and we'll get back to you, or call/visit our Stuart, Florida shop.",
+    "Call (772) 985-2854, send a message, or visit our Stuart, Florida shop for custom embroidery, printing, signs and laser engraving quotes.",
+  alternates: { canonical: "/contact" },
 };
 
 const INFO_CARDS = [

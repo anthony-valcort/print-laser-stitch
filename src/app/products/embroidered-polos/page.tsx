@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import ProductJsonLd from "@/components/ProductJsonLd";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FAQSection from "@/components/FAQSection";
@@ -8,9 +9,10 @@ import { ShopifyError } from "@/lib/shopify";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Custom Embroidered Polos · Print Laser Stitch",
+  title: "Custom Embroidered Polos in Stuart, FL | Print Laser Stitch",
   description:
-    "Premium performance and cotton polos embroidered with your logo or design. Min 6 pieces.",
+    "Logo-embroidered polos for businesses and teams. 6-piece minimum, up to 20% off in bulk, and preview your logo on the polo before you order.",
+  alternates: { canonical: "/products/embroidered-polos" },
 };
 
 export const revalidate = 300;
@@ -37,6 +39,7 @@ export default async function EmbroideredPolosPage() {
     <>
       <Header />
       <main className="flex-1">
+        {product && <ProductJsonLd product={product} />}
         {product ? (
           <TShirtConfigurator
             product={product}

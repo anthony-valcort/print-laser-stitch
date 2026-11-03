@@ -6,9 +6,10 @@ import CategoryGrid from "@/components/CategoryGrid";
 import { getAllCollections } from "@/lib/shopify-collections";
 
 export const metadata: Metadata = {
-  title: "Shop by Category · Print Laser Stitch",
+  title: "Shop Custom Printing, Apparel & Engraving | Print Laser Stitch",
   description:
-    "Browse every product category — stickers, apparel, signs, vehicle graphics, laser engraving and more.",
+    "Browse custom stickers, apparel, embroidery, signs, vehicle graphics and laser engraving from Print Laser Stitch in Stuart, Florida.",
+  alternates: { canonical: "/collections" },
 };
 
 export const revalidate = 300;

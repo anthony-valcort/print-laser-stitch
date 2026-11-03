@@ -5,8 +5,10 @@ import { getAllGalleryItems } from "@/lib/gallery-shopify";
 import GalleryPageClient from "@/components/gallery/GalleryPageClient";
 
 export const metadata: Metadata = {
-  title: "Gallery · Print Laser Stitch",
-  description: "A showcase of our custom print, decal, and engraving projects.",
+  title: "Our Work: Embroidery, Printing & Engraving | Print Laser Stitch",
+  description:
+    "Real projects from our Stuart, Florida shop — embroidered apparel, custom t-shirts, decals, signs, stickers and laser engraving.",
+  alternates: { canonical: "/gallery" },
 };
 
 export const revalidate = 60;

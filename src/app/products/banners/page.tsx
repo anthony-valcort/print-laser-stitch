@@ -6,9 +6,10 @@ import ProductPageShell from "@/components/ProductPageShell";
 import { getTemplateFitOverrides } from "@/lib/product-template-fit-overrides";
 
 export const metadata: Metadata = {
-  title: "Custom Banners · Print Laser Stitch",
+  title: "Custom Vinyl Banners in Stuart, FL | Print Laser Stitch",
   description:
-    "Heavy-duty 13oz and 16oz PVC vinyl banners in landscape sizes from 2×1 up to 8×4. Grommets, pole pockets, and lamination available.",
+    "Heavy-duty 13oz and 16oz vinyl banners from 2×1 to 8×4 ft with grommets, pole pockets and lamination. Printed in Stuart, Florida.",
+  alternates: { canonical: "/products/banners" },
 };
 
 export const revalidate = 300;

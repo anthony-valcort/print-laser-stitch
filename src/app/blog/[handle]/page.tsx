@@ -25,6 +25,7 @@ export async function generateMetadata({
         article.seoDescription ||
         article.excerpt ||
         `Read "${article.title}" on the Print Laser Stitch blog.`,
+      alternates: { canonical: `/blog/${handle}` },
     };
   } catch {
     return { title: "Blog · Print Laser Stitch" };

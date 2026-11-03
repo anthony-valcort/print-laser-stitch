@@ -5,9 +5,10 @@ import FAQSection from "@/components/FAQSection";
 import ProductPageShell from "@/components/ProductPageShell";
 
 export const metadata: Metadata = {
-  title: "Laser-Engraved Custom Wallets · Print Laser Stitch",
+  title: "Laser Engraved Wallets in Stuart, FL | Print Laser Stitch",
   description:
-    "Personalized leather wallets engraved with your initials, logo, or artwork. Premium materials, durable laser etching.",
+    "Personalized leather wallets laser-engraved with initials, logos or artwork. Great gifts for groomsmen, clients and employees. Stuart, Florida.",
+  alternates: { canonical: "/products/engraved-wallets" },
 };
 
 export const revalidate = 300;

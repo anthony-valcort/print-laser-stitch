@@ -206,12 +206,6 @@ export default async function CollectionPage({
                   className="group relative flex flex-col overflow-hidden rounded-2xl border border-border-soft bg-surface hover:-translate-y-1 hover:border-[#d9f000]/40 hover:shadow-[0_0_40px_rgba(217,240,0,0.18)]"
                 >
                   <div className="relative aspect-square w-full overflow-hidden bg-white/5">
-                    {hasVolumePricing(p.title) && (
-                      <span className="absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full accent-gradient px-2 py-1 font-headline text-[9px] font-black uppercase tracking-wide text-black shadow-lg shadow-black/30 sm:text-[10px]">
-                        <span aria-hidden>🏷️</span>
-                        Up to {Math.max(...GARMENT_VOLUME_TIERS.map((t) => t.percent))}% off bulk
-                      </span>
-                    )}
                     {p.featuredImage?.url ? (
                       <Image
                         src={p.featuredImage.url}
@@ -230,6 +224,12 @@ export default async function CollectionPage({
                     <div className="line-clamp-3 font-headline text-[13px] font-semibold leading-snug sm:line-clamp-none sm:text-sm">
                       {p.title}
                     </div>
+                    {hasVolumePricing(p.title) && (
+                      <span className="mt-2 inline-flex w-fit items-center gap-1 rounded-full accent-gradient px-2 py-1 font-headline text-[9px] font-black uppercase tracking-wide text-black shadow-md shadow-[#d9f000]/20 sm:text-[10px]">
+                        <span aria-hidden>🏷️</span>
+                        Up to {Math.max(...GARMENT_VOLUME_TIERS.map((t) => t.percent))}% off bulk
+                      </span>
+                    )}
                     <div className="mt-auto flex items-center justify-between gap-2 pt-2 sm:pt-3">
                       {p.minPrice ? (
                         <span className="font-headline text-sm font-bold text-[#18d3e8]">

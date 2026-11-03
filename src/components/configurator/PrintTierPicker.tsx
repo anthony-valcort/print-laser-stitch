@@ -165,7 +165,8 @@ export function tierCountLabel(
   const raw = selected[q.name];
   if (!raw) return null;
   const qty = parseTierQty(raw);
-  return qty ? `${qty.toLocaleString("en-US")} pcs` : raw;
+  if (!qty) return raw;
+  return `${qty.toLocaleString("en-US")} ${qty === 1 ? "pc" : "pcs"}`;
 }
 
 /* ----------------------------------------------------------------- pickers */
@@ -279,17 +280,25 @@ export function QuantityTierCards({
   const baseUnit = tiers.find((t) => t.unit !== null)?.unit ?? null;
   const units = tiers.map((t) => t.unit).filter((u): u is number => u !== null);
   const bestUnit = units.length ? Math.min(...units) : null;
+  // Only call out a best tier when ordering more genuinely costs less per
+  // piece. Flat per-piece pricing (bottle openers, A-frame signs) would
+  // otherwise badge every tier, or badge "1 pc" over a rounding cent.
+  const realSavings =
+    baseUnit !== null && bestUnit !== null && bestUnit < baseUnit * 0.97;
+  const bestIndex = realSavings
+    ? tiers.findIndex((t) => t.unit !== null && t.unit === bestUnit)
+    : -1;
 
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-      {tiers.map((t) => {
+      {tiers.map((t, i) => {
         const active = t.v === selected[opt.name];
-        const save =
+        const rawSave =
           baseUnit && t.unit !== null
             ? Math.round((1 - t.unit / baseUnit) * 100)
             : 0;
-        const best =
-          t.unit !== null && t.unit === bestUnit && units.length > 1;
+        const save = rawSave >= 3 ? rawSave : 0;
+        const best = i === bestIndex;
         return (
           <button
             key={t.v}
@@ -323,7 +332,7 @@ export function QuantityTierCards({
                   {t.qty.toLocaleString("en-US")}
                 </span>
                 <span className="text-[10px] uppercase tracking-[0.18em] text-foreground-muted">
-                  pcs
+                  {t.qty === 1 ? "pc" : "pcs"}
                 </span>
               </>
             ) : (
@@ -340,7 +349,7 @@ export function QuantityTierCards({
                 <span className="mt-1.5 text-sm font-bold tabular-nums text-foreground">
                   {money(t.total)}
                 </span>
-                {t.unit !== null && (
+                {t.unit !== null && t.qty !== 1 && (
                   <span className="text-[11px] tabular-nums text-foreground-muted">
                     {each(t.unit)} each
                   </span>

@@ -6,7 +6,7 @@
  * Required scopes: read_metafields, write_metafields
  */
 
-import { createHash } from "crypto";
+import { createHash, timingSafeEqual } from "crypto";
 import { revalidateTag, unstable_cache } from "next/cache";
 import { shopifyAdminFetch } from "./shopify";
 import { SEED_VEHICLES, type PartKey, type StickerPart, type VehicleSticker } from "./vehicle-sticker-data";
@@ -128,12 +128,25 @@ export function sha256(s: string): string {
   return createHash("sha256").update(s).digest("hex");
 }
 
-export async function getAdminPasswordHash(): Promise<string> {
+/** Returns the stored admin password hash, or null when no admin password is
+ * configured. There is deliberately NO default password: if neither the
+ * Shopify-stored hash nor the ADMIN_PASSWORD env var exists, admin login is
+ * disabled rather than falling back to a guessable value. */
+export async function getAdminPasswordHash(): Promise<string | null> {
   try {
     const hash = await readMetafield("admin_hash");
     if (hash) return hash;
   } catch {}
-  return sha256(process.env.ADMIN_PASSWORD ?? "admin123");
+  const envPw = process.env.ADMIN_PASSWORD;
+  return envPw ? sha256(envPw) : null;
+}
+
+/** Constant-time string comparison so response timing can't leak how much
+ * of a guessed token was correct. */
+export function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  return ab.length === bb.length && timingSafeEqual(ab, bb);
 }
 
 export async function setAdminPasswordHash(newHash: string): Promise<void> {
@@ -147,9 +160,6 @@ export async function isAdminAuthorized(
   const token = (authHeader ?? "").replace("Bearer ", "");
   if (!token) return false;
   const stored = await getAdminPasswordHash();
-  if (token === stored) return true;
-  const legacy = Buffer.from(
-    `admin:${process.env.ADMIN_PASSWORD ?? "admin123"}`,
-  ).toString("base64");
-  return token === legacy;
+  if (!stored) return false;
+  return safeEqual(token, stored);
 }

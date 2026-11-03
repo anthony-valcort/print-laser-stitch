@@ -5,9 +5,10 @@ import { getAllVehicles } from "@/lib/vehicle-shopify";
 import VehicleStickersClient from "./VehicleStickersClient";
 
 export const metadata: Metadata = {
-  title: "Vehicle Sticker Kits · Print Laser Stitch",
+  title: "Custom Vehicle Decal Kits | Print Laser Stitch",
   description:
-    "Find custom decal kits for your exact vehicle — hood sets, bedsides, full sets and more.",
+    "Custom decal kits for your exact vehicle — hood sets, bedsides, full sets and more, made by Print Laser Stitch in Stuart, Florida.",
+  alternates: { canonical: "/vehicle-stickers" },
 };
 
 export default async function VehicleStickersPage() {

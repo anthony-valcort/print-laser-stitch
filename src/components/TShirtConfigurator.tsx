@@ -24,6 +24,10 @@ import {
   isSizeOption,
 } from "@/components/configurator/colors";
 import { Section } from "@/components/configurator/Section";
+import {
+  BulkPricingLadder,
+  BulkProgress,
+} from "@/components/configurator/BulkPricing";
 import { ColorSwatch } from "@/components/configurator/ColorSwatch";
 import { ProductGallery } from "@/components/configurator/ProductGallery";
 import {
@@ -642,14 +646,27 @@ export default function TShirtConfigurator({
               <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
                 {product.title}
               </h1>
-              <div className="mt-3 flex items-baseline gap-3">
+              <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <span className="text-3xl font-bold accent-gradient-text">
-                  ${perShirtPrice.toFixed(2)}
+                  ${(perShirtPrice * (1 - volumePct / 100)).toFixed(2)}
                 </span>
+                {volumePct > 0 && (
+                  <span className="text-base font-medium text-foreground-muted line-through">
+                    ${perShirtPrice.toFixed(2)}
+                  </span>
+                )}
                 <span className="text-sm font-medium text-foreground-muted">
                   per shirt
                 </span>
               </div>
+              {volumeTiers.length > 0 && (
+                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-[#d9f000]/30 bg-[#d9f000]/10 px-3 py-1 text-xs font-semibold text-[#d9f000]">
+                  <span aria-hidden>🏷️</span>
+                  {volumePct > 0
+                    ? `Bulk price unlocked — ${volumePct}% off`
+                    : `As low as $${(perShirtPrice * (1 - Math.max(...volumeTiers.map((t) => t.percent)) / 100)).toFixed(2)}/shirt in bulk`}
+                </div>
+              )}
             </div>
 
             {/* Description */}
@@ -713,6 +730,17 @@ export default function TShirtConfigurator({
               );
             })}
 
+            {/* Bulk pricing tiers — right above the quantities, so customers
+                see the per-shirt price drop as they add more. */}
+            {sizeOption && volumeTiers.length > 0 && (
+              <BulkPricingLadder
+                tiers={volumeTiers}
+                minQuantity={minQuantity}
+                unitPrice={perShirtPrice}
+                totalQuantity={totalQuantity}
+              />
+            )}
+
             {/* Single-color size matrix — qty per size, total ≥ minQuantity */}
             {sizeOption && !multiColor && (
               <Section
@@ -762,6 +790,14 @@ export default function TShirtConfigurator({
                     Add {minQuantity - totalQuantity} more to reach the
                     minimum order of {minQuantity}.
                   </p>
+                )}
+                {volumeTiers.length > 0 && (
+                  <BulkProgress
+                    tiers={volumeTiers}
+                    totalQuantity={totalQuantity}
+                    subtotal={totalPrice}
+                    unitPrice={perShirtPrice}
+                  />
                 )}
               </Section>
             )}
@@ -885,6 +921,14 @@ export default function TShirtConfigurator({
                     Add {minQuantity - totalQuantity} more to reach the
                     minimum order of {minQuantity}.
                   </p>
+                )}
+                {volumeTiers.length > 0 && (
+                  <BulkProgress
+                    tiers={volumeTiers}
+                    totalQuantity={totalQuantity}
+                    subtotal={totalPrice}
+                    unitPrice={perShirtPrice}
+                  />
                 )}
               </Section>
             )}
@@ -1037,31 +1081,15 @@ export default function TShirtConfigurator({
                   ${finalPrice.toFixed(2)}
                 </span>
               </div>
-              {volumeTiers.length > 0 && (
-                <div className="mt-3 rounded-xl bg-black/20 p-3 text-xs text-white/90">
-                  <div className="mb-1.5 font-semibold uppercase tracking-wider">
-                    Bulk pricing
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {[...volumeTiers].reverse().map((t) => (
-                      <span
-                        key={t.minQty}
-                        className={`rounded-full px-2.5 py-1 font-semibold ${
-                          volumePct === t.percent
-                            ? "bg-white text-black"
-                            : "bg-white/10"
-                        }`}
-                      >
-                        {t.minQty}+ pcs · {t.percent}% off
-                      </span>
-                    ))}
-                  </div>
-                  {upcomingTier && totalQuantity > 0 && (
-                    <div className="mt-2 font-medium">
-                      Add {upcomingTier.qtyNeeded} more to save{" "}
-                      {upcomingTier.percent}%.
-                    </div>
-                  )}
+              {volumePct > 0 && (
+                <div className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-black/25 px-3 py-2 text-sm font-bold text-white">
+                  <span aria-hidden>🎉</span>
+                  You save ${volumeSavings.toFixed(2)} with bulk pricing
+                </div>
+              )}
+              {upcomingTier && totalQuantity > 0 && (
+                <div className="mt-2 text-center text-xs font-medium text-white/90">
+                  Add {upcomingTier.qtyNeeded} more to get {upcomingTier.percent}% off
                 </div>
               )}
               <div className="mt-1 text-right text-xs font-medium text-white/80">
@@ -1114,7 +1142,18 @@ export default function TShirtConfigurator({
         </div>
       </div>
 
-      <MobileBuyBar total={finalPrice} targetId="buy-button" label="Review order" />
+      <MobileBuyBar
+        total={finalPrice}
+        targetId="buy-button"
+        label="Review order"
+        note={
+          volumePct > 0
+            ? `Saving ${volumePct}% · $${volumeSavings.toFixed(2)}`
+            : upcomingTier && totalQuantity > 0
+              ? `+${upcomingTier.qtyNeeded} more = ${upcomingTier.percent}% off`
+              : undefined
+        }
+      />
       {toast && (
         <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full border border-border-strong bg-surface-elevated px-5 py-3 text-sm shadow-2xl shadow-black/40">
           {toast}

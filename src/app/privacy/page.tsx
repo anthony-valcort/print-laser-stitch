@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Privacy Policy · Print Laser Stitch",
   description:
     "How Print Laser Stitch collects, uses, and protects your information on our website and mobile app.",
+  alternates: { canonical: "/privacy" },
 };
 
 const PROSE =

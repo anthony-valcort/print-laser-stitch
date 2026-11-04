@@ -1,15 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 
-const HOURS: { day: string; time: string }[] = [
-  { day: "Mon", time: "7:30am–5:30pm" },
-  { day: "Tue", time: "7:30am–5:30pm" },
-  { day: "Wed", time: "7:30am–5:30pm" },
-  { day: "Thu", time: "7:30am–5:30pm" },
-  { day: "Fri", time: "7:30am–5:30pm" },
-  { day: "Sat", time: "10am–1:30pm" },
-  { day: "Sun", time: "Closed" },
-];
+import { weeklyHoursByDay } from "@/lib/business-hours";
+
+// Mirrors the Google Business Profile — edit src/lib/business-hours.ts.
+const HOURS = weeklyHoursByDay();
 
 const SOCIALS = [
   {

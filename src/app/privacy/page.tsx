@@ -111,9 +111,13 @@ export default function PrivacyPage() {
               </li>
               <li>
                 <strong>Your browser&apos;s local storage</strong> — to
-                remember your cart between visits, so your sizes, artwork
-                choices and quantities survive a refresh. This stays on your
-                device; it is not sent to us until you place an order.
+                remember your cart, and any order you have started but not
+                yet added to it, between visits. That includes your sizes,
+                colors, quantities, notes, phone number if you entered one,
+                and the link to artwork you uploaded. Saved carts are kept for
+                up to 60 days and unfinished selections for up to 30. This
+                stays on your device; it is not sent to us until you place an
+                order.
               </li>
             </ul>
             <p>
@@ -128,7 +132,7 @@ export default function PrivacyPage() {
             <p>
               You can clear cookies and local storage at any time in your
               browser settings. Clearing them signs you out and empties your
-              saved cart.
+              saved cart and any unfinished selections.
             </p>
 
             <h2>Data retention</h2>

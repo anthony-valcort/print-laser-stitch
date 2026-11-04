@@ -1,3 +1,4 @@
+import { fitTitle } from "@/lib/seo";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -25,7 +26,7 @@ export async function generateMetadata({
     const article = await getArticleByHandle(handle);
     if (!article) return { title: "Post not found · Print Laser Stitch" };
     return {
-      title: article.seoTitle ?? `${article.title} · Print Laser Stitch`,
+      title: fitTitle(article.seoTitle ?? article.title),
       description:
         article.seoDescription ||
         article.excerpt ||

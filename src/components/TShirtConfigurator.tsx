@@ -31,6 +31,12 @@ import {
 import { ColorSwatch } from "@/components/configurator/ColorSwatch";
 import { ProductGallery } from "@/components/configurator/ProductGallery";
 import AnimatedPrice from "@/components/AnimatedPrice";
+import MixMatchPanel from "@/components/configurator/MixMatchPanel";
+import {
+  canAddToMix,
+  mixStatus,
+  type MixLine,
+} from "@/lib/apparel-mix";
 import { flyToCart, successFeedback } from "@/lib/interactions";
 import {
   LogoMockupControls,
@@ -69,7 +75,7 @@ export default function TShirtConfigurator({
   singleUploadLabel = "Design",
 }: ApparelConfiguratorProps) {
   const router = useRouter();
-  const { addItem } = useCart();
+  const { addItem, items: cartItems } = useCart();
   const minQuantity = minQuantityProp ?? TSHIRT_MIN_QUANTITY;
   // Separate "Size" out from the other options — Size becomes a per-size
   // quantity matrix instead of a single picker.
@@ -426,7 +432,40 @@ export default function TShirtConfigurator({
     !needsBack || (!!backUpload.fileUrl && !backUpload.isUploading);
   const anyUploading = frontUpload.isUploading || backUpload.isUploading;
 
-  const qtyOk = totalQuantity >= minQuantity;
+  // Mix & Match: apparel already in the cart counts toward this order's
+  // minimum, so a customer can take 6 polos and 6 tees instead of 12 of
+  // either. Checkout recomputes all of this from real Shopify data.
+  const cartGarmentLines: MixLine[] = useMemo(
+    () =>
+      cartItems
+        .filter((i) => i.kind === "tshirt")
+        .map((i) => ({
+          productTitle: i.productTitle,
+          quantity: i.sizeVariants.reduce(
+            (a, sv) => a + Math.max(0, Math.floor(Number(sv.quantity) || 0)),
+            0,
+          ),
+        })),
+    [cartItems],
+  );
+
+  const mix = useMemo(
+    () =>
+      mixStatus([
+        ...cartGarmentLines,
+        { productTitle: product.title, quantity: totalQuantity },
+      ]),
+    [cartGarmentLines, product.title, totalQuantity],
+  );
+
+  const mixGate = canAddToMix({
+    thisStyleQty: totalQuantity,
+    productTitle: product.title,
+    ownMinimum: minQuantity,
+    otherLines: cartGarmentLines,
+  });
+
+  const qtyOk = mixGate.ok;
   const canCheckout =
     qtyOk &&
     frontReady &&
@@ -940,6 +979,15 @@ export default function TShirtConfigurator({
               </Section>
             )}
 
+            {/* Mix & Match — apparel already in the cart counts toward this
+                order's minimum and its bulk tier. */}
+            <MixMatchPanel
+              status={mix}
+              thisStyleQty={totalQuantity}
+              productTitle={product.title}
+              ownMinimum={minQuantity}
+              cartLines={cartGarmentLines}
+            />
 
             {/* Print location (only shown for products that have it) */}
             {showPrintLocations && (
@@ -1129,7 +1177,8 @@ export default function TShirtConfigurator({
               ) : !qtyOk ? (
                 totalQuantity === 0
                   ? "Pick sizes & quantities to continue"
-                  : `Add ${minQuantity - totalQuantity} more to reach min ${minQuantity}`
+                  : (mixGate.reason ??
+                    `Add ${minQuantity - totalQuantity} more to reach min ${minQuantity}`)
               ) : !frontReady || !backReady ? (
                 <>
                   <span>⬆</span>

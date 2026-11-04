@@ -19,7 +19,8 @@ import { gidToNumericId, shopifyAdminFetch } from "@/lib/shopify";
 import { getCurrentCustomer } from "@/lib/customer-session";
 import { normalizeInvoiceUrl, waitForInvoiceReady } from "@/lib/shopify-checkout";
 import { isStickerScopedCode, lookupDiscountCode } from "@/lib/discount-lookup";
-import { volumeDiscountPercent } from "@/lib/volume-discounts";
+import { hasVolumePricing } from "@/lib/volume-discounts";
+import { mixStatus, type MixLine } from "@/lib/apparel-mix";
 import { isAllowedDesignUrl } from "@/lib/allowed-design-hosts";
 import {
   QUANTITY_OPTIONS,
@@ -178,6 +179,38 @@ export async function POST(req: NextRequest) {
         { status: 502 },
       );
     }
+  }
+
+  // Mix & Match: the whole apparel order shares one minimum and one bulk
+  // tier. Counted here from the real Shopify product titles and quantities,
+  // never from anything the browser claims, so a crafted request can't talk
+  // its way past a minimum or into a discount.
+  const apparelLines: MixLine[] = body.items.flatMap((item) =>
+    item.kind === "tshirt"
+      ? [
+          {
+            productTitle:
+              variantPrices.get(item.sizeVariants[0]?.variantId ?? "")
+                ?.productTitle ?? "",
+            quantity: item.sizeVariants.reduce(
+              (a, sv) => a + Math.max(0, Math.floor(Number(sv.quantity) || 0)),
+              0,
+            ),
+          },
+        ]
+      : [],
+  );
+  const apparelMix = mixStatus(apparelLines);
+
+  if (apparelMix.pieces > 0 && !apparelMix.qualifies) {
+    return NextResponse.json(
+      {
+        error:
+          apparelMix.message ??
+          "This apparel order does not meet the minimum yet.",
+      },
+      { status: 400 },
+    );
   }
 
   // Build draft-order line items by expanding each cart item.
@@ -361,14 +394,19 @@ export async function POST(req: NextRequest) {
       const firstLookup = firstVariantId
         ? variantPrices.get(firstVariantId)
         : undefined;
-      const volumePct = firstLookup
-        ? volumeDiscountPercent(firstLookup.productTitle, itemQty)
-        : 0;
+      // The bulk tier counts the combined apparel total, so mixing polos and
+      // tees reaches 24/48/100 together rather than each style alone.
+      // apparelMix already includes this line, so its percent is never
+      // lower than what this line would earn alone.
+      const isGarment = firstLookup
+        ? hasVolumePricing(firstLookup.productTitle)
+        : false;
+      const volumePct = isGarment ? apparelMix.discountPercent : 0;
       const volumeDiscount: DraftAppliedDiscount | undefined =
         volumePct > 0
           ? {
               description: "Volume discount",
-              title: `Volume discount (${volumePct}% off ${itemQty} pcs)`,
+              title: `Volume discount (${volumePct}% off ${apparelMix.pieces} pcs)`,
               value_type: "percentage",
               value: String(volumePct),
             }

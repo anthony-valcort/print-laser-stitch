@@ -3,6 +3,7 @@ import ProductJsonLd from "@/components/ProductJsonLd";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FAQSection from "@/components/FAQSection";
+import ReturnPolicyNote from "@/components/ReturnPolicyNote";
 import TShirtConfigurator from "@/components/TShirtConfigurator";
 import { getProductByHandle } from "@/lib/shopify-products";
 import { ShopifyError } from "@/lib/shopify";
@@ -51,6 +52,7 @@ export default async function EmbroideredPolosPage() {
         ) : (
           <ProductMissingNotice handle={PRODUCT_HANDLE} error={fetchError} />
         )}
+        <ReturnPolicyNote />
         <FAQSection />
       </main>
       <Footer />

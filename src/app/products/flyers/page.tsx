@@ -5,9 +5,9 @@ import FAQSection from "@/components/FAQSection";
 import ProductPageShell from "@/components/ProductPageShell";
 
 export const metadata: Metadata = {
-  title: "Custom Flyer, Brochure & Postcard Printing in Stuart, FL | Print Laser Stitch",
+  title: "Flyer, Brochure & Postcard Printing | Print Laser Stitch",
   description:
-    "Full-color flyers, brochures and postcards in 12 sizes from 4×4 to 13×19, single or double-sided at the same price. 100 to 10,000 pieces with instant online pricing, printed for Stuart, Florida businesses.",
+    "Full-color flyers, brochures and postcards in 12 sizes, single or double-sided at the same price. 100 to 10,000 pieces with instant online pricing. Printed in Stuart, FL.",
   alternates: { canonical: "/products/flyers" },
 };
 

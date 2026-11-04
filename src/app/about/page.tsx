@@ -3,6 +3,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { fadeDelay, revealDelay } from "@/lib/reveal";
+import { BUSINESS_HOURS, formatRange } from "@/lib/business-hours";
 
 export const metadata: Metadata = {
   title: "About Us | Print Laser Stitch, Stuart FL",
@@ -313,7 +314,8 @@ export default function AboutPage() {
                 </div>
                 <div className="mt-2 text-xl font-bold">Mon – Sat</div>
                 <div className="mt-1 text-xs text-foreground-muted">
-                  9 AM – 5 PM EST
+                  Weekdays {formatRange(BUSINESS_HOURS[0], " – ")} · Sat{" "}
+                  {formatRange(BUSINESS_HOURS[1], " – ")} ET
                 </div>
               </div>
               <div className="rounded-2xl border border-border-soft bg-surface p-5 text-left sm:p-6">

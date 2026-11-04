@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
+import { groupedHours } from "@/lib/business-hours";
 
 export const metadata: Metadata = {
   title: "Contact Us | Print Laser Stitch, Stuart, FL",
@@ -53,11 +54,8 @@ const INFO_CARDS = [
         <polyline points="12 6 12 12 16 14" />
       </>
     ),
-    hours: [
-      { day: "Mon – Fri", time: "7:30am – 5:30pm" },
-      { day: "Sat", time: "10am – 1:30pm" },
-      { day: "Sun", time: "Closed" },
-    ],
+    // Mirrors the Google Business Profile — edit src/lib/business-hours.ts.
+    hours: groupedHours(),
   },
   {
     href: "https://www.google.com/maps/search/?api=1&query=3153+SE+Dominica+Terrace%2C+Stuart%2C+FL+34997",

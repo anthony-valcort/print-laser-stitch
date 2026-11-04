@@ -6,6 +6,7 @@ import AmbientBackground from "@/components/AmbientBackground";
 import ScrollReveal from "@/components/ScrollReveal";
 import MobileQuoteBar from "@/components/MobileQuoteBar";
 import CartDrawer from "@/components/CartDrawer";
+import CartWelcomeBack from "@/components/CartWelcomeBack";
 import CookieNotice from "@/components/CookieNotice";
 import JsonLd from "@/components/JsonLd";
 import { localBusinessJsonLd, websiteJsonLd } from "@/lib/seo";
@@ -28,7 +29,7 @@ const rajdhani = Rajdhani({
 });
 
 const SITE_URL = "https://www.printlaserstitch.com";
-const SITE_TITLE = "Custom Printing & Embroidery in Stuart, FL | Print Laser Stitch";
+const SITE_TITLE = "Custom Printing & Embroidery Stuart FL | Print Laser Stitch";
 const SITE_DESCRIPTION =
   "Stuart, FL print shop for custom embroidered polos, t-shirts, stickers, banners, signs and laser engraving. Instant online pricing and bulk discounts.";
 
@@ -78,6 +79,7 @@ export default function RootLayout({
         <CartProvider>
           {children}
           <CartDrawer />
+          <CartWelcomeBack />
         </CartProvider>
         <ScrollReveal />
         <MobileQuoteBar />

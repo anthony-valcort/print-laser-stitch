@@ -54,6 +54,16 @@ import {
 import { SizeQtyStepper } from "@/components/configurator/QuantityStepper";
 import { ExpandableDescription } from "@/components/configurator/ExpandableDescription";
 import { HOW_TO_ORDER_VIDEO_IDS } from "@/lib/how-to-order-videos";
+import { DraftNote, useDraft } from "@/components/configurator/useDraft";
+import {
+  cleanColorMatrix,
+  cleanOptions,
+  cleanQtyMap,
+  cleanStringList,
+  cleanText,
+  packUpload,
+  unpackUpload,
+} from "@/lib/draft-storage";
 
 export type ApparelConfiguratorProps = {
   product: ShopifyProduct;
@@ -205,6 +215,52 @@ export default function TShirtConfigurator({
   // The gallery image is the thing that flies into the cart icon on add.
   const galleryRef = useRef<HTMLDivElement>(null);
   const [toast, setToast] = useState<string | null>(null);
+
+  // Remember an unfinished order — sizes, colors, notes and uploaded artwork
+  // — so wandering off to another product doesn't mean starting over.
+  const draft = useDraft({
+    handle: product.handle,
+    snapshot: {
+      o: selectedOptions,
+      s: sizeQuantities,
+      oc: openColors,
+      cs: colorSizeQty,
+      pl: printLocation,
+      i: instructions,
+      p: phone,
+      fu: packUpload(frontUpload),
+      bu: packUpload(backUpload),
+    },
+    hasContent:
+      Object.values(sizeQuantities).some((n) => n > 0) ||
+      Object.values(colorSizeQty).some((row) =>
+        Object.values(row).some((n) => n > 0),
+      ) ||
+      !!instructions.trim() ||
+      !!phone.trim() ||
+      !!frontUpload.fileUrl ||
+      !!backUpload.fileUrl,
+    restore: (d) => {
+      const sizes = sizeOption?.values ?? [];
+      setSelectedOptions((prev) => cleanOptions(d.o, nonSizeOptions, prev));
+      setSizeQuantities((prev) => ({ ...prev, ...cleanQtyMap(d.s, sizes) }));
+      const colors = cleanStringList(d.oc, colorChoices);
+      setOpenColors(colors);
+      setColorSizeQty(cleanColorMatrix(d.cs, colors, sizes));
+      if (
+        showPrintLocations &&
+        PRINT_LOCATIONS.some((l) => l.key === d.pl)
+      ) {
+        setPrintLocation(d.pl as PrintLocationKey);
+      }
+      setInstructions(cleanText(d.i, 2000));
+      setPhone(cleanText(d.p, 40));
+      const fu = unpackUpload(d.fu);
+      if (fu) setFrontUpload(fu);
+      const bu = unpackUpload(d.bu);
+      if (bu) setBackUpload(bu);
+    },
+  });
 
   // Find the variant for a given (color, size) and the current single-pick
   // selections (Fabric, …). `color` is null for single-color products.
@@ -582,6 +638,7 @@ export default function TShirtConfigurator({
     };
 
     addItem(cartItem);
+    draft.clear(); // It's in the cart now — nothing left to remember.
     successFeedback();
     flyToCart(galleryRef.current?.querySelector("img") ?? null);
     // Keep them on the product page — the cart comes to them instead.
@@ -684,6 +741,7 @@ export default function TShirtConfigurator({
 
           {/* RIGHT: Configurator */}
           <div className="space-y-6">
+            {draft.restored && <DraftNote onStartOver={draft.startOver} />}
             <div>
               <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-border-soft bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-foreground-muted">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />

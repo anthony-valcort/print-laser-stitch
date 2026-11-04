@@ -240,15 +240,24 @@ export function UploadBox({
   const [dragActive, setDragActive] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
 
+  // Artwork restored from a saved draft has no local file bytes — only a
+  // zero-byte stand-in carrying its name — so show it from its upload link.
+  const restoredFromDraft =
+    !!slot.file && slot.file.size === 0 && !!slot.fileUrl;
+
   useEffect(() => {
     if (!slot.file || !slot.file.type.startsWith("image/")) {
       setPreview(null);
       return;
     }
+    if (restoredFromDraft) {
+      setPreview(slot.fileUrl);
+      return;
+    }
     const url = URL.createObjectURL(slot.file);
     setPreview(url);
     return () => URL.revokeObjectURL(url);
-  }, [slot.file]);
+  }, [slot.file, slot.fileUrl, restoredFromDraft]);
 
   return (
     <div>
@@ -294,6 +303,7 @@ export function UploadBox({
                 <img
                   src={preview}
                   alt="Upload preview"
+                  onError={() => setPreview(null)}
                   className="h-16 w-16 rounded-lg object-contain bg-white/5 ring-1 ring-border-strong"
                 />
               ) : (
@@ -316,7 +326,9 @@ export function UploadBox({
                 {slot.file.name}
               </div>
               <div className="text-[11px] text-foreground-muted">
-                {(slot.file.size / 1024).toFixed(1)} KB
+                {restoredFromDraft
+                  ? "Saved from your last visit"
+                  : `${(slot.file.size / 1024).toFixed(1)} KB`}
               </div>
               {slot.isUploading && (
                 <>

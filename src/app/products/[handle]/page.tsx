@@ -16,7 +16,7 @@ import { isSizeOption } from "@/components/configurator/colors";
 import { getTemplateFitOverrides } from "@/lib/product-template-fit-overrides";
 import { HOW_TO_ORDER_VIDEO_IDS } from "@/lib/how-to-order-videos";
 import ProductJsonLd from "@/components/ProductJsonLd";
-import { metaDescriptionFromHtml, productPath } from "@/lib/seo";
+import { fitTitle, metaDescriptionFromHtml, productPath } from "@/lib/seo";
 
 /**
  * Does this Size option's values look like garment sizes (apparel) vs
@@ -61,7 +61,7 @@ export async function generateMetadata({
       `${product.title} from Print Laser Stitch in Stuart, Florida.`;
     const image = product.featuredImage?.url;
     return {
-      title: `${product.title} | Print Laser Stitch`,
+      title: fitTitle(product.title),
       description,
       // Products with a dedicated page point Google there, so the two URLs
       // don't compete as duplicates.

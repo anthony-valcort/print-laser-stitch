@@ -66,14 +66,43 @@ type CartContextValue = {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
+/**
+ * A saved cart now lives for weeks, so what comes back from storage can be
+ * older than the code reading it. Keep a line only if it still has the shape
+ * the cart screens rely on — one stale or half-written item must never be
+ * able to crash the cart page for a returning customer.
+ */
+const CART_MAX_AGE_MS = 60 * 24 * 60 * 60 * 1000; // 60 days: prices move on.
+
+export function isUsableCartItem(raw: unknown, now = Date.now()): raw is CartItem {
+  if (!raw || typeof raw !== "object") return false;
+  const i = raw as Record<string, unknown>;
+  if (
+    typeof i.id !== "string" ||
+    typeof i.kind !== "string" ||
+    typeof i.title !== "string" ||
+    !Number.isFinite(i.totalPrice) ||
+    !Number.isFinite(i.quantity) ||
+    (i.quantity as number) <= 0
+  ) {
+    return false;
+  }
+  if (typeof i.addedAt === "number" && now - i.addedAt > CART_MAX_AGE_MS) {
+    return false;
+  }
+  if (i.kind === "tshirt" && !Array.isArray(i.sizeVariants)) return false;
+  return true;
+}
+
 function safeRead(): CartItem[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
-    const parsed = JSON.parse(raw) as CartItem[];
+    const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed;
+    const now = Date.now();
+    return parsed.filter((i): i is CartItem => isUsableCartItem(i, now));
   } catch {
     return [];
   }

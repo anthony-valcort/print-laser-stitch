@@ -75,10 +75,12 @@ export default function RootLayout({
       >
         <JsonLd data={[localBusinessJsonLd(), websiteJsonLd()]} />
         <AmbientBackground />
-        <CartProvider>{children}</CartProvider>
+        <CartProvider>
+          {children}
+          <CartDrawer />
+        </CartProvider>
         <ScrollReveal />
         <MobileQuoteBar />
-        <CartDrawer />
         <CookieNotice />
       </body>
     </html>

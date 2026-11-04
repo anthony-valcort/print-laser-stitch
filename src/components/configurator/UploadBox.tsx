@@ -1,5 +1,6 @@
 "use client";
 
+import { shrinkToUploadLimit } from "@/lib/shrink-image";
 import { useEffect, useRef, useState } from "react";
 import { isPdfFile, renderPdfFirstPageToFile } from "@/lib/template-fit/pdf-to-image";
 
@@ -131,6 +132,9 @@ export async function uploadDesign(
     }
   }
 
+  // Large images are compressed to fit the storage limit instead of failing.
+  uploadFile = await shrinkToUploadLimit(uploadFile);
+
   set({
     file: uploadFile,
     fileUrl: null,
@@ -224,7 +228,7 @@ export function UploadBox({
   onSelect,
   onClear,
   accept = ACCEPT_DESIGN_FILES,
-  hint = "PNG · JPG · PDF · SVG · AI · ≤20MB",
+  hint = "PNG · JPG · PDF · SVG · AI",
 }: {
   label?: string;
   slot: UploadSlot;

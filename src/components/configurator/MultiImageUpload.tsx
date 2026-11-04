@@ -154,7 +154,7 @@ export function MultiImageUpload({
         </div>
       </div>
       <p className="mt-2 text-[10px] text-foreground-muted">
-        PNG · JPG · WEBP · ≤20MB each
+        PNG · JPG · WEBP
       </p>
     </div>
   );

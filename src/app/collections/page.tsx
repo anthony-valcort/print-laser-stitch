@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import PageCopy from "@/components/PageCopy";
 import CategoryGrid from "@/components/CategoryGrid";
 import { fadeDelay } from "@/lib/reveal";
 import { getAllCollections } from "@/lib/shopify-collections";
@@ -66,6 +67,19 @@ export default async function CollectionsPage() {
             <CategoryGrid categories={collections} />
           )}
         </section>
+        <PageCopy
+          heading="Custom printing and embroidery, one local shop"
+          paragraphs={[
+            "Print Laser Stitch is a print shop in Stuart, Florida. We make custom embroidered polos and hats, printed t-shirts, stickers, banners, posters, business cards, signs, vehicle decals and laser engraved gifts, with instant online pricing on most products.",
+            "Ordering for a team or company? Garments get bulk pricing from 12 pieces, and you can mix styles in one order. Not sure what you need? Call (772) 985-2854 or send us a message.",
+          ]}
+          links={[
+            { href: "/products/embroidered-polos", label: "Embroidered polos" },
+            { href: "/products/tshirts", label: "T-shirts" },
+            { href: "/signage-quotes", label: "Signs and decals" },
+            { href: "/gallery", label: "Our work" },
+          ]}
+        />
       </main>
       <Footer />
     </>

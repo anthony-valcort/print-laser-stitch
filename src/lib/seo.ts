@@ -8,6 +8,7 @@
 
 import type { ShopifyProduct } from "@/lib/shopify-products";
 import { openingHoursSpecification } from "@/lib/business-hours";
+import { GOOGLE_REVIEWS } from "@/lib/reviews";
 
 export const SITE_URL = "https://www.printlaserstitch.com";
 export const SITE_NAME = "Print Laser Stitch";
@@ -71,7 +72,11 @@ export const BUSINESS = {
   /** Add the business's public profile URLs here (Google Business Profile,
    * Facebook, Instagram, Yelp…). They help Google connect the website to
    * those listings. */
-  sameAs: [] as string[],
+  sameAs: [
+    "https://www.facebook.com/share/1D34YQAGuE/?mibextid=wwXIfr",
+    "https://www.instagram.com/print_laser_stitch",
+    GOOGLE_REVIEWS.url,
+  ] as string[],
 };
 
 /**

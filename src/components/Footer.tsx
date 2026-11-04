@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { weeklyHoursByDay } from "@/lib/business-hours";
+import GoogleReviewsBadge from "@/components/GoogleReviewsBadge";
 
 // Mirrors the Google Business Profile — edit src/lib/business-hours.ts.
 const HOURS = weeklyHoursByDay();
@@ -51,6 +52,8 @@ export default function Footer() {
               Start your order
               <Arrow />
             </Link>
+
+            <GoogleReviewsBadge className="mt-6" />
 
             <div className="mt-7 flex gap-3">
               {SOCIALS.map((s) => (

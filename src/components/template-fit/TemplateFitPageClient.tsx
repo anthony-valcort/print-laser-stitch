@@ -11,6 +11,7 @@ import {
 import { uploadFlattenedDesign } from "@/lib/template-fit/upload-flattened";
 import { parseSizeInchesWithUnit } from "@/lib/parse-size";
 import { useCart } from "@/lib/cart-store";
+import { clearDraft } from "@/lib/draft-storage";
 import type { ProductCartItem } from "@/lib/cart-types";
 
 export default function TemplateFitPageClient({
@@ -130,6 +131,7 @@ export default function TemplateFitPageClient({
 
       addItem(cartItem);
       clearTemplateFitPayload();
+      clearDraft(productHandle); // Ordered — don't restore it on the product page.
       router.push("/cart");
     } catch (err) {
       setError(

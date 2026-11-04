@@ -30,6 +30,38 @@ export const MIX_MINIMUM = 12;
 /** Pieces required of each decoration method present in the mix. */
 export const MIX_MIN_PER_METHOD = 6;
 
+/** Used when a garment's title doesn't state a minimum of its own. */
+export const DEFAULT_GARMENT_MINIMUM = 12;
+
+/**
+ * Anthony encodes each style's standalone minimum in its Shopify title —
+ * "T-Shirts (Minimum purchase 12)", "Custom Embroidered Performance Polo
+ * (6-Piece Minimum)". Parsing it here keeps one source of truth for the
+ * product page, the cart and the checkout route.
+ */
+export function detectMinQuantityFromTitle(title: string): number | null {
+  // "Min 12", "Minimum 12", "Min purchase 12", "Minimum purchase 12"
+  const a = title.match(/\bmin(?:imum)?(?:\s+purchase)?\s+(\d+)/i);
+  if (a) {
+    const n = Number(a[1]);
+    if (Number.isFinite(n) && n > 1) return n;
+  }
+  // "12 Min", "6 Piece Minimum", "6 pcs minimum", "6-unit minimum"
+  const b = title.match(
+    /\b(\d+)[-\s]+(?:pcs?|pieces?|units?|packs?|qty)?[-\s]*min(?:imum)?(?:\s+purchase)?/i,
+  );
+  if (b) {
+    const n = Number(b[1]);
+    if (Number.isFinite(n) && n > 1) return n;
+  }
+  return null;
+}
+
+/** A style's own standalone minimum — what it sells at with nothing else. */
+export function ownMinimumFor(title: string): number {
+  return detectMinQuantityFromTitle(title) ?? DEFAULT_GARMENT_MINIMUM;
+}
+
 /**
  * How a garment gets decorated. The minimum is really a setup minimum, so
  * this — not the product — is what the per-method floor counts.
@@ -127,6 +159,12 @@ export type MixStatus = {
   message: string | null;
 };
 
+/** "a" · "a and b" · "a, b and c" */
+function joinList(parts: string[]): string {
+  if (parts.length <= 1) return parts[0] ?? "";
+  return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+}
+
 /**
  * Where an apparel order stands against the shared minimum and bulk tiers.
  * Pass every garment line in play — what's in the cart plus whatever the
@@ -148,16 +186,48 @@ export function mixStatus(lines: MixLine[]): MixStatus {
     }));
 
   const shortBy = Math.max(0, MIX_MINIMUM - pieces);
-  const qualifies = pieces >= MIX_MINIMUM && shortfalls.length === 0;
+
+  // Mixing exists to WAIVE a style's own minimum — it must never impose a
+  // higher one. An order where every style already clears its own minimum
+  // (6 polos on their own, say) has nothing to be rescued from and sells
+  // as it always did.
+  const allSelfSufficient =
+    garments.length > 0 &&
+    garments.every((l) => l.quantity >= ownMinimumFor(l.productTitle));
+
+  const qualifies =
+    allSelfSufficient || (pieces >= MIX_MINIMUM && shortfalls.length === 0);
 
   let message: string | null = null;
-  if (pieces > 0 && shortBy > 0) {
-    message = `${pieces} of ${MIX_MINIMUM} pieces — add ${shortBy} more from any garment.`;
-  } else if (shortfalls.length > 0) {
-    const s = shortfalls[0];
-    message = `Add ${s.needed} more ${METHOD_LABEL[s.method]} ${
-      s.needed === 1 ? "piece" : "pieces"
-    } — each decoration type needs ${MIX_MIN_PER_METHOD}.`;
+  if (pieces > 0 && !qualifies && garments.length === 1) {
+    // One style on its own: the shortest path is almost always topping up
+    // that style to its own minimum, so quote that number rather than the
+    // mix total (5 polos needs 1 more, not 7).
+    const only = garments[0];
+    const own = ownMinimumFor(only.productTitle);
+    const need = own - only.quantity;
+    message =
+      own < MIX_MINIMUM
+        ? `${only.quantity} of ${own} pieces — add ${need} more, or mix in other garments to reach ${MIX_MINIMUM}.`
+        : `${only.quantity} of ${own} pieces — add ${need} more.`;
+  } else if (pieces > 0 && !qualifies) {
+    // Both constraints can bite at once (e.g. 4 printed + 3 embroidered is
+    // short on the total AND on both methods). Telling the customer only
+    // "add 5 more" would send them back here a second time, so spell out
+    // every piece they actually need.
+    const parts = shortfalls.map(
+      (s) => `${s.needed} more ${METHOD_LABEL[s.method]}`
+    );
+    const methodNeed = shortfalls.reduce((n, s) => n + s.needed, 0);
+    const anyNeed = Math.max(0, shortBy - methodNeed);
+    if (anyNeed > 0) {
+      parts.push(`${anyNeed} more from any garment`);
+    }
+    const detail = joinList(parts);
+    message =
+      shortBy > 0
+        ? `${pieces} of ${MIX_MINIMUM} pieces — add ${detail}.`
+        : `Add ${detail} — each decoration type needs ${MIX_MIN_PER_METHOD}.`;
   }
 
   return {

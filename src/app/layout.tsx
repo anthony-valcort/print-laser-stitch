@@ -5,6 +5,8 @@ import { CartProvider } from "@/lib/cart-store";
 import AmbientBackground from "@/components/AmbientBackground";
 import ScrollReveal from "@/components/ScrollReveal";
 import MobileQuoteBar from "@/components/MobileQuoteBar";
+import CartDrawer from "@/components/CartDrawer";
+import CookieNotice from "@/components/CookieNotice";
 import JsonLd from "@/components/JsonLd";
 import { localBusinessJsonLd, websiteJsonLd } from "@/lib/seo";
 
@@ -73,9 +75,13 @@ export default function RootLayout({
       >
         <JsonLd data={[localBusinessJsonLd(), websiteJsonLd()]} />
         <AmbientBackground />
-        <CartProvider>{children}</CartProvider>
+        <CartProvider>
+          {children}
+          <CartDrawer />
+        </CartProvider>
         <ScrollReveal />
         <MobileQuoteBar />
+        <CookieNotice />
       </body>
     </html>
   );

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ProductJsonLd from "@/components/ProductJsonLd";
+import ReturnPolicyNote from "@/components/ReturnPolicyNote";
 import { getProductByHandle } from "@/lib/shopify-products";
 import { ShopifyError } from "@/lib/shopify";
 import GenericProductConfigurator, {
@@ -42,6 +43,7 @@ export default async function ProductPageShell({
     <>
       <ProductJsonLd product={product} />
       <GenericProductConfigurator product={product} {...configProps} />
+      <ReturnPolicyNote />
     </>
   );
 }

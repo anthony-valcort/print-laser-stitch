@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/lib/cart-store";
+import { openCartDrawer } from "@/lib/cart-drawer";
 
 export default function CartIcon() {
   const { lineCount, isHydrated } = useCart();
@@ -38,6 +39,12 @@ export default function CartIcon() {
       ref={ref}
       href="/cart"
       data-cart-icon
+      onClick={(e) => {
+        // With JS the cart slides out in place; the href stays so the link
+        // still works without it (and for open-in-new-tab).
+        e.preventDefault();
+        openCartDrawer();
+      }}
       aria-label={`Cart (${lineCount} ${lineCount === 1 ? "product" : "products"})`}
       className={`relative rounded-full border border-border-soft bg-white/5 p-2 text-foreground transition-colors hover:bg-white/10 ${
         bump ? "cart-bump" : ""

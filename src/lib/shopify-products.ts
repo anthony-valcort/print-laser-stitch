@@ -179,25 +179,11 @@ type RawProductByHandleResp = {
  * The dynamic catch-all route uses this to auto-switch to the size-matrix
  * configurator without needing a per-product page file.
  */
-export function detectMinQuantityFromTitle(title: string): number | null {
-  // "Min 12", "Minimum 12", "Min purchase 12", "Minimum purchase 12"
-  const a = title.match(/\bmin(?:imum)?(?:\s+purchase)?\s+(\d+)/i);
-  if (a) {
-    const n = Number(a[1]);
-    if (Number.isFinite(n) && n > 1) return n;
-  }
-  // "12 Min", "12 Minimum", "12 Minimum purchase",
-  // "6 Piece Minimum", "6 pcs minimum", "6-unit minimum" — i.e. a number
-  // optionally followed by a unit word (piece/pcs/unit/pack/qty) then "min".
-  const b = title.match(
-    /\b(\d+)[-\s]+(?:pcs?|pieces?|units?|packs?|qty)?[-\s]*min(?:imum)?(?:\s+purchase)?/i,
-  );
-  if (b) {
-    const n = Number(b[1]);
-    if (Number.isFinite(n) && n > 1) return n;
-  }
-  return null;
-}
+// Single implementation lives in apparel-mix (a pure module the cart, the
+// product pages and the checkout route all share) so a style's minimum can
+// never mean one thing here and another at checkout.
+export { detectMinQuantityFromTitle } from "@/lib/apparel-mix";
+// See apparel-mix for the per-style minimums and the shared mix rules.
 
 // Storefront-only — the Admin API returns null when resolving
 // `shopify.color-pattern` references (those metaobjects live in Shopify's

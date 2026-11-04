@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FAQSection from "@/components/FAQSection";
+import ReturnPolicyNote from "@/components/ReturnPolicyNote";
 import GenericProductConfigurator from "@/components/GenericProductConfigurator";
 import TShirtConfigurator from "@/components/TShirtConfigurator";
 import {
@@ -157,6 +158,7 @@ export default async function DynamicProductPage({
             howToOrderVideoId={HOW_TO_ORDER_VIDEO_IDS[product.handle]}
           />
         )}
+        <ReturnPolicyNote />
         <FAQSection />
       </main>
       <Footer />

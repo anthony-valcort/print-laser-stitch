@@ -831,13 +831,15 @@ export default function TShirtConfigurator({
                     );
                   })}
                 </div>
-                {totalQuantity > 0 && totalQuantity < minQuantity && (
-                  <p className="mt-2 text-[11px] text-amber-300">
-                    Add {minQuantity - totalQuantity} more to reach the
-                    minimum order of {minQuantity}.
-                  </p>
-                )}
-                {volumeTiers.length > 0 && (
+                {totalQuantity > 0 &&
+                  totalQuantity < minQuantity &&
+                  !mix.qualifies && (
+                    <p className="mt-2 text-[11px] text-amber-300">
+                      Add {minQuantity - totalQuantity} more to reach the
+                      minimum order of {minQuantity}.
+                    </p>
+                  )}
+                {volumeTiers.length > 0 && cartGarmentLines.length === 0 && (
                   <BulkProgress
                     tiers={volumeTiers}
                     totalQuantity={totalQuantity}
@@ -962,13 +964,15 @@ export default function TShirtConfigurator({
                   </div>
                 )}
 
-                {totalQuantity > 0 && totalQuantity < minQuantity && (
-                  <p className="mt-2 text-[11px] text-amber-300">
-                    Add {minQuantity - totalQuantity} more to reach the
-                    minimum order of {minQuantity}.
-                  </p>
-                )}
-                {volumeTiers.length > 0 && (
+                {totalQuantity > 0 &&
+                  totalQuantity < minQuantity &&
+                  !mix.qualifies && (
+                    <p className="mt-2 text-[11px] text-amber-300">
+                      Add {minQuantity - totalQuantity} more to reach the
+                      minimum order of {minQuantity}.
+                    </p>
+                  )}
+                {volumeTiers.length > 0 && cartGarmentLines.length === 0 && (
                   <BulkProgress
                     tiers={volumeTiers}
                     totalQuantity={totalQuantity}

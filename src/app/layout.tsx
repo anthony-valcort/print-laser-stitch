@@ -5,6 +5,8 @@ import { CartProvider } from "@/lib/cart-store";
 import AmbientBackground from "@/components/AmbientBackground";
 import ScrollReveal from "@/components/ScrollReveal";
 import MobileQuoteBar from "@/components/MobileQuoteBar";
+import CartDrawer from "@/components/CartDrawer";
+import CookieNotice from "@/components/CookieNotice";
 import JsonLd from "@/components/JsonLd";
 import { localBusinessJsonLd, websiteJsonLd } from "@/lib/seo";
 
@@ -76,6 +78,8 @@ export default function RootLayout({
         <CartProvider>{children}</CartProvider>
         <ScrollReveal />
         <MobileQuoteBar />
+        <CartDrawer />
+        <CookieNotice />
       </body>
     </html>
   );

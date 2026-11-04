@@ -13,6 +13,7 @@ import { ColorSwatch } from "@/components/configurator/ColorSwatch";
 import { ProductGallery } from "@/components/configurator/ProductGallery";
 import AnimatedPrice from "@/components/AnimatedPrice";
 import { flyToCart, successFeedback } from "@/lib/interactions";
+import { openCartDrawer } from "@/lib/cart-drawer";
 import {
   ACCEPT_PREVIEWABLE_DESIGN_FILES,
   EMPTY_UPLOAD_SLOT,
@@ -376,7 +377,9 @@ export default function GenericProductConfigurator({
     addItem(cartItem);
     successFeedback();
     flyToCart(galleryRef.current?.querySelector("img") ?? null);
-    router.push("/cart");
+    // Keep them on the product page — the cart comes to them instead.
+    setIsCheckingOut(false);
+    setTimeout(openCartDrawer, 650);
   }
 
   const autoTemplateFit = useMemo(

@@ -1,17 +1,47 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/lib/cart-store";
 
 export default function CartIcon() {
   const { lineCount, isHydrated } = useCart();
   const showBadge = isHydrated && lineCount > 0;
 
+  // Pop the badge whenever the cart grows, and when a flown item lands here,
+  // so adding something always has a visible destination.
+  const [bump, setBump] = useState(false);
+  const prev = useRef(lineCount);
+  const ref = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (isHydrated && lineCount > prev.current) setBump(true);
+    prev.current = lineCount;
+  }, [lineCount, isHydrated]);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onBump = () => setBump(true);
+    el.addEventListener("cart-bump", onBump);
+    return () => el.removeEventListener("cart-bump", onBump);
+  }, []);
+
+  useEffect(() => {
+    if (!bump) return;
+    const t = setTimeout(() => setBump(false), 600);
+    return () => clearTimeout(t);
+  }, [bump]);
+
   return (
     <Link
+      ref={ref}
       href="/cart"
+      data-cart-icon
       aria-label={`Cart (${lineCount} ${lineCount === 1 ? "product" : "products"})`}
-      className="relative rounded-full border border-border-soft bg-white/5 p-2 text-foreground hover:bg-white/10"
+      className={`relative rounded-full border border-border-soft bg-white/5 p-2 text-foreground transition-colors hover:bg-white/10 ${
+        bump ? "cart-bump" : ""
+      }`}
     >
       <svg
         width="20"
@@ -28,7 +58,11 @@ export default function CartIcon() {
         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
       </svg>
       {showBadge && (
-        <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full accent-gradient px-1 text-[10px] font-bold text-black">
+        <span
+          className={`absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full accent-gradient px-1 text-[10px] font-bold text-black ${
+            bump ? "cart-badge-pop" : ""
+          }`}
+        >
           {lineCount}
         </span>
       )}

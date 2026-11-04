@@ -4,7 +4,7 @@
 import MobileBuyBar from "@/components/MobileBuyBar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   PRINT_LOCATIONS,
   TSHIRT_MIN_QUANTITY,
@@ -30,6 +30,8 @@ import {
 } from "@/components/configurator/BulkPricing";
 import { ColorSwatch } from "@/components/configurator/ColorSwatch";
 import { ProductGallery } from "@/components/configurator/ProductGallery";
+import AnimatedPrice from "@/components/AnimatedPrice";
+import { flyToCart, successFeedback } from "@/lib/interactions";
 import {
   LogoMockupControls,
   LogoOverlay,
@@ -195,6 +197,8 @@ export default function TShirtConfigurator({
 
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [galleryIdx, setGalleryIdx] = useState(0);
+  // The gallery image is the thing that flies into the cart icon on add.
+  const galleryRef = useRef<HTMLDivElement>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   // Find the variant for a given (color, size) and the current single-pick
@@ -540,6 +544,8 @@ export default function TShirtConfigurator({
     };
 
     addItem(cartItem);
+    successFeedback();
+    flyToCart(galleryRef.current?.querySelector("img") ?? null);
     router.push("/cart");
   }
 
@@ -574,7 +580,7 @@ export default function TShirtConfigurator({
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)] lg:gap-12">
           {/* LEFT: Sticky gallery */}
-          <div className="lg:sticky lg:top-20 lg:self-start">
+          <div ref={galleryRef} className="lg:sticky lg:top-20 lg:self-start">
             <ProductGallery
               images={displayImages}
               idx={galleryIdx}
@@ -647,9 +653,10 @@ export default function TShirtConfigurator({
                 {product.title}
               </h1>
               <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <span className="text-3xl font-bold accent-gradient-text">
-                  ${(perShirtPrice * (1 - volumePct / 100)).toFixed(2)}
-                </span>
+                <AnimatedPrice
+                  value={perShirtPrice * (1 - volumePct / 100)}
+                  className="text-3xl font-bold accent-gradient-text"
+                />
                 {volumePct > 0 && (
                   <span className="text-base font-medium text-foreground-muted line-through">
                     ${perShirtPrice.toFixed(2)}

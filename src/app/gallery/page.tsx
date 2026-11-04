@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import PageCopy from "@/components/PageCopy";
 import { getAllGalleryItems } from "@/lib/gallery-shopify";
 import GalleryPageClient from "@/components/gallery/GalleryPageClient";
 
@@ -21,6 +22,19 @@ export default async function GalleryPage() {
       <Header />
       <main className="flex-1">
         <GalleryPageClient items={items} />
+        <PageCopy
+          heading="Custom printing, embroidery and engraving made in Stuart, FL"
+          paragraphs={[
+            "These are real jobs from our shop: embroidered polos and hats for local teams and businesses, screen printed and heat pressed t-shirts, decals and signs, stickers, banners, and laser engraved gifts. Everything is produced at 3153 SE Dominica Terrace in Stuart.",
+            "Want something similar? Start with the product page for instant online pricing, or tell us about your project and we will quote it. Orders of 12 or more garments qualify for bulk pricing, and you can mix styles to reach the minimum.",
+          ]}
+          links={[
+            { href: "/products/embroidered-polos", label: "Embroidered polos" },
+            { href: "/products/tshirts", label: "Custom t-shirts" },
+            { href: "/signage-quotes", label: "Signs and decals" },
+            { href: "/contact", label: "Request a quote" },
+          ]}
+        />
       </main>
       <Footer />
     </>

@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductConfigurator from "@/components/ProductConfigurator";
 import FAQSection from "@/components/FAQSection";
+import ReturnPolicyNote from "@/components/ReturnPolicyNote";
 import AlreadyCustomerCTA from "@/components/AlreadyCustomerCTA";
 
 export const metadata: Metadata = {
@@ -18,6 +19,7 @@ export default function VinylStickersPage() {
       <Header />
       <main className="flex-1">
         <ProductConfigurator />
+        <ReturnPolicyNote />
         <FAQSection />
         <AlreadyCustomerCTA />
       </main>

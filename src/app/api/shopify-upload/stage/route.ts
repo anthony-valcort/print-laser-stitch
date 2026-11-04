@@ -1,9 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createStagedUpload, ALLOWED_UPLOAD_FORMATS } from "@/lib/cloudinary-files";
 
-const VIDEO_FORMATS = new Set(["mp4", "mov", "webm"]);
-const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB (site advertises 20 MB)
-const MAX_VIDEO_BYTES = 200 * 1024 * 1024; // 200 MB, gallery videos
+// No file-size cap here on purpose: customers upload large-format artwork
+// (6x4 ft banners) and the proof step re-uploads a print-resolution PNG that
+// is far bigger than the original. The only limits are Cloudinary's own.
 
 type StageRequest = {
   filename: string;
@@ -48,12 +48,8 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
-  const maxBytes = VIDEO_FORMATS.has(ext) ? MAX_VIDEO_BYTES : MAX_FILE_BYTES;
-  if (!Number.isFinite(body.fileSize) || body.fileSize <= 0 || body.fileSize > maxBytes) {
-    return NextResponse.json(
-      { error: `File is too large (max ${Math.round(maxBytes / 1024 / 1024)} MB).` },
-      { status: 400 },
-    );
+  if (!Number.isFinite(body.fileSize) || body.fileSize <= 0) {
+    return NextResponse.json({ error: "Invalid file size." }, { status: 400 });
   }
 
   try {

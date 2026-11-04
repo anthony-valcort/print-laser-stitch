@@ -14,6 +14,14 @@ import { ProductGallery } from "@/components/configurator/ProductGallery";
 import AnimatedPrice from "@/components/AnimatedPrice";
 import { flyToCart, successFeedback } from "@/lib/interactions";
 import { openCartDrawer } from "@/lib/cart-drawer";
+import { DraftNote, useDraft } from "@/components/configurator/useDraft";
+import {
+  cleanInt,
+  cleanOptions,
+  cleanText,
+  packUpload,
+  unpackUpload,
+} from "@/lib/draft-storage";
 import {
   ACCEPT_PREVIEWABLE_DESIGN_FILES,
   EMPTY_UPLOAD_SLOT,
@@ -217,6 +225,41 @@ export default function GenericProductConfigurator({
   const galleryRef = useRef<HTMLDivElement>(null);
   const [toast, setToast] = useState<string | null>(null);
 
+  // Remember an unfinished order — the options picked, quantity, notes and
+  // uploaded artwork — so wandering off to another product doesn't mean
+  // starting over.
+  const draft = useDraft({
+    handle: product.handle,
+    snapshot: {
+      o: selectedOptions,
+      q: quantity,
+      i: instructions,
+      p: phone,
+      ps: printSide,
+      fu: packUpload(frontUpload),
+      bu: packUpload(backUpload),
+    },
+    hasContent:
+      JSON.stringify(selectedOptions) !== JSON.stringify(initialOpts) ||
+      quantity !== minQuantity ||
+      !!instructions.trim() ||
+      !!phone.trim() ||
+      !!frontUpload.fileUrl ||
+      !!backUpload.fileUrl,
+    restore: (d) => {
+      setSelectedOptions((prev) => cleanOptions(d.o, product.options, prev));
+      const q = cleanInt(d.q, minQuantity, 100_000);
+      if (q !== null) setQuantity(q);
+      setInstructions(cleanText(d.i, 2000));
+      setPhone(cleanText(d.p, 40));
+      if (d.ps === "front" || d.ps === "both") setPrintSide(d.ps);
+      const fu = unpackUpload(d.fu);
+      if (fu) setFrontUpload(fu);
+      const bu = unpackUpload(d.bu);
+      if (bu) setBackUpload(bu);
+    },
+  });
+
   // Resolve current variant from all selected options.
   const currentVariant = useMemo(() => {
     return product.variants.find((v) =>
@@ -375,6 +418,7 @@ export default function GenericProductConfigurator({
     };
 
     addItem(cartItem);
+    draft.clear(); // It's in the cart now — nothing left to remember.
     successFeedback();
     flyToCart(galleryRef.current?.querySelector("img") ?? null);
     // Keep them on the product page — the cart comes to them instead.
@@ -537,6 +581,7 @@ export default function GenericProductConfigurator({
 
           {/* RIGHT: Configurator */}
           <div className="space-y-6">
+            {draft.restored && <DraftNote onStartOver={draft.startOver} />}
             <div>
               {badge && (
                 <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-border-soft bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-foreground-muted">

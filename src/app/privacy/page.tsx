@@ -99,11 +99,36 @@ export default function PrivacyPage() {
               brokers.
             </p>
 
-            <h2>Cookies</h2>
+            <h2>Cookies and local storage</h2>
             <p>
-              Our website uses a functional, secure cookie to keep you signed
-              in and to remember your cart. We don&apos;t use third-party
-              advertising or tracking cookies.
+              We keep this deliberately small. Our website uses:
+            </p>
+            <ul>
+              <li>
+                <strong>One functional cookie</strong> — a secure, signed
+                cookie that keeps you logged in to your account. It is not
+                used to profile you and is not read by anyone else.
+              </li>
+              <li>
+                <strong>Your browser&apos;s local storage</strong> — to
+                remember your cart between visits, so your sizes, artwork
+                choices and quantities survive a refresh. This stays on your
+                device; it is not sent to us until you place an order.
+              </li>
+            </ul>
+            <p>
+              We do <strong>not</strong> use advertising cookies, analytics
+              cookies, pixels, session recording, or cross-site tracking of
+              any kind, and we do not sell or share personal information for
+              advertising. Because the only cookie we set is strictly
+              necessary to operate the site, there is nothing to opt out of —
+              the notice shown on your first visit is there to tell you this,
+              not to ask permission to track you.
+            </p>
+            <p>
+              You can clear cookies and local storage at any time in your
+              browser settings. Clearing them signs you out and empties your
+              saved cart.
             </p>
 
             <h2>Data retention</h2>
@@ -117,6 +142,16 @@ export default function PrivacyPage() {
             <p>
               You can contact us at any time to access, update, or delete
               your personal information — see the contact details below.
+            </p>
+
+            <h2>Returns on custom work</h2>
+            <p>
+              Items we decorate are made to your order, so they are final
+              sale — they cannot be restocked or resold. If the fault is
+              ours, though, it is ours to fix: misprints, peeling or cracked
+              prints, embroidery below our standard, the wrong item or size
+              on our end, or damage in production are reprinted or refunded.
+              Contact us within 7 days of delivery with a photo.
             </p>
 
             <h2>Children&apos;s privacy</h2>

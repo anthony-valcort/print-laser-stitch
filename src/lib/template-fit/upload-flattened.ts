@@ -1,18 +1,22 @@
+import { shrinkBlobToUploadLimit } from "@/lib/shrink-image";
+
 /**
  * Uploads a flattened design Blob (produced by flatten-to-canvas.ts) straight
  * to Cloudinary, reusing the same stage/register API routes that
  * UploadBox.tsx uses for raw customer uploads (see uploadDesign() there).
  */
 export async function uploadFlattenedDesign(
-  blob: Blob,
-  filename: string,
+  rawBlob: Blob,
+  rawFilename: string,
 ): Promise<string> {
+  // Print-resolution proofs can exceed the storage limit; fit them under it.
+  const { blob, filename, mimeType } = await shrinkBlobToUploadLimit(rawBlob, rawFilename);
   const stageResp = await fetch("/api/shopify-upload/stage", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       filename,
-      mimeType: "image/png",
+      mimeType,
       fileSize: blob.size,
     }),
   });
@@ -35,7 +39,8 @@ export async function uploadFlattenedDesign(
 
   const uploadResp = await fetch(stage.url, { method: "POST", body: fd });
   if (!uploadResp.ok) {
-    throw new Error(`Upload to staging failed (${uploadResp.status})`);
+    const text = await uploadResp.text().catch(() => "");
+    throw new Error(`Upload to staging failed (${uploadResp.status}): ${text.slice(0, 200)}`);
   }
 
   const registerResp = await fetch("/api/shopify-upload/register", {
@@ -44,7 +49,7 @@ export async function uploadFlattenedDesign(
     body: JSON.stringify({
       resourceUrl: stage.resourceUrl,
       filename,
-      mimeType: "image/png",
+      mimeType,
     }),
   });
   const registered = (await registerResp.json()) as

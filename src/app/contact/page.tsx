@@ -3,6 +3,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ContactForm from "@/components/ContactForm";
 import { groupedHours } from "@/lib/business-hours";
+import PageCopy from "@/components/PageCopy";
+import GoogleReviewsBadge from "@/components/GoogleReviewsBadge";
 
 export const metadata: Metadata = {
   title: "Contact Us | Print Laser Stitch, Stuart, FL",
@@ -192,6 +194,21 @@ export default function ContactPage() {
             </div>
           </div>
         </section>
+        <div className="mx-auto max-w-4xl px-4 pb-6 sm:px-6 lg:px-8">
+          <GoogleReviewsBadge />
+        </div>
+        <PageCopy
+          heading="Visit or call our Stuart, Florida print shop"
+          paragraphs={[
+            "Print Laser Stitch is at 3153 SE Dominica Terrace in Stuart, serving customers across Martin County, St. Lucie County and north Palm Beach County, including Jensen Beach, Palm City, Hobe Sound, Port St. Lucie, Fort Pierce and Jupiter.",
+            "For the fastest answer on a quote, call (772) 985-2854 during shop hours or use the form above. Tell us what you want made, how many, and when you need it, and we will reply with pricing and next steps.",
+          ]}
+          links={[
+            { href: "/collections", label: "Browse products" },
+            { href: "/signage-quotes", label: "Instant sign quote" },
+            { href: "/gallery", label: "See our work" },
+          ]}
+        />
       </main>
       <Footer />
     </>

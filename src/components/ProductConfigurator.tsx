@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
+import { shrinkToUploadLimit, shrinkBlobToUploadLimit } from "@/lib/shrink-image";
 import MobileBuyBar from "@/components/MobileBuyBar";
 import Image from "next/image";
 import Link from "next/link";
@@ -161,8 +162,10 @@ export default function ProductConfigurator() {
     [size, shape, material, customWidth, customHeight],
   );
 
-  async function handleFile(f: File | undefined | null) {
-    if (!f) return;
+  async function handleFile(original: File | undefined | null) {
+    if (!original) return;
+    // Large images are compressed to fit the storage limit instead of failing.
+    const f = await shrinkToUploadLimit(original);
     setFile(f);
     setFileUrl(null);
     setUploadError(null);
@@ -250,11 +253,14 @@ export default function ProductConfigurator() {
 
   /** Generic Shopify staged upload — used for the proof PNG + cutline SVG. */
   async function uploadBlobToShopify(
-    blob: Blob,
-    filename: string,
-    mimeType: string,
+    rawBlob: Blob,
+    rawFilename: string,
+    rawMimeType: string,
   ): Promise<string | undefined> {
     try {
+      const { blob, filename, mimeType } = rawMimeType.startsWith("image/")
+        ? await shrinkBlobToUploadLimit(rawBlob, rawFilename)
+        : { blob: rawBlob, filename: rawFilename, mimeType: rawMimeType };
       const stageResp = await fetch("/api/shopify-upload/stage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -724,7 +730,7 @@ export default function ProductConfigurator() {
                       Drag or click to upload your file
                     </div>
                     <div className="mt-1 text-xs text-foreground-muted">
-                      PNG · JPG · PDF · SVG · AI · Max 25MB · 1 file per order
+                      PNG · JPG · PDF · SVG · AI · 1 file per order
                     </div>
                   </>
                 )}

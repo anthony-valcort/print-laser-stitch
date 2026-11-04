@@ -1,6 +1,8 @@
 "use client";
 
 import { parseSizeInches, type SizeUnit } from "@/lib/parse-size";
+import { tapFeedback } from "@/lib/interactions";
+import { useJustPicked } from "@/components/configurator/feedback";
 
 /**
  * Tier-style option pickers for print products: size cards that show the
@@ -171,6 +173,29 @@ export function tierCountLabel(
 
 /* ----------------------------------------------------------------- pickers */
 
+/** Animated confirmation tick on the chosen card. */
+function Tick() {
+  return (
+    <span
+      className="check-pop absolute right-1.5 top-1.5 grid h-4 w-4 place-items-center rounded-full bg-[#d9f000] text-black"
+      aria-hidden
+    >
+      <svg
+        width="9"
+        height="9"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M20 6 9 17l-5-5" />
+      </svg>
+    </span>
+  );
+}
+
 function Shape({ w, h }: { w: number; h: number }) {
   const box = 30;
   const scale = box / Math.max(w, h);
@@ -192,6 +217,7 @@ export function SizeCards({
   sizeUnit = "in",
   qtyOptionName,
 }: PickerProps) {
+  const { mark, pickedProps } = useJustPicked();
   const qtyName = qtyOptionName;
   const qtyValues = qtyName
     ? [
@@ -223,14 +249,20 @@ export function SizeCards({
           <button
             key={v}
             type="button"
-            onClick={() => setOption(opt.name, v)}
+            onClick={() => {
+              tapFeedback();
+              mark(v);
+              setOption(opt.name, v);
+            }}
             aria-pressed={active}
-            className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition active:scale-[0.98] ${
+            {...pickedProps(v)}
+            className={`tap-card flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition ${
               active
                 ? "border-[#d9f000] bg-[#d9f000]/10 text-[#d9f000] shadow-[0_0_24px_rgba(217,240,0,0.15)]"
                 : "border-border-soft bg-white/3 text-foreground-muted hover:border-white/25 hover:bg-white/6"
             }`}
           >
+            {active && <Tick />}
             {size && <Shape w={size.width} h={size.height} />}
             <span className="min-w-0">
               <span
@@ -265,6 +297,7 @@ export function QuantityTierCards({
   selected,
   setOption,
 }: PickerProps) {
+  const { mark, pickedProps } = useJustPicked();
   const tiers = [...opt.values]
     .sort((a, b) => tierSortKey(a) - tierSortKey(b))
     .map((v) => {
@@ -303,9 +336,14 @@ export function QuantityTierCards({
           <button
             key={t.v}
             type="button"
-            onClick={() => setOption(opt.name, t.v)}
+            onClick={() => {
+              tapFeedback();
+              mark(t.v);
+              setOption(opt.name, t.v);
+            }}
             aria-pressed={active}
-            className={`relative flex flex-col items-center rounded-xl border px-2 pb-2.5 pt-4 text-center transition active:scale-[0.98] ${
+            {...pickedProps(t.v)}
+            className={`tap-card flex flex-col items-center rounded-xl border px-2 pb-2.5 pt-4 text-center transition ${
               active
                 ? "border-[#d9f000] bg-[#d9f000]/10 shadow-[0_0_24px_rgba(217,240,0,0.15)]"
                 : "border-border-soft bg-white/3 hover:border-white/25 hover:bg-white/6"
@@ -369,6 +407,7 @@ export function SidesPicker({
   selected,
   setOption,
 }: PickerProps) {
+  const { mark, pickedProps } = useJustPicked();
   const prices = opt.values.map((v) =>
     priceFor(variants, selected, { [opt.name]: v }),
   );
@@ -384,9 +423,14 @@ export function SidesPicker({
             <button
               key={v}
               type="button"
-              onClick={() => setOption(opt.name, v)}
+              onClick={() => {
+                tapFeedback();
+                mark(v);
+                setOption(opt.name, v);
+              }}
               aria-pressed={active}
-              className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-sm font-semibold transition active:scale-[0.98] ${
+              {...pickedProps(v)}
+              className={`tap-card flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-sm font-semibold transition ${
                 active
                   ? "border-[#d9f000] bg-[#d9f000]/10 text-[#d9f000]"
                   : "border-border-soft bg-white/3 text-foreground hover:bg-white/6"

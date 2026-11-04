@@ -322,7 +322,7 @@ export default function DecalCalculator() {
                 onSelect={(f) => uploadDesign(f, setPanelImage)}
                 onClear={() => setPanelImage(EMPTY_UPLOAD_SLOT)}
                 accept={ACCEPT_REFERENCE_IMAGES}
-                hint="PNG · JPG · WEBP · ≤20MB"
+                hint="PNG · JPG · WEBP"
               />
             </div>
 

@@ -7,9 +7,22 @@
  */
 
 import type { ShopifyProduct } from "@/lib/shopify-products";
+import { openingHoursSpecification } from "@/lib/business-hours";
 
 export const SITE_URL = "https://www.printlaserstitch.com";
 export const SITE_NAME = "Print Laser Stitch";
+
+/** Google shows ~60 characters of a title. Keeps the brand suffix when it
+ * fits, otherwise trims the page name at a word boundary so the title never
+ * gets cut mid-word in search results. */
+export function fitTitle(name: string, suffix = " | Print Laser Stitch", max = 60): string {
+  const clean = name.replace(/\s+/g, " ").trim();
+  if (clean.length + suffix.length <= max) return clean + suffix;
+  if (clean.length <= max) return clean;
+  const cut = clean.slice(0, max - 1);
+  const at = cut.lastIndexOf(" ");
+  return (at > 30 ? cut.slice(0, at) : cut).replace(/[\s,:;\-–|]+$/, "") + "…";
+}
 
 export const BUSINESS = {
   name: "Print Laser Stitch",
@@ -116,6 +129,9 @@ export function localBusinessJsonLd() {
     description:
       "Print shop in Stuart, Florida offering custom embroidery, screen printing, custom t-shirts and polos, stickers, banners, signs, decals and laser engraving for businesses, teams and individuals across the Treasure Coast.",
     address: { "@type": "PostalAddress", ...BUSINESS.address },
+    // Same hours as the Google Business Profile (see business-hours.ts) so
+    // Google never sees the site and the listing disagreeing.
+    openingHoursSpecification: openingHoursSpecification(),
     areaServed: BUSINESS.areaServed.map((name) => ({ "@type": "Place", name })),
     knowsAbout: BUSINESS.services,
     makesOffer: BUSINESS.services.map((name) => ({

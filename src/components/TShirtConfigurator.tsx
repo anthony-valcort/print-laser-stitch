@@ -3,7 +3,6 @@
 
 import MobileBuyBar from "@/components/MobileBuyBar";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   PRINT_LOCATIONS,
@@ -38,6 +37,7 @@ import {
   type MixLine,
 } from "@/lib/apparel-mix";
 import { flyToCart, successFeedback } from "@/lib/interactions";
+import { openCartDrawer } from "@/lib/cart-drawer";
 import {
   LogoMockupControls,
   LogoOverlay,
@@ -74,7 +74,6 @@ export default function TShirtConfigurator({
   showPrintLocations = true,
   singleUploadLabel = "Design",
 }: ApparelConfiguratorProps) {
-  const router = useRouter();
   const { addItem, items: cartItems } = useCart();
   const minQuantity = minQuantityProp ?? TSHIRT_MIN_QUANTITY;
   // Separate "Size" out from the other options — Size becomes a per-size
@@ -585,7 +584,9 @@ export default function TShirtConfigurator({
     addItem(cartItem);
     successFeedback();
     flyToCart(galleryRef.current?.querySelector("img") ?? null);
-    router.push("/cart");
+    // Keep them on the product page — the cart comes to them instead.
+    setIsCheckingOut(false);
+    setTimeout(openCartDrawer, 650);
   }
 
   return (

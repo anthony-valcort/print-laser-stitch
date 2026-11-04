@@ -183,6 +183,7 @@ type RawProductByHandleResp = {
 // product pages and the checkout route all share) so a style's minimum can
 // never mean one thing here and another at checkout.
 export { detectMinQuantityFromTitle } from "@/lib/apparel-mix";
+// See apparel-mix for the per-style minimums and the shared mix rules.
 
 // Storefront-only — the Admin API returns null when resolving
 // `shopify.color-pattern` references (those metaobjects live in Shopify's

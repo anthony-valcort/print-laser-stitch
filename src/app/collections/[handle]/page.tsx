@@ -149,6 +149,11 @@ export default async function CollectionPage({
                   {description}
                 </p>
               )}
+              {collection.products.length > 0 && (
+                <p className="mt-3 text-sm font-medium text-foreground/90">
+                  Tap a product to choose your options and order.
+                </p>
+              )}
               <p className="mt-2 font-headline text-[11px] uppercase tracking-[0.2em] text-[#d9f000]">
                 {collection.products.length}{" "}
                 {collection.products.length === 1 ? "product" : "products"}
@@ -171,7 +176,7 @@ export default async function CollectionPage({
             ) : (
               COLLECTION_HOW_TO_ORDER_VIDEO_IDS[collection.handle] && (
                 <div
-                  className="w-full shrink-0 animate-fade-up lg:w-105"
+                  className="hidden w-full shrink-0 animate-fade-up lg:block lg:w-105"
                   style={fadeDelay(150)}
                 >
                   <h2 className="font-display text-2xl font-black uppercase tracking-tight text-[#d9f000] sm:text-3xl">
@@ -179,6 +184,7 @@ export default async function CollectionPage({
                   </h2>
                   <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
                     <iframe
+                      loading="lazy"
                       src={`https://www.youtube-nocookie.com/embed/${COLLECTION_HOW_TO_ORDER_VIDEO_IDS[collection.handle]}`}
                       title="How to order — Print Laser Stitch"
                       className="h-full w-full"
@@ -255,6 +261,25 @@ export default async function CollectionPage({
               ))}
             </div>
           )}
+
+          {!COLLECTION_HEADER_IMAGES[collection.handle] &&
+            COLLECTION_HOW_TO_ORDER_VIDEO_IDS[collection.handle] && (
+              <div className="mt-10 lg:hidden">
+                <h2 className="font-display text-xl font-black uppercase tracking-tight text-[#d9f000]">
+                  Need help ordering?
+                </h2>
+                <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
+                  <iframe
+                    loading="lazy"
+                    src={`https://www.youtube-nocookie.com/embed/${COLLECTION_HOW_TO_ORDER_VIDEO_IDS[collection.handle]}`}
+                    title="How to order — Print Laser Stitch"
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            )}
         </section>
       </main>
       <Footer />

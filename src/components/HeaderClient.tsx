@@ -326,7 +326,7 @@ export default function HeaderClient({
       </div>
 
       {/* Mobile search row */}
-      <div className="px-4 pb-3 sm:px-6 lg:hidden">
+      <div className="px-4 pb-2.5 sm:px-6 lg:hidden">
         <SearchBar size="large" placeholder="Search products…" className="w-full" />
       </div>
 
@@ -339,31 +339,31 @@ export default function HeaderClient({
         <div className="overflow-hidden">
           <nav
             aria-label="Shop by category"
-            className="border-t border-border-soft bg-background-soft/60"
+            className="relative border-t border-border-soft bg-background-soft/60"
           >
-            <ul className="mx-auto grid max-w-7xl grid-cols-5 gap-1.5 px-3 py-2.5 sm:px-6 lg:flex lg:justify-between lg:gap-1.5 lg:px-8">
+            <ul className="mx-auto flex max-w-7xl snap-x gap-2 overflow-x-auto px-4 py-2 [scrollbar-width:none] sm:px-6 lg:justify-between lg:gap-1.5 lg:overflow-visible lg:px-8 lg:py-2.5 [&::-webkit-scrollbar]:hidden">
               {CATEGORY_STRIP.map((c, i) => {
                 const active = isActive(c.href);
                 return (
                   <li
                     key={c.label}
-                    className="min-w-0 lg:flex-1"
+                    className="shrink-0 snap-start lg:min-w-0 lg:flex-1"
                     style={{ animation: `plsTileIn 0.5s ease-out ${i * 45}ms both` }}
                   >
                     <Link
                       href={c.href}
                       aria-current={active ? "page" : undefined}
-                      className={`group flex h-full w-full flex-col items-center gap-1.5 rounded-2xl border px-1 py-2.5 text-center transition duration-200 active:scale-95 max-lg:border-border-soft max-lg:bg-white/[0.04] lg:px-2 ${
+                      className={`group flex items-center gap-2 whitespace-nowrap rounded-full border px-3.5 py-2 transition duration-200 active:scale-95 lg:h-full lg:w-full lg:flex-col lg:gap-1.5 lg:whitespace-normal lg:rounded-2xl lg:px-2 lg:py-2.5 lg:text-center ${
                         active
                           ? "border-[#d9f000]/50 bg-[#d9f000]/10 text-[#d9f000]"
-                          : "border-transparent text-foreground-muted hover:-translate-y-0.5 hover:border-border-strong hover:bg-white/[0.05] hover:text-[#d9f000]"
+                          : "border-border-soft bg-white/[0.04] text-foreground-muted lg:border-transparent lg:bg-transparent lg:hover:-translate-y-0.5 lg:hover:border-border-strong lg:hover:bg-white/[0.05] lg:hover:text-[#d9f000]"
                       }`}
                     >
                       <CategoryIcon
                         name={c.icon}
-                        className="h-7 w-7 transition-transform duration-200 group-hover:scale-110 max-lg:h-8 max-lg:w-8"
+                        className="h-5 w-5 transition-transform duration-200 group-hover:scale-110 lg:h-7 lg:w-7"
                       />
-                      <span className="font-headline text-[11px] font-semibold leading-tight tracking-wide lg:text-[12px] text-foreground/90 group-hover:text-foreground">
+                      <span className="font-headline text-[13px] font-semibold leading-tight tracking-wide text-foreground/90 group-hover:text-foreground lg:text-[12px]">
                         {c.label}
                       </span>
                     </Link>
@@ -371,6 +371,10 @@ export default function HeaderClient({
                 );
               })}
             </ul>
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent lg:hidden"
+            />
           </nav>
         </div>
       </div>
@@ -380,7 +384,7 @@ export default function HeaderClient({
           <div className="mx-auto max-w-7xl space-y-1 px-4 py-4">
             <a
               href={PHONE_HREF}
-              className="mb-3 flex items-center justify-center gap-2 rounded-2xl accent-gradient px-4 py-3.5 font-headline text-base font-bold tracking-wide text-black shadow-lg shadow-[#d9f000]/20 active:scale-[0.98]"
+              className="mb-3 flex items-center justify-center gap-2 rounded-2xl border border-border-strong px-4 py-2.5 font-headline text-[15px] font-semibold tracking-wide text-[#18d3e8] active:scale-[0.98]"
             >
               <PhoneIcon /> Call {PHONE_DISPLAY}
             </a>
@@ -398,7 +402,7 @@ export default function HeaderClient({
                   key={l.label}
                   href={l.href}
                   onClick={() => setMobileOpen(false)}
-                  className="rounded-2xl border border-border-strong bg-white/[0.06] px-4 py-3 text-center font-headline text-[15px] font-semibold tracking-wide transition active:scale-95 active:bg-[#d9f000]/10"
+                  className="rounded-xl border border-border-soft bg-white/[0.04] px-3 py-2.5 text-center font-headline text-sm font-semibold tracking-wide transition active:scale-95 active:bg-[#d9f000]/10"
                 >
                   {l.label}
                 </Link>
@@ -408,7 +412,7 @@ export default function HeaderClient({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setMobileOpen(false)}
-                className="rounded-2xl border border-border-strong bg-white/[0.06] px-4 py-3 text-center font-headline text-[15px] font-semibold tracking-wide transition active:scale-95"
+                className="rounded-xl border border-border-soft bg-white/[0.04] px-3 py-2.5 text-center font-headline text-sm font-semibold tracking-wide transition active:scale-95"
               >
                 University ↗
               </a>
@@ -417,7 +421,7 @@ export default function HeaderClient({
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setMobileOpen(false)}
-                className="rounded-2xl border border-border-strong bg-white/[0.06] px-4 py-3 text-center font-headline text-[15px] font-semibold tracking-wide transition active:scale-95"
+                className="rounded-xl border border-border-soft bg-white/[0.04] px-3 py-2.5 text-center font-headline text-sm font-semibold tracking-wide transition active:scale-95"
               >
                 Portal ↗
               </a>

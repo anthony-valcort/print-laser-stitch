@@ -562,12 +562,13 @@ export default function GenericProductConfigurator({
             )}
 
             {howToOrderVideoId && (
-              <div className="mt-6">
+              <div className="mt-6 hidden lg:block">
                 <h2 className="font-display text-xl font-black uppercase tracking-tight text-[#d9f000]">
                   How to Order
                 </h2>
                 <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
                   <iframe
+                    loading="lazy"
                     src={`https://www.youtube-nocookie.com/embed/${howToOrderVideoId}`}
                     title="How to order — Print Laser Stitch"
                     className="h-full w-full"
@@ -921,6 +922,25 @@ export default function GenericProductConfigurator({
                 sizeUnit={sizeUnit}
                 bleedIn={showBleedTrim ? BLEED_IN : 0}
               />
+            </div>
+          )}
+
+          {/* How-to video: below the product on phones */}
+          {howToOrderVideoId && (
+            <div className="lg:hidden">
+              <h2 className="font-display text-xl font-black uppercase tracking-tight text-[#d9f000]">
+                How to Order
+              </h2>
+              <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
+                <iframe
+                  loading="lazy"
+                  src={`https://www.youtube-nocookie.com/embed/${howToOrderVideoId}`}
+                  title="How to order — Print Laser Stitch"
+                  className="h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
             </div>
           )}
         </div>

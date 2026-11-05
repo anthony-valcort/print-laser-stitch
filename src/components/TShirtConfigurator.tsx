@@ -681,10 +681,10 @@ export default function TShirtConfigurator({
             {/* Phones: say what this is first, with a clear next step */}
             <div className="mb-4 lg:hidden">
               <h1 className="font-display text-2xl font-black uppercase leading-tight tracking-tight">
-                {product.title}
+                {product.title.replace(/\s*\([^)]*\)\s*$/, "")}
               </h1>
               <p className="mt-1.5 text-sm text-foreground-muted">
-                Choose your options below and order online in minutes.
+                {product.title.match(/\(([^)]*)\)\s*$/)?.[1]}{product.title.match(/\(([^)]*)\)\s*$/) ? ". " : ""}Choose your options below and order online in minutes.
               </p>
               <a
                 href="#order-options"

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import CartIcon from "./CartIcon";
 import SearchBar from "./SearchBar";
 import CategoryIcon, { type CategoryIconName } from "./header/CategoryIcons";
@@ -24,17 +24,22 @@ const PHONE_DISPLAY = "(772) 985-2854";
 const PHONE_HREF = "tel:+17729852854";
 
 /** The icon tiles under the search bar, in the order customers shop. */
-const CATEGORY_STRIP: { label: string; href: string; icon: CategoryIconName }[] = [
-  { label: "Stickers", href: "/products/vinyl-stickers", icon: "stickers" },
-  { label: "Apparel", href: "/collections/custom-apparel", icon: "tshirts" },
-  { label: "Polos", href: "/products/embroidered-polos", icon: "polos" },
-  { label: "Business Cards", href: "/products/business-cards", icon: "cards" },
-  { label: "Flyers", href: "/products/flyers", icon: "flyers" },
-  { label: "Posters", href: "/products/posters", icon: "posters" },
-  { label: "Banners", href: "/products/banners", icon: "banners" },
-  { label: "Signs & Decals", href: "/signage-quotes", icon: "signs" },
-  { label: "Engraving", href: "/products/engraved-cups", icon: "engraving" },
-  { label: "All Products", href: "/collections", icon: "all" },
+const CATEGORY_STRIP: {
+  label: string;
+  href: string;
+  icon: CategoryIconName;
+  color: string;
+}[] = [
+  { label: "Stickers", href: "/products/vinyl-stickers", icon: "stickers", color: "#d94cb3" },
+  { label: "Apparel", href: "/collections/custom-apparel", icon: "tshirts", color: "#18d3e8" },
+  { label: "Polos", href: "/products/embroidered-polos", icon: "polos", color: "#60a5fa" },
+  { label: "Business Cards", href: "/products/business-cards", icon: "cards", color: "#ff9f43" },
+  { label: "Flyers", href: "/products/flyers", icon: "flyers", color: "#4ade80" },
+  { label: "Posters", href: "/products/posters", icon: "posters", color: "#a78bfa" },
+  { label: "Banners", href: "/products/banners", icon: "banners", color: "#d9f000" },
+  { label: "Signs & Decals", href: "/signage-quotes", icon: "signs", color: "#fb7185" },
+  { label: "Engraving", href: "/products/engraved-cups", icon: "engraving", color: "#2dd4bf" },
+  { label: "All Products", href: "/collections", icon: "all", color: "#f5f5f5" },
 ];
 
 const UTILITY_LINKS: { label: string; href: string; external?: boolean }[] = [
@@ -96,6 +101,26 @@ export default function HeaderClient({
   // After the visitor scrolls down, the utility bar and category strip tuck
   // away so the sticky header shrinks to just logo + search + account + cart.
   const [compact, setCompact] = useState(false);
+
+  // Left/right arrows for the swipeable category row (phones).
+  const stripRef = useRef<HTMLUListElement>(null);
+  const [edge, setEdge] = useState({ left: false, right: true });
+  function updateEdges() {
+    const el = stripRef.current;
+    if (!el) return;
+    setEdge({
+      left: el.scrollLeft > 4,
+      right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4,
+    });
+  }
+  function scrollStrip(dir: -1 | 1) {
+    stripRef.current?.scrollBy({ left: dir * 220, behavior: "smooth" });
+  }
+  useEffect(() => {
+    updateEdges();
+    window.addEventListener("resize", updateEdges);
+    return () => window.removeEventListener("resize", updateEdges);
+  }, []);
 
   useEffect(() => {
     function onScroll() {
@@ -341,7 +366,11 @@ export default function HeaderClient({
             aria-label="Shop by category"
             className="relative border-t border-border-soft bg-background-soft/60"
           >
-            <ul className="mx-auto flex max-w-7xl snap-x gap-2 overflow-x-auto px-4 py-2 [scrollbar-width:none] sm:px-6 lg:justify-between lg:gap-1.5 lg:overflow-visible lg:px-8 lg:py-2.5 [&::-webkit-scrollbar]:hidden">
+            <ul
+              ref={stripRef}
+              onScroll={updateEdges}
+              className="mx-auto flex max-w-7xl snap-x gap-2 overflow-x-auto px-4 py-2 [scrollbar-width:none] sm:px-6 lg:justify-between lg:gap-1.5 lg:overflow-visible lg:px-8 lg:py-2.5 [&::-webkit-scrollbar]:hidden"
+            >
               {CATEGORY_STRIP.map((c, i) => {
                 const active = isActive(c.href);
                 return (
@@ -353,15 +382,18 @@ export default function HeaderClient({
                     <Link
                       href={c.href}
                       aria-current={active ? "page" : undefined}
+                      style={{ "--c": c.color } as CSSProperties}
                       className={`group flex items-center gap-2 whitespace-nowrap rounded-full border px-3.5 py-2 transition duration-200 active:scale-95 lg:h-full lg:w-full lg:flex-col lg:gap-1.5 lg:whitespace-normal lg:rounded-2xl lg:px-2 lg:py-2.5 lg:text-center ${
                         active
                           ? "border-[#d9f000]/50 bg-[#d9f000]/10 text-[#d9f000]"
-                          : "border-border-soft bg-white/[0.04] text-foreground-muted lg:border-transparent lg:bg-transparent lg:hover:-translate-y-0.5 lg:hover:border-border-strong lg:hover:bg-white/[0.05] lg:hover:text-[#d9f000]"
+                          : "border-[color-mix(in_srgb,var(--c)_35%,transparent)] bg-[color-mix(in_srgb,var(--c)_12%,transparent)] text-foreground-muted lg:border-transparent lg:bg-transparent lg:hover:-translate-y-0.5 lg:hover:border-border-strong lg:hover:bg-white/[0.05] lg:hover:text-[#d9f000]"
                       }`}
                     >
                       <CategoryIcon
                         name={c.icon}
-                        className="h-5 w-5 transition-transform duration-200 group-hover:scale-110 lg:h-7 lg:w-7"
+                        className={`h-5 w-5 transition-transform duration-200 group-hover:scale-110 lg:h-7 lg:w-7 ${
+                          active ? "" : "text-[var(--c)]"
+                        }`}
                       />
                       <span className="font-headline text-[13px] font-semibold leading-tight tracking-wide text-foreground/90 group-hover:text-foreground lg:text-[12px]">
                         {c.label}
@@ -371,10 +403,35 @@ export default function HeaderClient({
                 );
               })}
             </ul>
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent lg:hidden"
-            />
+            {(["left", "right"] as const).map((side) => {
+              const show = side === "left" ? edge.left : edge.right;
+              return (
+                <button
+                  key={side}
+                  type="button"
+                  tabIndex={show ? 0 : -1}
+                  aria-label={`Scroll categories ${side}`}
+                  onClick={() => scrollStrip(side === "left" ? -1 : 1)}
+                  className={`absolute top-1/2 z-10 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full border border-border-strong bg-background/95 text-foreground shadow-lg shadow-black/40 backdrop-blur transition duration-200 active:scale-90 lg:hidden ${
+                    side === "left" ? "left-1" : "right-1"
+                  } ${show ? "opacity-100" : "pointer-events-none opacity-0"}`}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <polyline points={side === "left" ? "15 18 9 12 15 6" : "9 18 15 12 9 6"} />
+                  </svg>
+                </button>
+              );
+            })}
           </nav>
         </div>
       </div>

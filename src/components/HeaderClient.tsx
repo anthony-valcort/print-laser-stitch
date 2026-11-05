@@ -109,7 +109,7 @@ export default function HeaderClient({
     const el = stripRef.current;
     if (!el) return;
     setEdge({
-      left: el.scrollLeft > 4,
+      left: el.scrollLeft > 24,
       right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4,
     });
   }

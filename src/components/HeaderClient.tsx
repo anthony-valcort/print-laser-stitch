@@ -353,7 +353,7 @@ export default function HeaderClient({
                     <Link
                       href={c.href}
                       aria-current={active ? "page" : undefined}
-                      className={`group flex w-full flex-col items-center gap-1.5 rounded-2xl border px-1 py-2.5 text-center transition duration-200 active:scale-95 max-lg:border-border-soft max-lg:bg-white/[0.04] lg:px-2 ${
+                      className={`group flex h-full w-full flex-col items-center gap-1.5 rounded-2xl border px-1 py-2.5 text-center transition duration-200 active:scale-95 max-lg:border-border-soft max-lg:bg-white/[0.04] lg:px-2 ${
                         active
                           ? "border-[#d9f000]/50 bg-[#d9f000]/10 text-[#d9f000]"
                           : "border-transparent text-foreground-muted hover:-translate-y-0.5 hover:border-border-strong hover:bg-white/[0.05] hover:text-[#d9f000]"

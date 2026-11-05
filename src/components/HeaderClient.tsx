@@ -2,9 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import CartIcon from "./CartIcon";
 import SearchBar from "./SearchBar";
+import CategoryIcon, { type CategoryIconName } from "./header/CategoryIcons";
 
 export type HeaderCustomer = {
   firstName: string | null;
@@ -18,6 +20,69 @@ export type HeaderCollection = {
   imageUrl: string | null;
 };
 
+const PHONE_DISPLAY = "(772) 985-2854";
+const PHONE_HREF = "tel:+17729852854";
+
+/** The icon tiles under the search bar, in the order customers shop. */
+const CATEGORY_STRIP: { label: string; href: string; icon: CategoryIconName }[] = [
+  { label: "Stickers", href: "/products/vinyl-stickers", icon: "stickers" },
+  { label: "Apparel", href: "/collections/custom-apparel", icon: "tshirts" },
+  { label: "Polos", href: "/products/embroidered-polos", icon: "polos" },
+  { label: "Business Cards", href: "/products/business-cards", icon: "cards" },
+  { label: "Flyers", href: "/products/flyers", icon: "flyers" },
+  { label: "Posters", href: "/products/posters", icon: "posters" },
+  { label: "Banners", href: "/products/banners", icon: "banners" },
+  { label: "Signs & Decals", href: "/signage-quotes", icon: "signs" },
+  { label: "Engraving", href: "/products/engraved-cups", icon: "engraving" },
+  { label: "All Products", href: "/collections", icon: "all" },
+];
+
+const UTILITY_LINKS: { label: string; href: string; external?: boolean }[] = [
+  { label: "About", href: "/about" },
+  { label: "Gallery", href: "/gallery" },
+  { label: "Blog", href: "/blog" },
+  { label: "Contact", href: "/contact" },
+  { label: "University", href: "https://printlaserstitchuniversity.com/", external: true },
+  { label: "Portal", href: "https://printlaserstitch.app/", external: true },
+];
+
+function PhoneIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z" />
+    </svg>
+  );
+}
+
+function UserIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
+    </svg>
+  );
+}
+
 export default function HeaderClient({
   collections = [],
   customer = null,
@@ -25,10 +90,23 @@ export default function HeaderClient({
   collections?: HeaderCollection[];
   customer?: HeaderCustomer | null;
 }) {
-  const [productsOpen, setProductsOpen] = useState(false);
+  const pathname = usePathname();
   const [accountOpen, setAccountOpen] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  // After the visitor scrolls down, the utility bar and category strip tuck
+  // away so the sticky header shrinks to just logo + search + account + cart.
+  const [compact, setCompact] = useState(false);
+
+  useEffect(() => {
+    function onScroll() {
+      const y = window.scrollY;
+      // Two thresholds (hysteresis) so it doesn't flicker near the boundary.
+      setCompact((prev) => (prev ? y > 40 : y > 140));
+    }
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // Lock background scroll while the mobile menu is open so scrolling the
   // (long) collection list doesn't scroll the page behind it.
@@ -41,239 +119,130 @@ export default function HeaderClient({
     };
   }, [mobileOpen]);
 
-  const hasCollections = collections.length > 0;
+  const firstName = customer
+    ? customer.firstName || customer.displayName.split(" ")[0] || customer.email
+    : null;
+
+  function isActive(href: string) {
+    if (href === "/collections") return pathname === "/collections";
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border-soft bg-background/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2">
+    <header className="sticky top-0 z-40 border-b border-border-soft bg-background/90 backdrop-blur-md">
+      <style>{`@keyframes plsTileIn{from{opacity:0;transform:translateY(8px) scale(.94)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){[style*="plsTileIn"]{animation:none!important}}`}</style>
+      {/* Utility bar (desktop only; collapses on scroll) */}
+      <div
+        className={`hidden grid-rows-[1fr] transition-[grid-template-rows,opacity] duration-300 lg:grid ${
+          compact ? "!grid-rows-[0fr] opacity-0" : "opacity-100"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="border-b border-border-soft bg-white/[0.025]">
+            <div className="mx-auto flex h-12 max-w-7xl items-center justify-between px-4 text-xs text-foreground-muted sm:px-6 lg:px-8">
+              <span className="font-headline tracking-wider uppercase">
+                Custom printing · embroidery · engraving — Stuart, FL
+              </span>
+              <nav className="flex items-center gap-2">
+                {UTILITY_LINKS.map((l) => {
+                  const cls = `inline-flex items-center gap-1 rounded-full border px-4 py-1.5 font-headline text-[13px] font-semibold tracking-wide transition duration-200 hover:-translate-y-0.5 active:scale-95 ${
+                    l.label === "Contact"
+                      ? "border-transparent accent-gradient text-black shadow-md shadow-[#d9f000]/20 hover:brightness-110"
+                      : "border-border-strong bg-white/[0.06] text-foreground hover:border-[#d9f000]/60 hover:bg-[#d9f000]/10 hover:text-[#d9f000]"
+                  }`;
+                  return l.external ? (
+                    <a
+                      key={l.label}
+                      href={l.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cls}
+                    >
+                      {l.label}
+                      <span aria-hidden className="text-[10px] opacity-70">
+                        ↗
+                      </span>
+                    </a>
+                  ) : (
+                    <Link key={l.label} href={l.href} className={cls}>
+                      {l.label}
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main row: logo · big search · phone · account · cart */}
+      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6 lg:gap-6 lg:px-8">
+        <Link href="/" aria-label="Print Laser Stitch home" className="shrink-0">
           <Image
             src="/logo.avif"
             alt="Print Laser Stitch"
-            width={40}
-            height={40}
-            className="h-10 w-10 shrink-0"
+            width={52}
+            height={52}
+            className="h-11 w-11 sm:h-12 sm:w-12"
             priority
           />
         </Link>
 
-        <nav className="hidden items-center gap-1 lg:flex">
-          <Link
-            href="/"
-            className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
+        <SearchBar
+          size="large"
+          placeholder="Search stickers, shirts, banners, signs…"
+          className="hidden min-w-0 flex-1 lg:block"
+        />
+
+        <div className="ml-auto hidden items-center gap-2 lg:ml-0 lg:flex">
+          <a
+            href={PHONE_HREF}
+            className="group hidden items-center gap-2.5 rounded-2xl px-3 py-1.5 transition hover:bg-white/5 xl:flex"
           >
-            Home
-          </Link>
-          {hasCollections ? (
-            <div
-              className="relative"
-              onMouseEnter={() => setProductsOpen(true)}
-              onMouseLeave={() => setProductsOpen(false)}
-            >
-              <Link
-                href="/collections"
-                className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
-              >
-                Products
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className={`transition-transform ${productsOpen ? "rotate-180" : ""}`}
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </Link>
-              {productsOpen && (
-                <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2">
-                  <div className="w-md rounded-2xl border border-border-soft bg-background-soft p-2 shadow-2xl shadow-black/40">
-                    <div className="grid grid-cols-2 gap-1">
-                      {collections.map((c) => (
-                        <Link
-                          key={c.handle}
-                          href={`/collections/${c.handle}`}
-                          className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm hover:bg-white/5"
-                        >
-                          {c.imageUrl ? (
-                            <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-md bg-white/10">
-                              <Image
-                                src={c.imageUrl}
-                                alt=""
-                                fill
-                                sizes="32px"
-                                className="object-cover"
-                              />
-                            </span>
-                          ) : (
-                            <span className="text-lg">📦</span>
-                          )}
-                          <span className="font-medium">{c.title}</span>
-                        </Link>
-                      ))}
-                    </div>
-                    <Link
-                      href="/collections"
-                      className="mt-1 block rounded-xl border-t border-border-soft px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wider text-[#18d3e8] hover:bg-white/5"
-                    >
-                      Browse all categories →
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <Link
-              href="/collections"
-              className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
-            >
-              Products
-            </Link>
-          )}
-          <Link
-            href="/decal-quote"
-            className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
-          >
-            Signage Quote
-          </Link>
-          <Link
-            href="/signage-quotes"
-            className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
-          >
-            Decal Calculator
-          </Link>
-          <Link
-            href="/gallery"
-            className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
-          >
-            Gallery
-          </Link>
-          <Link
-            href="/about"
-            className="shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap text-foreground/80 hover:text-foreground hover:bg-white/5"
-          >
-            About
-          </Link>
-          <div
-            className="relative shrink-0"
-            onMouseEnter={() => setMoreOpen(true)}
-            onMouseLeave={() => setMoreOpen(false)}
-          >
-            <button
-              type="button"
-              className="flex items-center gap-1 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-white/5"
-              onClick={() => setMoreOpen((v) => !v)}
-            >
-              More
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className={`transition-transform ${moreOpen ? "rotate-180" : ""}`}
-              >
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </button>
-            {moreOpen && (
-              <div className="absolute right-0 top-full pt-2">
-                <div className="w-48 overflow-hidden rounded-2xl border border-border-soft bg-background-soft shadow-2xl shadow-black/40">
-                  <Link
-                    href="/blog"
-                    className="block px-4 py-3 text-sm hover:bg-white/5"
-                  >
-                    Blog
-                  </Link>
-                  <Link
-                    href="/contact"
-                    className="block px-4 py-3 text-sm hover:bg-white/5"
-                  >
-                    Contact Us
-                  </Link>
-                  <a
-                    href="https://printlaserstitchuniversity.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2.5 px-4 py-3 text-sm hover:bg-white/5"
-                  >
-                    <Image
-                      src="/university-logo.jpeg"
-                      alt=""
-                      width={18}
-                      height={18}
-                      className="h-4.5 w-4.5 shrink-0 rounded-full object-cover ring-1 ring-[#d94cb3]/40"
-                    />
-                    University
-                  </a>
-                  <a
-                    href="https://printlaserstitch.app/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block px-4 py-3 text-sm hover:bg-white/5"
-                  >
-                    🔐 Portal
-                  </a>
-                </div>
-              </div>
-            )}
-          </div>
-          <SearchBar className="w-40 shrink-0 xl:w-56" />
+            <span className="text-[#18d3e8]">
+              <PhoneIcon />
+            </span>
+            <span className="leading-tight">
+              <span className="block text-[11px] text-foreground-muted">
+                Need a quote? Call us
+              </span>
+              <span className="block font-headline text-[15px] font-bold tracking-wide">
+                {PHONE_DISPLAY}
+              </span>
+            </span>
+          </a>
+
           {customer ? (
             <div
-              className="relative shrink-0"
+              className="relative"
               onMouseEnter={() => setAccountOpen(true)}
               onMouseLeave={() => setAccountOpen(false)}
             >
               <button
                 type="button"
-                className="flex items-center gap-2 whitespace-nowrap rounded-full border border-border-soft bg-white/5 px-3 py-1.5 text-sm font-medium hover:bg-white/10"
+                className="flex items-center gap-2.5 rounded-2xl px-3 py-1.5 text-left transition hover:bg-white/5"
                 onClick={() => setAccountOpen((v) => !v)}
               >
-                <span className="grid h-7 w-7 place-items-center rounded-full accent-gradient text-xs font-bold text-black">
+                <span className="grid h-9 w-9 place-items-center rounded-full accent-gradient text-sm font-bold text-black">
                   {(customer.firstName || customer.displayName || customer.email)
                     .charAt(0)
                     .toUpperCase()}
                 </span>
-                <span className="hidden lg:inline">
-                  {customer.firstName || customer.displayName.split(" ")[0]}
+                <span className="hidden leading-tight xl:block">
+                  <span className="block text-[11px] text-foreground-muted">Account</span>
+                  <span className="block max-w-28 truncate font-headline text-[15px] font-bold tracking-wide">
+                    Hi, {firstName}
+                  </span>
                 </span>
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className={`transition-transform ${accountOpen ? "rotate-180" : ""}`}
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
               </button>
               {accountOpen && (
                 <div className="absolute right-0 top-full pt-2">
                   <div className="w-56 overflow-hidden rounded-2xl border border-border-soft bg-background-soft shadow-2xl shadow-black/40">
                     <div className="border-b border-border-soft px-4 py-3">
-                      <div className="text-xs text-foreground-muted">
-                        Signed in as
-                      </div>
-                      <div className="truncate text-sm font-medium">
-                        {customer.email}
-                      </div>
+                      <div className="text-xs text-foreground-muted">Signed in as</div>
+                      <div className="truncate text-sm font-medium">{customer.email}</div>
                     </div>
-                    <Link
-                      href="/account"
-                      className="block px-4 py-2.5 text-sm hover:bg-white/5"
-                    >
+                    <Link href="/account" className="block px-4 py-2.5 text-sm hover:bg-white/5">
                       My account
                     </Link>
                     <Link
@@ -297,130 +266,162 @@ export default function HeaderClient({
           ) : (
             <Link
               href="/login"
-              className="shrink-0 rounded-md accent-gradient px-4 py-2 font-headline text-sm font-bold whitespace-nowrap uppercase tracking-wider text-black shadow-md shadow-[#d9f000]/30 hover:brightness-110"
+              className="flex items-center gap-2.5 rounded-2xl px-3 py-1.5 transition hover:bg-white/5"
             >
-              Login
+              <span className="grid h-9 w-9 place-items-center rounded-full border border-border-strong text-foreground">
+                <UserIcon />
+              </span>
+              <span className="hidden leading-tight xl:block">
+                <span className="block text-[11px] text-foreground-muted">Account</span>
+                <span className="block font-headline text-[15px] font-bold tracking-wide">
+                  Login / Sign up
+                </span>
+              </span>
             </Link>
           )}
           <CartIcon />
-        </nav>
+        </div>
 
         {/* Mobile-only: cart icon + hamburger sit on the right */}
-        <div className="flex items-center gap-2 lg:hidden">
+        <div className="ml-auto flex items-center gap-2 lg:hidden">
+          <a
+            href={PHONE_HREF}
+            aria-label={`Call ${PHONE_DISPLAY}`}
+            className="grid h-10 w-10 place-items-center rounded-full border border-border-soft bg-white/5 text-[#18d3e8] hover:bg-white/10"
+          >
+            <PhoneIcon />
+          </a>
           <CartIcon />
           <button
             type="button"
             aria-label="Open menu"
-            className="rounded-full border border-border-soft bg-white/5 p-2 text-foreground hover:bg-white/10"
+            className="rounded-full border border-border-soft bg-white/5 p-2.5 text-foreground hover:bg-white/10"
             onClick={() => setMobileOpen((v) => !v)}
           >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            {mobileOpen ? (
-              <>
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </>
-            ) : (
-              <>
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </>
-            )}
-          </svg>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              {mobileOpen ? (
+                <>
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </>
+              ) : (
+                <>
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <line x1="3" y1="18" x2="21" y2="18" />
+                </>
+              )}
+            </svg>
           </button>
+        </div>
+      </div>
+
+      {/* Mobile search row */}
+      <div className="px-4 pb-3 sm:px-6 lg:hidden">
+        <SearchBar size="large" placeholder="Search products…" className="w-full" />
+      </div>
+
+      {/* Category icon strip (collapses on scroll) */}
+      <div
+        className={`grid grid-rows-[1fr] transition-[grid-template-rows,opacity] duration-300 ${
+          compact ? "!grid-rows-[0fr] opacity-0" : "opacity-100"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <nav
+            aria-label="Shop by category"
+            className="border-t border-border-soft bg-background-soft/60"
+          >
+            <ul className="mx-auto grid max-w-7xl grid-cols-5 gap-1.5 px-3 py-2.5 sm:px-6 lg:flex lg:justify-between lg:gap-1.5 lg:px-8">
+              {CATEGORY_STRIP.map((c, i) => {
+                const active = isActive(c.href);
+                return (
+                  <li
+                    key={c.label}
+                    className="min-w-0 lg:flex-1"
+                    style={{ animation: `plsTileIn 0.5s ease-out ${i * 45}ms both` }}
+                  >
+                    <Link
+                      href={c.href}
+                      aria-current={active ? "page" : undefined}
+                      className={`group flex h-full w-full flex-col items-center gap-1.5 rounded-2xl border px-1 py-2.5 text-center transition duration-200 active:scale-95 max-lg:border-border-soft max-lg:bg-white/[0.04] lg:px-2 ${
+                        active
+                          ? "border-[#d9f000]/50 bg-[#d9f000]/10 text-[#d9f000]"
+                          : "border-transparent text-foreground-muted hover:-translate-y-0.5 hover:border-border-strong hover:bg-white/[0.05] hover:text-[#d9f000]"
+                      }`}
+                    >
+                      <CategoryIcon
+                        name={c.icon}
+                        className="h-7 w-7 transition-transform duration-200 group-hover:scale-110 max-lg:h-8 max-lg:w-8"
+                      />
+                      <span className="font-headline text-[11px] font-semibold leading-tight tracking-wide lg:text-[12px] text-foreground/90 group-hover:text-foreground">
+                        {c.label}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
         </div>
       </div>
 
       {mobileOpen && (
         <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-border-soft bg-background-soft lg:hidden">
           <div className="mx-auto max-w-7xl space-y-1 px-4 py-4">
-            <div className="pb-2">
-              <SearchBar className="w-full" />
+            <a
+              href={PHONE_HREF}
+              className="mb-3 flex items-center justify-center gap-2 rounded-2xl accent-gradient px-4 py-3.5 font-headline text-base font-bold tracking-wide text-black shadow-lg shadow-[#d9f000]/20 active:scale-[0.98]"
+            >
+              <PhoneIcon /> Call {PHONE_DISPLAY}
+            </a>
+            <div className="mb-3 grid grid-cols-2 gap-2">
+              {[
+                { label: "Home", href: "/" },
+                { label: "Signage Quote", href: "/decal-quote" },
+                { label: "Decal Calculator", href: "/signage-quotes" },
+                { label: "Gallery", href: "/gallery" },
+                { label: "Blog", href: "/blog" },
+                { label: "About Us", href: "/about" },
+                { label: "Contact Us", href: "/contact" },
+              ].map((l) => (
+                <Link
+                  key={l.label}
+                  href={l.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-2xl border border-border-strong bg-white/[0.06] px-4 py-3 text-center font-headline text-[15px] font-semibold tracking-wide transition active:scale-95 active:bg-[#d9f000]/10"
+                >
+                  {l.label}
+                </Link>
+              ))}
+              <a
+                href="https://printlaserstitchuniversity.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileOpen(false)}
+                className="rounded-2xl border border-border-strong bg-white/[0.06] px-4 py-3 text-center font-headline text-[15px] font-semibold tracking-wide transition active:scale-95"
+              >
+                University ↗
+              </a>
+              <a
+                href="https://printlaserstitch.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileOpen(false)}
+                className="rounded-2xl border border-border-strong bg-white/[0.06] px-4 py-3 text-center font-headline text-[15px] font-semibold tracking-wide transition active:scale-95"
+              >
+                Portal ↗
+              </a>
             </div>
-            <Link
-              href="/"
-              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-              onClick={() => setMobileOpen(false)}
-            >
-              Home
-            </Link>
-            <Link
-              href="/decal-quote"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-            >
-              🪟 Signage Quote
-            </Link>
-            <Link
-              href="/signage-quotes"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-            >
-              🪧 Decal Calculator
-            </Link>
-            <Link
-              href="/blog"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-            >
-              📰 Blog
-            </Link>
-            <Link
-              href="/gallery"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-            >
-              🖼️ Gallery
-            </Link>
-            <a
-              href="https://printlaserstitchuniversity.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-            >
-              <Image
-                src="/university-logo.jpeg"
-                alt=""
-                width={20}
-                height={20}
-                className="h-5 w-5 shrink-0 rounded-full object-cover ring-1 ring-[#d94cb3]/40"
-              />
-              University
-            </a>
-            <Link
-              href="/about"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-            >
-              About Us
-            </Link>
-            <Link
-              href="/contact"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-            >
-              ✉️ Contact Us
-            </Link>
-            <a
-              href="https://printlaserstitch.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-            >
-              🔐 Portal
-            </a>
             <Link
               href="/collections"
               onClick={() => setMobileOpen(false)}

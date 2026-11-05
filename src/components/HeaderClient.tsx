@@ -26,7 +26,7 @@ const PHONE_HREF = "tel:+17729852854";
 /** The icon tiles under the search bar, in the order customers shop. */
 const CATEGORY_STRIP: { label: string; href: string; icon: CategoryIconName }[] = [
   { label: "Stickers", href: "/products/vinyl-stickers", icon: "stickers" },
-  { label: "T-Shirts", href: "/products/tshirts", icon: "tshirts" },
+  { label: "Apparel", href: "/collections/custom-apparel", icon: "tshirts" },
   { label: "Polos", href: "/products/embroidered-polos", icon: "polos" },
   { label: "Business Cards", href: "/products/business-cards", icon: "cards" },
   { label: "Flyers", href: "/products/flyers", icon: "flyers" },
@@ -130,6 +130,7 @@ export default function HeaderClient({
 
   return (
     <header className="sticky top-0 z-40 border-b border-border-soft bg-background/90 backdrop-blur-md">
+      <style>{`@keyframes plsTileIn{from{opacity:0;transform:translateY(8px) scale(.94)}to{opacity:1;transform:none}}@media (prefers-reduced-motion:reduce){[style*="plsTileIn"]{animation:none!important}}`}</style>
       {/* Utility bar (desktop only; collapses on scroll) */}
       <div
         className={`hidden grid-rows-[1fr] transition-[grid-template-rows,opacity] duration-300 lg:grid ${
@@ -138,32 +139,36 @@ export default function HeaderClient({
       >
         <div className="overflow-hidden">
           <div className="border-b border-border-soft bg-white/[0.025]">
-            <div className="mx-auto flex h-9 max-w-7xl items-center justify-between px-4 text-xs text-foreground-muted sm:px-6 lg:px-8">
+            <div className="mx-auto flex h-12 max-w-7xl items-center justify-between px-4 text-xs text-foreground-muted sm:px-6 lg:px-8">
               <span className="font-headline tracking-wider uppercase">
                 Custom printing · embroidery · engraving — Stuart, FL
               </span>
-              <nav className="flex items-center gap-5">
-                {UTILITY_LINKS.map((l) =>
-                  l.external ? (
+              <nav className="flex items-center gap-2">
+                {UTILITY_LINKS.map((l) => {
+                  const cls = `inline-flex items-center gap-1 rounded-full border px-4 py-1.5 font-headline text-[13px] font-semibold tracking-wide transition duration-200 hover:-translate-y-0.5 active:scale-95 ${
+                    l.label === "Contact"
+                      ? "border-transparent accent-gradient text-black shadow-md shadow-[#d9f000]/20 hover:brightness-110"
+                      : "border-border-strong bg-white/[0.06] text-foreground hover:border-[#d9f000]/60 hover:bg-[#d9f000]/10 hover:text-[#d9f000]"
+                  }`;
+                  return l.external ? (
                     <a
                       key={l.label}
                       href={l.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="transition hover:text-foreground"
+                      className={cls}
                     >
                       {l.label}
+                      <span aria-hidden className="text-[10px] opacity-70">
+                        ↗
+                      </span>
                     </a>
                   ) : (
-                    <Link
-                      key={l.label}
-                      href={l.href}
-                      className="transition hover:text-foreground"
-                    >
+                    <Link key={l.label} href={l.href} className={cls}>
                       {l.label}
                     </Link>
-                  ),
-                )}
+                  );
+                })}
               </nav>
             </div>
           </div>
@@ -336,15 +341,19 @@ export default function HeaderClient({
             aria-label="Shop by category"
             className="border-t border-border-soft bg-background-soft/60"
           >
-            <ul className="mx-auto flex max-w-7xl snap-x gap-2 overflow-x-auto px-4 py-2.5 [scrollbar-width:none] sm:px-6 lg:justify-between lg:gap-1.5 lg:px-8 [&::-webkit-scrollbar]:hidden">
-              {CATEGORY_STRIP.map((c) => {
+            <ul className="mx-auto grid max-w-7xl grid-cols-5 gap-1.5 px-3 py-2.5 sm:px-6 lg:flex lg:justify-between lg:gap-1.5 lg:px-8">
+              {CATEGORY_STRIP.map((c, i) => {
                 const active = isActive(c.href);
                 return (
-                  <li key={c.label} className="shrink-0 snap-start lg:flex-1">
+                  <li
+                    key={c.label}
+                    className="min-w-0 lg:flex-1"
+                    style={{ animation: `plsTileIn 0.5s ease-out ${i * 45}ms both` }}
+                  >
                     <Link
                       href={c.href}
                       aria-current={active ? "page" : undefined}
-                      className={`group flex w-[5.25rem] flex-col items-center gap-1.5 rounded-2xl border px-2 py-2.5 text-center transition duration-200 lg:w-full ${
+                      className={`group flex w-full flex-col items-center gap-1.5 rounded-2xl border px-1 py-2.5 text-center transition duration-200 active:scale-95 max-lg:border-border-soft max-lg:bg-white/[0.04] lg:px-2 ${
                         active
                           ? "border-[#d9f000]/50 bg-[#d9f000]/10 text-[#d9f000]"
                           : "border-transparent text-foreground-muted hover:-translate-y-0.5 hover:border-border-strong hover:bg-white/[0.05] hover:text-[#d9f000]"
@@ -352,9 +361,9 @@ export default function HeaderClient({
                     >
                       <CategoryIcon
                         name={c.icon}
-                        className="h-7 w-7 transition-transform duration-200 group-hover:scale-110"
+                        className="h-7 w-7 transition-transform duration-200 group-hover:scale-110 max-lg:h-8 max-lg:w-8"
                       />
-                      <span className="font-headline text-[12px] font-semibold leading-tight tracking-wide text-foreground/90 group-hover:text-foreground">
+                      <span className="font-headline text-[11px] font-semibold leading-tight tracking-wide lg:text-[12px] text-foreground/90 group-hover:text-foreground">
                         {c.label}
                       </span>
                     </Link>
@@ -369,80 +378,50 @@ export default function HeaderClient({
       {mobileOpen && (
         <div className="max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-border-soft bg-background-soft lg:hidden">
           <div className="mx-auto max-w-7xl space-y-1 px-4 py-4">
-            <Link
-              href="/"
-              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-              onClick={() => setMobileOpen(false)}
-            >
-              Home
-            </Link>
-            <Link
-              href="/decal-quote"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-            >
-              🪟 Signage Quote
-            </Link>
-            <Link
-              href="/signage-quotes"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-            >
-              🪧 Decal Calculator
-            </Link>
-            <Link
-              href="/blog"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-            >
-              📰 Blog
-            </Link>
-            <Link
-              href="/gallery"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-            >
-              🖼️ Gallery
-            </Link>
             <a
-              href="https://printlaserstitchuniversity.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
+              href={PHONE_HREF}
+              className="mb-3 flex items-center justify-center gap-2 rounded-2xl accent-gradient px-4 py-3.5 font-headline text-base font-bold tracking-wide text-black shadow-lg shadow-[#d9f000]/20 active:scale-[0.98]"
             >
-              <Image
-                src="/university-logo.jpeg"
-                alt=""
-                width={20}
-                height={20}
-                className="h-5 w-5 shrink-0 rounded-full object-cover ring-1 ring-[#d94cb3]/40"
-              />
-              University
+              <PhoneIcon /> Call {PHONE_DISPLAY}
             </a>
-            <Link
-              href="/about"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-            >
-              About Us
-            </Link>
-            <Link
-              href="/contact"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-            >
-              ✉️ Contact Us
-            </Link>
-            <a
-              href="https://printlaserstitch.app/"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setMobileOpen(false)}
-              className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-white/5"
-            >
-              🔐 Portal
-            </a>
+            <div className="mb-3 grid grid-cols-2 gap-2">
+              {[
+                { label: "Home", href: "/" },
+                { label: "Signage Quote", href: "/decal-quote" },
+                { label: "Decal Calculator", href: "/signage-quotes" },
+                { label: "Gallery", href: "/gallery" },
+                { label: "Blog", href: "/blog" },
+                { label: "About Us", href: "/about" },
+                { label: "Contact Us", href: "/contact" },
+              ].map((l) => (
+                <Link
+                  key={l.label}
+                  href={l.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="rounded-2xl border border-border-strong bg-white/[0.06] px-4 py-3 text-center font-headline text-[15px] font-semibold tracking-wide transition active:scale-95 active:bg-[#d9f000]/10"
+                >
+                  {l.label}
+                </Link>
+              ))}
+              <a
+                href="https://printlaserstitchuniversity.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileOpen(false)}
+                className="rounded-2xl border border-border-strong bg-white/[0.06] px-4 py-3 text-center font-headline text-[15px] font-semibold tracking-wide transition active:scale-95"
+              >
+                University ↗
+              </a>
+              <a
+                href="https://printlaserstitch.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileOpen(false)}
+                className="rounded-2xl border border-border-strong bg-white/[0.06] px-4 py-3 text-center font-headline text-[15px] font-semibold tracking-wide transition active:scale-95"
+              >
+                Portal ↗
+              </a>
+            </div>
             <Link
               href="/collections"
               onClick={() => setMobileOpen(false)}

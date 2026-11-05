@@ -678,6 +678,25 @@ export default function TShirtConfigurator({
         <div className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)] lg:gap-12">
           {/* LEFT: Sticky gallery */}
           <div ref={galleryRef} className="lg:sticky lg:top-20 lg:self-start">
+            {/* Phones: say what this is first, with a clear next step */}
+            <div className="mb-4 lg:hidden">
+              <h1 className="font-display text-2xl font-black uppercase leading-tight tracking-tight">
+                {product.title}
+              </h1>
+              <p className="mt-1.5 text-sm text-foreground-muted">
+                Choose your options below and order online in minutes.
+              </p>
+              <a
+                href="#order-options"
+                className="mt-3 inline-flex items-center gap-2 rounded-full accent-gradient px-5 py-2.5 font-headline text-sm font-bold uppercase tracking-wide text-black shadow-lg shadow-[#d9f000]/25 transition active:scale-95"
+              >
+                Choose your options
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M12 5v14" />
+                  <path d="m19 12-7 7-7-7" />
+                </svg>
+              </a>
+            </div>
             <ProductGallery
               images={displayImages}
               idx={galleryIdx}
@@ -741,14 +760,14 @@ export default function TShirtConfigurator({
           </div>
 
           {/* RIGHT: Configurator */}
-          <div className="space-y-6">
+          <div id="order-options" className="scroll-mt-32 space-y-6">
             {draft.restored && <DraftNote onStartOver={draft.startOver} />}
             <div>
               <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-border-soft bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-foreground-muted">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />
                 {badge ?? `Custom apparel · min ${minQuantity} pcs`}
               </div>
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              <h1 className="hidden text-3xl font-bold tracking-tight sm:text-4xl lg:block">
                 {product.title}
               </h1>
               <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">

@@ -444,6 +444,16 @@ export default function ProductConfigurator() {
                 everyday wear. Upload your file, preview the proof on screen,
                 then order in minutes.
               </p>
+              <a
+                href="#order-options"
+                className="mt-5 inline-flex items-center gap-2 rounded-full accent-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wide text-black shadow-lg shadow-[#d9f000]/25 transition hover:brightness-110 active:scale-95"
+              >
+                Start your order
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M12 5v14" />
+                  <path d="m19 12-7 7-7-7" />
+                </svg>
+              </a>
               <div className="mt-5 flex flex-wrap gap-2">
                 {[
                   "💦 Holds up outdoors",
@@ -462,8 +472,9 @@ export default function ProductConfigurator() {
             </div>
 
             {/* How to order — video */}
-            <div className="aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
+            <div className="hidden aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30 lg:block">
               <iframe
+                loading="lazy"
                 src={`https://www.youtube-nocookie.com/embed/${HOW_TO_ORDER_VIDEO_ID}`}
                 title="How to order — Print Laser Stitch"
                 className="h-full w-full"
@@ -475,7 +486,7 @@ export default function ProductConfigurator() {
         </div>
 
         {/* CONFIGURATOR — left options / right sticky summary */}
-        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div id="order-options" className="mt-8 grid scroll-mt-32 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
           {/* LEFT */}
           <div className="min-w-0 space-y-6">
             {/* Shape */}
@@ -871,6 +882,23 @@ export default function ProductConfigurator() {
                 Review your proof, then we&apos;ll take you to secure checkout.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* How to order — below the product on phones */}
+        <div className="mt-10 lg:hidden">
+          <h2 className="font-display text-xl font-black uppercase tracking-tight text-[#d9f000]">
+            Need help ordering?
+          </h2>
+          <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
+            <iframe
+              loading="lazy"
+              src={`https://www.youtube-nocookie.com/embed/${HOW_TO_ORDER_VIDEO_ID}`}
+              title="How to order — Print Laser Stitch"
+              className="h-full w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
           </div>
         </div>
       </div>

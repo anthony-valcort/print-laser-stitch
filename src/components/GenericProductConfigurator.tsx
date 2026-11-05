@@ -541,6 +541,27 @@ export default function GenericProductConfigurator({
         <div className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)] lg:gap-12">
           {/* LEFT: Sticky gallery */}
           <div ref={galleryRef} className="lg:sticky lg:top-20 lg:self-start">
+            {/* Phones: say what this is first, with a clear next step */}
+            <div className="mb-4 lg:hidden">
+              <h1 className="font-display text-2xl font-black uppercase leading-tight tracking-tight">
+                {product.title.replace(/\s*\([^)]*\)\s*$/, "")}
+              </h1>
+              <p className="mt-1.5 text-sm text-foreground-muted">
+                {product.title.match(/\(([^)]*)\)\s*$/)?.[1]}
+                {product.title.match(/\(([^)]*)\)\s*$/) ? ". " : ""}
+                Choose your options below and order online in minutes.
+              </p>
+              <a
+                href="#order-options"
+                className="mt-3 inline-flex items-center gap-2 rounded-full accent-gradient px-5 py-2.5 font-headline text-sm font-bold uppercase tracking-wide text-black shadow-lg shadow-[#d9f000]/25 transition active:scale-95"
+              >
+                Choose your options
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M12 5v14" />
+                  <path d="m19 12-7 7-7-7" />
+                </svg>
+              </a>
+            </div>
             <ProductGallery
               images={galleryImages}
               idx={galleryIdx}
@@ -562,12 +583,13 @@ export default function GenericProductConfigurator({
             )}
 
             {howToOrderVideoId && (
-              <div className="mt-6">
+              <div className="mt-6 hidden lg:block">
                 <h2 className="font-display text-xl font-black uppercase tracking-tight text-[#d9f000]">
                   How to Order
                 </h2>
                 <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
                   <iframe
+                    loading="lazy"
                     src={`https://www.youtube-nocookie.com/embed/${howToOrderVideoId}`}
                     title="How to order — Print Laser Stitch"
                     className="h-full w-full"
@@ -580,7 +602,7 @@ export default function GenericProductConfigurator({
           </div>
 
           {/* RIGHT: Configurator */}
-          <div className="space-y-6">
+          <div id="order-options" className="scroll-mt-32 space-y-6">
             {draft.restored && <DraftNote onStartOver={draft.startOver} />}
             <div>
               {badge && (
@@ -589,7 +611,7 @@ export default function GenericProductConfigurator({
                   {badge}
                 </div>
               )}
-              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+              <h1 className="hidden text-3xl font-bold tracking-tight sm:text-4xl lg:block">
                 {product.title}
               </h1>
               <div className="mt-3 flex items-baseline gap-3">
@@ -921,6 +943,25 @@ export default function GenericProductConfigurator({
                 sizeUnit={sizeUnit}
                 bleedIn={showBleedTrim ? BLEED_IN : 0}
               />
+            </div>
+          )}
+
+          {/* How-to video: below the product on phones */}
+          {howToOrderVideoId && (
+            <div className="lg:hidden">
+              <h2 className="font-display text-xl font-black uppercase tracking-tight text-[#d9f000]">
+                How to Order
+              </h2>
+              <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
+                <iframe
+                  loading="lazy"
+                  src={`https://www.youtube-nocookie.com/embed/${howToOrderVideoId}`}
+                  title="How to order — Print Laser Stitch"
+                  className="h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
             </div>
           )}
         </div>

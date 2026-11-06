@@ -6,10 +6,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /**
- * Anthony, the clickable mascot. Tap him and he tells you to call. Every tap
- * after that is a different friendly line. <AnthonyBuddy /> (in the layout)
- * peeks in from the edge of almost every page; <TalkingAnthony /> is the same
- * guy placed inline in a section.
+ * Anthony, the clickable mascot. Before a tap he greets you with a line that
+ * fits the page and wiggles for attention. After a tap he cycles through
+ * other lines, and the "call me" line keeps coming back.
+ * <AnthonyBuddy /> (in the layout) peeks in on most pages; <TalkingAnthony />
+ * is the same guy placed inline in a section.
  */
 const PHONE_HREF = "tel:+17729852854";
 const PHONE_LABEL = "(772) 985-2854";
@@ -21,16 +22,118 @@ const POSES = {
 type Pose = keyof typeof POSES;
 
 const CALL_LINE = "You can call me now for all your print needs!";
-const LINES = [
-  CALL_LINE,
-  "Shirts, stickers, signs, hats. If you can dream it, I can print it. 🧢",
-  "Every order gets a free design proof before we print anything.",
-  CALL_LINE,
-  "Not happy with it? We will reprint it. No hassle.",
-  "Bulk orders are my favorite. Ask me about team uniforms!",
-  CALL_LINE,
-  "Proudly printed right here in Stuart, Florida. 🌴",
-];
+
+type Msgs = { greet: string; lines: string[] };
+
+const HOME: Msgs = {
+  greet: "Welcome! Need any help? 👋",
+  lines: [
+    CALL_LINE,
+    "Every order gets a free design proof before we print anything.",
+    "Bulk orders are my favorite. Ask me about team uniforms!",
+    "Proudly printed right here in Stuart, Florida. 🌴",
+  ],
+};
+const APPAREL: Msgs = {
+  greet: "This is our apparel page. Hope you love our selection! 👕",
+  lines: [
+    "We can’t wait to work on your next project!",
+    "Outfitting a whole team? Ask me about bulk pricing! 🧢",
+    "Tees, polos, hats... we put your logo on all of it.",
+  ],
+};
+const CARDS: Msgs = {
+  greet: "Did you know we offer free graphic design? Complimentary to you! 🎨",
+  lines: [
+    "Seriously, it’s on the house. Send me your idea!",
+    "Sharp cards make a sharp first impression. 😎",
+  ],
+};
+const CART: Msgs = {
+  greet: "Hey, we made it to the cart! Can’t wait to start working with you 🎉",
+  lines: [
+    "Got questions? Call me, I’m happy to help!",
+    "Every order gets a free design proof first. No surprises. 🙌",
+  ],
+};
+const POSTERS: Msgs = {
+  greet: "Our printers have the best colors on the market. The quality is out of this world! 🚀",
+  lines: [
+    "Colors so bright they jump right off the page!",
+    "Big, bold and beautiful. That’s the plan. 🖼️",
+  ],
+};
+const ENGRAVE: Msgs = {
+  greet: "Let’s engrave some cool stuff today! 🔥",
+  lines: [
+    "Wood, metal, glass... bring me your wild ideas!",
+    "Gifts, tumblers, plaques. Let’s make it personal. ✨",
+  ],
+};
+const STICKERS: Msgs = {
+  greet: "Sticker time! You dream it up, I’ll print it. 😎",
+  lines: [
+    "Every sticker gets laminated for max durability. 💪",
+    "Any shape, any size. Let’s get creative!",
+  ],
+};
+const SIGNS: Msgs = {
+  greet: "Let’s make your business impossible to miss! 🚨",
+  lines: [
+    "Signs, banners, decals, flyers. I’ve got you covered!",
+    "Big, bold and seen from down the road. 👀",
+  ],
+};
+const VEHICLE: Msgs = {
+  greet: "Let’s turn your ride into a rolling billboard! 🚐",
+  lines: [
+    "Every mile is free advertising. Let’s do it!",
+    "Cars, vans, trucks. Bring it by!",
+  ],
+};
+const CONTACT: Msgs = {
+  greet: "Got a question? Send it my way! 💬",
+  lines: [
+    "Calling is fastest. I’m friendly, promise!",
+    "No question is too small. Ask away!",
+  ],
+};
+const GALLERY: Msgs = {
+  greet: "Check out our work. Yours could be next! ✨",
+  lines: [
+    "Everything here was made right in Stuart, FL.",
+    "See something you love? Let’s make one for you!",
+  ],
+};
+const DEFAULT: Msgs = {
+  greet: "Need a hand? Just tap me! 👋",
+  lines: [
+    CALL_LINE,
+    "Every order gets a free design proof before we print anything.",
+    "Proudly printed right here in Stuart, Florida. 🌴",
+  ],
+};
+
+function messagesFor(p: string): Msgs {
+  if (p === "/cart") return CART;
+  if (/business-card/.test(p)) return CARDS;
+  if (/engrav/.test(p)) return ENGRAVE;
+  if (/poster/.test(p)) return POSTERS;
+  if (/vehicle/.test(p)) return VEHICLE;
+  if (/sticker|decal/.test(p)) return STICKERS;
+  if (/banner|sign|flyer/.test(p)) return SIGNS;
+  if (/shirt|polo|apparel|hoodie|richardson|5-panel|trucker|beanie/.test(p)) return APPAREL;
+  if (p.startsWith("/contact")) return CONTACT;
+  if (p.startsWith("/gallery")) return GALLERY;
+  return DEFAULT;
+}
+
+/** Their lines, with the "call me" line sprinkled back in. */
+function sequence(lines: string[]) {
+  const out = lines.flatMap((l, i) => (i % 2 === 1 ? [l, CALL_LINE] : [l]));
+  if (out[out.length - 1] !== CALL_LINE) out.push(CALL_LINE);
+  return out;
+}
 
 type Align = "left" | "right" | "center";
 
@@ -39,6 +142,9 @@ export default function TalkingAnthony({
   className = "",
   clip = false,
   intro = false,
+  introKey = "home",
+  greet = HOME.greet,
+  lines = HOME.lines,
   align = "right",
   sizes = "240px",
   onHide,
@@ -47,8 +153,11 @@ export default function TalkingAnthony({
   className?: string;
   /** Show only the top two thirds so he looks like he is peeking in. */
   clip?: boolean;
-  /** Say hi by himself once per visit. */
+  /** Greet by himself (once per page per visit) and wiggle for attention. */
   intro?: boolean;
+  introKey?: string;
+  greet?: string;
+  lines?: string[];
   align?: Align;
   sizes?: string;
   onHide?: () => void;
@@ -57,22 +166,38 @@ export default function TalkingAnthony({
   const [tip, setTip] = useState(false);
   const [hop, setHop] = useState(0);
   const clicks = useRef(0);
+  const seq = sequence(lines);
 
   useEffect(() => {
     if (!intro) return;
+    let greeted = true;
     try {
-      if (sessionStorage.getItem("anthony-hi")) return;
-      sessionStorage.setItem("anthony-hi", "1");
+      const k = "anthony-hi:" + introKey;
+      greeted = !!sessionStorage.getItem(k);
+      if (!greeted) sessionStorage.setItem(k, "1");
     } catch {
-      return;
+      /* ignore */
     }
-    const on = setTimeout(() => setTip(true), 1500);
-    const off = setTimeout(() => setTip(false), 8500);
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    if (!greeted) {
+      timers.push(setTimeout(() => clicks.current === 0 && setTip(true), 1200));
+      timers.push(setTimeout(() => setTip(false), 10500));
+    }
+    // A little wiggle now and then until somebody taps him.
+    let n = 0;
+    const wiggle = setInterval(() => {
+      if (clicks.current > 0 || n >= 3) {
+        clearInterval(wiggle);
+        return;
+      }
+      n++;
+      setHop((h) => h + 1);
+    }, 9000);
     return () => {
-      clearTimeout(on);
-      clearTimeout(off);
+      timers.forEach(clearTimeout);
+      clearInterval(wiggle);
     };
-  }, [intro]);
+  }, [intro, introKey]);
 
   const close = useCallback(() => setMsg(null), []);
 
@@ -86,7 +211,7 @@ export default function TalkingAnthony({
     const n = clicks.current++;
     setTip(false);
     setHop((h) => h + 1);
-    setMsg(LINES[n % LINES.length]);
+    setMsg(seq[n % seq.length]);
     try {
       navigator.vibrate?.(12);
     } catch {
@@ -104,55 +229,64 @@ export default function TalkingAnthony({
         <div
           className={"pointer-events-none absolute bottom-full z-20 mb-1 flex w-60 max-w-[80vw] " + pos + " " + flex}
         >
-          <div
-            key={msg ?? "tip"}
-            className="animate-bubble-pop pointer-events-auto relative rounded-2xl bg-white p-3 text-black shadow-xl shadow-black/40"
-          >
-            {msg !== null ? (
-              <>
+          {msg !== null ? (
+            <div
+              key={msg}
+              className="animate-bubble-pop pointer-events-auto relative rounded-2xl bg-white p-3 text-black shadow-xl shadow-black/40"
+            >
+              <button
+                type="button"
+                onClick={close}
+                aria-label="Close"
+                className="absolute right-1.5 top-1 grid h-6 w-6 place-items-center rounded-full text-base leading-none text-black/50 hover:bg-black/5"
+              >
+                ×
+              </button>
+              <p className="pr-5 text-[13px] font-semibold leading-snug">{msg}</p>
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                <a
+                  href={PHONE_HREF}
+                  className="accent-gradient inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold text-black"
+                >
+                  📞 Call now
+                </a>
+                <Link
+                  href="/contact"
+                  onClick={close}
+                  className="rounded-full border border-black/15 px-3.5 py-2 text-xs font-semibold text-black hover:bg-black/5"
+                >
+                  Message me
+                </Link>
+              </div>
+              <p className="mt-1.5 text-[11px] text-black/50">{PHONE_LABEL}</p>
+              {onHide && (
                 <button
                   type="button"
-                  onClick={close}
-                  aria-label="Close"
-                  className="absolute right-1.5 top-1 grid h-6 w-6 place-items-center rounded-full text-base leading-none text-black/50 hover:bg-black/5"
+                  onClick={onHide}
+                  className="mt-1 text-[11px] text-black/45 underline"
                 >
-                  ×
+                  Not now, hide me
                 </button>
-                <p className="pr-5 text-[13px] font-semibold leading-snug">{msg}</p>
-                <div className="mt-2.5 flex flex-wrap gap-2">
-                  <a
-                    href={PHONE_HREF}
-                    className="accent-gradient inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold text-black"
-                  >
-                    📞 Call now
-                  </a>
-                  <Link
-                    href="/contact"
-                    onClick={close}
-                    className="rounded-full border border-black/15 px-3.5 py-2 text-xs font-semibold text-black hover:bg-black/5"
-                  >
-                    Message me
-                  </Link>
-                </div>
-                <p className="mt-1.5 text-[11px] text-black/50">{PHONE_LABEL}</p>
-                {onHide && (
-                  <button
-                    type="button"
-                    onClick={onHide}
-                    className="mt-1 text-[11px] text-black/45 underline"
-                  >
-                    Not now, hide me
-                  </button>
-                )}
-              </>
-            ) : (
-              <p className="whitespace-nowrap text-xs font-bold">Hi, I&apos;m Anthony! Tap me 👋</p>
-            )}
-            <span
-              aria-hidden
-              className={"absolute -bottom-1.5 h-3 w-3 rotate-45 bg-white " + tail}
-            />
-          </div>
+              )}
+              <span
+                aria-hidden
+                className={"absolute -bottom-1.5 h-3 w-3 rotate-45 bg-white " + tail}
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={onClick}
+              className="animate-bubble-pop pointer-events-auto relative rounded-2xl bg-white px-3 py-2 text-left text-[13px] font-bold leading-snug text-black shadow-xl shadow-black/40"
+            >
+              {greet}
+              <span className="mt-0.5 block text-[10px] font-semibold text-black/45">tap me 👆</span>
+              <span
+                aria-hidden
+                className={"absolute -bottom-1.5 h-3 w-3 rotate-45 bg-white " + tail}
+              />
+            </button>
+          )}
         </div>
       )}
       <button
@@ -185,8 +319,8 @@ export default function TalkingAnthony({
   );
 }
 
+// Checkout and account pages stay clear so nothing gets in the way of buying.
 const HIDE_ON = [
-  "/cart",
   "/order",
   "/account",
   "/login",
@@ -206,6 +340,7 @@ const SIDE: Record<string, "left" | "right"> = {
   collections: "right",
   products: "left",
   blog: "left",
+  cart: "right",
 };
 
 function hash(s: string) {
@@ -214,7 +349,7 @@ function hash(s: string) {
   return h;
 }
 
-/** Peeks in from the edge of almost every page, from a different side per page. */
+/** Peeks in from the edge of most pages, from a different side per page. */
 export function AnthonyBuddy() {
   const pathname = usePathname() || "/";
   const [hidden, setHidden] = useState(false);
@@ -243,6 +378,7 @@ export function AnthonyBuddy() {
   }
   const side = SIDE[first] ?? (hash(first) % 2 ? "left" : "right");
   const pose: Pose = hash(pathname) % 2 ? "thumbs" : "welcome";
+  const m = messagesFor(pathname);
 
   return (
     <TalkingAnthony
@@ -250,6 +386,9 @@ export function AnthonyBuddy() {
       pose={pose}
       clip
       intro
+      introKey={pathname}
+      greet={m.greet}
+      lines={m.lines}
       align={side}
       sizes="(min-width: 1024px) 256px, 224px"
       onHide={() => {

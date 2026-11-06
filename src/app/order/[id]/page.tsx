@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import Mascot from "@/components/Mascot";
 import OrderClearCartOnPaid from "@/components/OrderClearCartOnPaid";
 
 /**
@@ -98,7 +99,16 @@ export default async function OrderPage({ params }: { params: Params }) {
             drop the items the customer just bought. Renders nothing. */}
         {order.isPaid && <OrderClearCartOnPaid draftOrderId={order.id} />}
 
-        <div>
+        <div className={order.isPaid ? "relative pr-24 sm:pr-32" : undefined}>
+          {order.isPaid && (
+            <Mascot
+              pose="thumbs"
+              alt="Anthony giving a thumbs up"
+              className="absolute right-0 top-0 w-20 sm:w-28"
+              sizes="112px"
+              motion="bob"
+            />
+          )}
           <p className="text-xs font-semibold uppercase tracking-wider text-accent">
             Order
           </p>

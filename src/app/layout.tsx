@@ -8,6 +8,7 @@ import MobileQuoteBar from "@/components/MobileQuoteBar";
 import CartDrawer from "@/components/CartDrawer";
 import CartWelcomeBack from "@/components/CartWelcomeBack";
 import CookieNotice from "@/components/CookieNotice";
+import { AnthonyBuddy } from "@/components/TalkingAnthony";
 import JsonLd from "@/components/JsonLd";
 import { localBusinessJsonLd, websiteJsonLd } from "@/lib/seo";
 
@@ -83,6 +84,7 @@ export default function RootLayout({
         </CartProvider>
         <ScrollReveal />
         <MobileQuoteBar />
+        <AnthonyBuddy />
         <CookieNotice />
       </body>
     </html>

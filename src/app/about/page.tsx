@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import TalkingAnthony from "@/components/TalkingAnthony";
 import { fadeDelay, revealDelay } from "@/lib/reveal";
 import { BUSINESS_HOURS, formatRange } from "@/lib/business-hours";
 
@@ -120,15 +121,18 @@ export default function AboutPage() {
         <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
           <div
             data-reveal
-            className="relative overflow-hidden rounded-3xl border border-[#d9f000]/30 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#18d3e8]/10 p-6 sm:p-12"
+            className="relative overflow-x-clip rounded-3xl border border-[#d9f000]/30 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#18d3e8]/10 p-6 sm:p-12"
           >
             <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#d9f000]/15 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#18d3e8]/10 blur-3xl" />
 
             <div className="relative grid items-start gap-6 sm:gap-10 lg:grid-cols-[auto_1fr]">
-              <div className="grid h-20 w-20 place-items-center rounded-2xl accent-gradient text-3xl font-black text-black shadow-2xl shadow-[#d9f000]/30 sm:h-32 sm:w-32 sm:rounded-3xl sm:text-5xl">
-                A
-              </div>
+              <TalkingAnthony
+                pose="welcome"
+                align="center"
+                className="mx-auto w-52 sm:w-64 lg:w-72"
+                sizes="(min-width: 1024px) 288px, (min-width: 640px) 256px, 208px"
+              />
               <div>
                 <span className="inline-block rounded-full border border-[#d9f000]/40 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
                   From the founder

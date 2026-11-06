@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CategoryGrid from "@/components/CategoryGrid";
 import CountUp from "@/components/CountUp";
+import TalkingAnthony from "@/components/TalkingAnthony";
 import { getAllCollections } from "@/lib/shopify-collections";
 
 export const revalidate = 300;
@@ -143,7 +144,7 @@ export default async function Home() {
             </div>
 
             {/* Hero image */}
-            <div className="relative order-1 lg:order-2">
+            <div className="relative order-1 mb-16 sm:mb-20 lg:order-2 lg:mb-0">
               <div className="pointer-events-none absolute -inset-4 -z-10 rounded-4xl bg-linear-to-br from-[#d9f000]/25 via-[#18d3e8]/20 to-[#d94cb3]/25 opacity-70 blur-2xl" />
               <div className="lg:animate-float">
                 <div className="group relative overflow-hidden rounded-2xl border border-[#d9f000]/30 shadow-2xl shadow-[#d9f000]/20">
@@ -160,6 +161,14 @@ export default async function Home() {
                   <div className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/15 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
                 </div>
               </div>
+              {/* Anthony waves from the corner of the hero image. Tap him! */}
+              <TalkingAnthony
+                pose="welcome"
+                intro
+                align="right"
+                sizes="(min-width: 1024px) 240px, (min-width: 640px) 176px, 128px"
+                className="absolute -bottom-16 right-0 z-10 w-32 sm:-bottom-20 sm:w-44 lg:-bottom-10 lg:-right-6 lg:w-60"
+              />
             </div>
           </div>
         </section>
@@ -631,6 +640,44 @@ export default async function Home() {
               </div>
             </div>
           </a>
+        </section>
+
+        {/* Meet Anthony — a personal touch */}
+        <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+          <div
+            data-reveal
+            className="relative overflow-x-clip rounded-3xl border border-[#18d3e8]/25 bg-linear-to-br from-[#18d3e8]/10 via-surface to-[#d9f000]/10 px-5 pt-6 sm:px-10 sm:pt-8"
+          >
+            <div className="pointer-events-none absolute -left-16 -top-16 h-56 w-56 rounded-full bg-[#18d3e8]/15 blur-3xl" />
+            <div className="relative grid grid-cols-[1fr_auto] items-end gap-3 sm:gap-8">
+              <div className="pb-6 sm:pb-10">
+                <span className="inline-block rounded-full border border-[#18d3e8]/40 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[10px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8] sm:text-[11px]">
+                  Meet your printer
+                </span>
+                <h2 className="mt-3 font-display text-2xl font-black uppercase leading-tight tracking-tight sm:text-4xl">
+                  Questions?{" "}
+                  <span className="accent-gradient-text">Just ask Anthony.</span>
+                </h2>
+                <p className="mt-2 max-w-md text-sm leading-relaxed text-foreground-muted sm:text-base">
+                  Not sure which product, size or file to use? Send a message
+                  and we&apos;ll help you pick the right one. Real people, right
+                  here in Stuart.
+                </p>
+                <Link
+                  href="/contact"
+                  className="accent-gradient mt-4 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-black shadow-lg shadow-[#d9f000]/20 transition-transform hover:scale-[1.03]"
+                >
+                  Message Anthony <Arrow size={14} />
+                </Link>
+              </div>
+              <TalkingAnthony
+                pose="thumbs"
+                align="right"
+                className="w-32 sm:w-52 lg:w-64"
+                sizes="(min-width: 1024px) 256px, (min-width: 640px) 208px, 128px"
+              />
+            </div>
+          </div>
         </section>
 
         {/* Why order with us — promise band */}

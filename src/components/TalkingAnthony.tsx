@@ -141,6 +141,7 @@ export default function TalkingAnthony({
   pose,
   className = "",
   clip = false,
+  compact = false,
   intro = false,
   introKey = "home",
   greet = HOME.greet,
@@ -153,6 +154,8 @@ export default function TalkingAnthony({
   className?: string;
   /** Show only the top two thirds so he looks like he is peeking in. */
   clip?: boolean;
+  /** On phones show just a round face (so he never covers page content). */
+  compact?: boolean;
   /** Greet by himself (once per page per visit) and wiggle for attention. */
   intro?: boolean;
   introKey?: string;
@@ -299,8 +302,22 @@ export default function TalkingAnthony({
           key={hop}
           className={"block " + (hop ? "animate-mascot-hop motion-reduce:animate-none" : "")}
         >
+          {compact && (
+            <span className="relative block h-16 w-16 overflow-hidden rounded-full border-2 border-[#d9f000] bg-[#18d3e8]/25 shadow-lg shadow-black/50 sm:hidden">
+              <Image
+                src={POSES[pose]}
+                alt=""
+                width={1086}
+                height={1448}
+                sizes="200px"
+                draggable={false}
+                className="absolute max-w-none"
+                style={{ width: 200, height: "auto", left: -64, top: 4 }}
+              />
+            </span>
+          )}
           <span
-            className={clip ? "block overflow-hidden" : "block"}
+            className={(compact ? "hidden sm:block " : "block ") + (clip ? "overflow-hidden" : "")}
             style={clip ? { aspectRatio: "1086 / 985" } : undefined}
           >
             <Image
@@ -354,6 +371,7 @@ export function AnthonyBuddy() {
   const pathname = usePathname() || "/";
   const [hidden, setHidden] = useState(false);
   const [bar, setBar] = useState(true);
+  const [gone, setGone] = useState(false);
 
   useEffect(() => {
     try {
@@ -362,6 +380,11 @@ export function AnthonyBuddy() {
       /* ignore */
     }
   }, []);
+
+  // Pages that already show him big (like the 404) mark themselves.
+  useEffect(() => {
+    setGone(!!document.querySelector("[data-no-buddy]"));
+  }, [pathname]);
 
   // On phones a sticky bar sits at the bottom of some pages; stand on top of it.
   useEffect(() => {
@@ -373,18 +396,21 @@ export function AnthonyBuddy() {
   }, [pathname]);
 
   const first = pathname.split("/")[1] ?? "";
-  if (hidden || INLINE_ON.includes(pathname) || HIDE_ON.includes("/" + first)) {
+  if (hidden || gone || INLINE_ON.includes(pathname) || HIDE_ON.includes("/" + first)) {
     return null;
   }
   const side = SIDE[first] ?? (hash(first) % 2 ? "left" : "right");
   const pose: Pose = hash(pathname) % 2 ? "thumbs" : "welcome";
   const m = messagesFor(pathname);
+  // Product pages are full of things to tap, so on phones he becomes a small face.
+  const compact = first === "products";
 
   return (
     <TalkingAnthony
       key={pathname}
       pose={pose}
       clip
+      compact={compact}
       intro
       introKey={pathname}
       greet={m.greet}
@@ -400,9 +426,16 @@ export function AnthonyBuddy() {
         setHidden(true);
       }}
       className={
-        "fixed z-30 w-40 sm:bottom-0 sm:w-56 lg:w-64 " +
-        (bar ? "bottom-[4.2rem] " : "bottom-0 ") +
-        (side === "left" ? "-left-3 sm:left-2" : "-right-3 sm:right-2")
+        "fixed z-30 sm:bottom-0 sm:w-56 lg:w-64 " +
+        (compact ? "w-16 " : "w-40 ") +
+        (bar ? (compact ? "bottom-[5rem] " : "bottom-[4.2rem] ") : compact ? "bottom-4 " : "bottom-0 ") +
+        (compact
+          ? side === "left"
+            ? "left-3 sm:left-2"
+            : "right-3 sm:right-2"
+          : side === "left"
+            ? "-left-3 sm:left-2"
+            : "-right-3 sm:right-2")
       }
     />
   );

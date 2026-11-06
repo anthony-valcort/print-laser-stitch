@@ -3,6 +3,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import TalkingAnthony from "@/components/TalkingAnthony";
+import TalkingAnn from "@/components/TalkingAnn";
 import { fadeDelay, revealDelay } from "@/lib/reveal";
 import { BUSINESS_HOURS, formatRange } from "@/lib/business-hours";
 
@@ -163,6 +164,22 @@ export default function AboutPage() {
                   </p>
                 </div>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Ann Christie */}
+        <section className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+          <div className="relative overflow-x-clip rounded-3xl border border-[#d94cb3]/30 bg-gradient-to-br from-[#d94cb3]/15 via-surface to-[#18d3e8]/10 p-6 sm:p-10">
+            <div className="grid items-center gap-6 sm:grid-cols-[1fr_auto]">
+              <div>
+                <p className="font-headline text-xs uppercase tracking-widest text-[#d94cb3]">The other half of the team</p>
+                <h2 className="font-display mt-2 text-3xl sm:text-4xl">Say hi to Ann Christie</h2>
+                <p className="mt-3 text-white/75">
+                  Ann Christie is part of the Print Laser Stitch family and she is cheering you on. Got an idea, big or small? Tap her and say hello.
+                </p>
+              </div>
+              <TalkingAnn pose="tees" align="center" introKey="about" greet="Hi, I'm Ann! So glad you're here 💛" lines={["Whatever you're dreaming up, we'd love to help make it real!", "Every great project starts with one little idea. Share yours!", "You've got this, and we've got you 💛"]} className="mx-auto w-44 sm:w-56" />
             </div>
           </div>
         </section>

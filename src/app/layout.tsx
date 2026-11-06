@@ -9,6 +9,7 @@ import CartDrawer from "@/components/CartDrawer";
 import CartWelcomeBack from "@/components/CartWelcomeBack";
 import CookieNotice from "@/components/CookieNotice";
 import { AnthonyBuddy } from "@/components/TalkingAnthony";
+import { AnnBuddy } from "@/components/TalkingAnn";
 import JsonLd from "@/components/JsonLd";
 import { localBusinessJsonLd, websiteJsonLd } from "@/lib/seo";
 
@@ -85,6 +86,7 @@ export default function RootLayout({
         <ScrollReveal />
         <MobileQuoteBar />
         <AnthonyBuddy />
+        <AnnBuddy />
         <CookieNotice />
       </body>
     </html>

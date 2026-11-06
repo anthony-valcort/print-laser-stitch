@@ -14,7 +14,7 @@ export default function NotFound() {
     <>
       <Header />
       <main className="flex-1">
-        <section className="mx-auto flex max-w-3xl flex-col items-center px-4 py-12 text-center sm:px-6 sm:py-20">
+        <section data-no-buddy className="mx-auto flex max-w-3xl flex-col items-center px-4 py-12 text-center sm:px-6 sm:py-20">
           <Mascot
             pose="welcome"
             alt="Anthony from Print Laser Stitch welcoming you"

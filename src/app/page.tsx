@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CategoryGrid from "@/components/CategoryGrid";
 import CountUp from "@/components/CountUp";
+import Mascot from "@/components/Mascot";
 import { getAllCollections } from "@/lib/shopify-collections";
 
 export const revalidate = 300;
@@ -159,6 +160,20 @@ export default async function Home() {
                   {/* Light sweep on hover */}
                   <div className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/15 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
                 </div>
+              </div>
+              {/* Anthony waves from the corner of the hero image */}
+              <div className="pointer-events-none absolute -bottom-9 right-0 z-10 w-22 sm:-bottom-10 sm:w-28 lg:-bottom-6 lg:-right-4 lg:w-36">
+                <p
+                  className="animate-bubble-pop absolute right-full top-3 mr-1 whitespace-nowrap rounded-2xl rounded-br-sm bg-white px-2.5 py-1.5 font-headline text-[11px] font-bold text-black shadow-lg sm:text-xs"
+                  style={{ animationDelay: "900ms" }}
+                >
+                  Hi, I&apos;m Anthony! 👋
+                </p>
+                <Mascot
+                  pose="welcome"
+                  alt="Anthony, owner of Print Laser Stitch, waving hello"
+                  sizes="(min-width: 1024px) 144px, 112px"
+                />
               </div>
             </div>
           </div>
@@ -631,6 +646,44 @@ export default async function Home() {
               </div>
             </div>
           </a>
+        </section>
+
+        {/* Meet Anthony — a personal touch */}
+        <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+          <div
+            data-reveal
+            className="relative overflow-hidden rounded-3xl border border-[#18d3e8]/25 bg-linear-to-br from-[#18d3e8]/10 via-surface to-[#d9f000]/10 px-5 pt-6 sm:px-10 sm:pt-8"
+          >
+            <div className="pointer-events-none absolute -left-16 -top-16 h-56 w-56 rounded-full bg-[#18d3e8]/15 blur-3xl" />
+            <div className="relative grid grid-cols-[1fr_auto] items-end gap-3 sm:gap-8">
+              <div className="pb-6 sm:pb-10">
+                <span className="inline-block rounded-full border border-[#18d3e8]/40 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[10px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8] sm:text-[11px]">
+                  Meet your printer
+                </span>
+                <h2 className="mt-3 font-display text-2xl font-black uppercase leading-tight tracking-tight sm:text-4xl">
+                  Questions?{" "}
+                  <span className="accent-gradient-text">Just ask Anthony.</span>
+                </h2>
+                <p className="mt-2 max-w-md text-sm leading-relaxed text-foreground-muted sm:text-base">
+                  Not sure which product, size or file to use? Send a message
+                  and we&apos;ll help you pick the right one. Real people, right
+                  here in Stuart.
+                </p>
+                <Link
+                  href="/contact"
+                  className="accent-gradient mt-4 inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-black shadow-lg shadow-[#d9f000]/20 transition-transform hover:scale-[1.03]"
+                >
+                  Message Anthony <Arrow size={14} />
+                </Link>
+              </div>
+              <Mascot
+                pose="thumbs"
+                alt="Anthony giving a thumbs up"
+                className="w-24 sm:w-40 lg:w-48"
+                sizes="(min-width: 1024px) 192px, 160px"
+              />
+            </div>
+          </div>
         </section>
 
         {/* Why order with us — promise band */}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import Mascot from "@/components/Mascot";
 import { fadeDelay, revealDelay } from "@/lib/reveal";
 import { BUSINESS_HOURS, formatRange } from "@/lib/business-hours";
 
@@ -126,9 +127,12 @@ export default function AboutPage() {
             <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#18d3e8]/10 blur-3xl" />
 
             <div className="relative grid items-start gap-6 sm:gap-10 lg:grid-cols-[auto_1fr]">
-              <div className="grid h-20 w-20 place-items-center rounded-2xl accent-gradient text-3xl font-black text-black shadow-2xl shadow-[#d9f000]/30 sm:h-32 sm:w-32 sm:rounded-3xl sm:text-5xl">
-                A
-              </div>
+              <Mascot
+                pose="welcome"
+                alt="Anthony, founder of Print Laser Stitch"
+                className="mx-auto w-36 sm:w-48 lg:w-56"
+                sizes="(min-width: 1024px) 224px, 192px"
+              />
               <div>
                 <span className="inline-block rounded-full border border-[#d9f000]/40 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
                   From the founder

@@ -99,7 +99,7 @@ export default function TalkingAnthony({
   const tail = align === "left" ? "left-9" : align === "center" ? "left-1/2 -ml-1.5" : "right-9";
 
   return (
-    <div className={"relative " + className}>
+    <div className={(/\b(absolute|fixed)\b/.test(className) ? "" : "relative ") + className}>
       {(msg !== null || tip) && (
         <div
           className={"pointer-events-none absolute bottom-full z-20 mb-1 flex w-60 max-w-[80vw] " + pos + " " + flex}

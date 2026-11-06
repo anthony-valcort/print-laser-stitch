@@ -17,7 +17,7 @@ const POSES: Record<Pose, string> = {
   posters: "/mascot/ann-posters.png",
 };
 
-const CALL_LINE = "I'd love to hear your idea! Call me anytime 💛";
+const CALL_LINE = "I'd love to hear your idea! Call us anytime 💛";
 
 type Msgs = { pose: Pose; greet: string; lines: string[] };
 
@@ -184,7 +184,7 @@ export default function TalkingAnn({
           href="/contact"
           className="rounded-full border border-white/25 px-3 py-1.5 text-xs font-semibold text-white"
         >
-          Message me
+          Message us
         </Link>
       </div>
       <p className="mt-2 text-[11px] text-white/50">{PHONE_LABEL}</p>

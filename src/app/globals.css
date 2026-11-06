@@ -603,3 +603,27 @@ body {
 @utility animate-bubble-pop {
   animation: bubble-pop 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
 }
+
+/* Anthony hops when you tap him */
+@keyframes mascot-hop {
+  0% {
+    transform: translateY(0) scale(1, 1);
+  }
+  20% {
+    transform: translateY(0) scale(1.06, 0.92);
+  }
+  45% {
+    transform: translateY(-14px) scale(0.96, 1.05);
+  }
+  70% {
+    transform: translateY(0) scale(1.05, 0.95);
+  }
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+
+@utility animate-mascot-hop {
+  transform-origin: 50% 100%;
+  animation: mascot-hop 0.55s ease-out;
+}

@@ -460,7 +460,7 @@ export default function WrapDesigner() {
       : "";
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:py-12">
+    <section data-no-buddy className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:py-12">
       <div className="mb-6">
         <p className="font-headline text-xs uppercase tracking-widest text-[#18d3e8]">Experimental preview</p>
         <h1 className="font-display mt-1 text-3xl sm:text-4xl">Vehicle Wrap Designer</h1>

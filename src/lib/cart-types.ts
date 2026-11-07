@@ -10,6 +10,7 @@ export type CartItemKind =
   | "product"
   | "signage"
   | "decal"
+  | "sign-job"
   | "vehicle-sticker";
 
 export interface CartItemBase {
@@ -162,6 +163,47 @@ export interface DecalCartItem extends CartItemBase {
   notes?: string;
 }
 
+export interface SignJobPieceLine {
+  surface: string;
+  surfaceLabel: string;
+  shape: string;
+  material: string;
+  materialLabel: string;
+  /** inches */
+  widthIn: number;
+  /** inches */
+  heightIn: number;
+  qty: number;
+  label?: string;
+  note?: string;
+  /** Artwork / reference photo (Cloudinary URL). */
+  imageUrl?: string;
+}
+
+/**
+ * Sign & Decal Builder — the merged signage + decal calculator. Pieces ×
+ * material rate for the chosen service tier, 7% tax, plus optional old-
+ * graphic removal and travel (Full Install only). Re-priced on the server.
+ */
+export interface SignJobCartItem extends CartItemBase {
+  kind: "sign-job";
+  pieces: SignJobPieceLine[];
+  service: string;
+  serviceLabel: string;
+  removal: {
+    type: string;
+    sameAsNew: boolean;
+    widthFt: number;
+    heightFt: number;
+  };
+  travelArea: string;
+  travelLabel?: string;
+  installAddress?: string;
+  totalAreaSqFt: number;
+  notes?: string;
+  imageUrls?: string[];
+}
+
 export interface VehicleStickerCartItem extends CartItemBase {
   kind: "vehicle-sticker";
   make: string;
@@ -177,6 +219,7 @@ export type CartItem =
   | ProductCartItem
   | SignageCartItem
   | DecalCartItem
+  | SignJobCartItem
   | VehicleStickerCartItem;
 
 // Distributive Omit — correctly narrows each union member separately.

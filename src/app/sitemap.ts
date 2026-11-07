@@ -19,7 +19,6 @@ const STATIC_PAGES: { path: string; priority: number }[] = [
   { path: "/products/engraved-wallets", priority: 0.8 },
   { path: "/products/engraved-bottle-openers", priority: 0.8 },
   { path: "/signage-quotes", priority: 0.8 },
-  { path: "/decal-quote", priority: 0.7 },
   { path: "/vehicle-stickers", priority: 0.7 },
   { path: "/wrap-designer", priority: 0.8 },
   { path: "/collections", priority: 0.7 },

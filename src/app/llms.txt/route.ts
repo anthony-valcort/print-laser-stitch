@@ -21,7 +21,7 @@ const KEY_PAGES: { name: string; path: string; note: string }[] = [
   { name: "Laser Engraved Cups & Tumblers", path: "/products/engraved-cups", note: "Customers ship their own cups or tumblers; we laser-engrave the design and return them." },
   { name: "Laser Engraved Wallets", path: "/products/engraved-wallets", note: "Leather wallets engraved with names, logos or art." },
   { name: "Engraved Bottle Openers", path: "/products/engraved-bottle-openers", note: "Stainless steel speed bottle openers, laser engraved." },
-  { name: "Sign & Decal Quote Calculator", path: "/signage-quotes", note: "Instant pricing for printed signs and decals, with print-only, design-and-print, or full installation options." },
+  { name: "Sign & Decal Builder", path: "/signage-quotes", note: "Visual, real-scale builder and instant pricing for window decals, wall graphics, vehicle lettering and sign panels — print only, design and print, or full installation, with optional old-graphic removal. No travel fee in Martin or St. Lucie County." },
   { name: "Vehicle Decal Kits", path: "/vehicle-stickers", note: "Decal kits matched to specific vehicles." },
   { name: "Project Gallery", path: "/gallery", note: "Photos of completed work." },
   { name: "Contact & Quotes", path: "/contact", note: "Request a quote or ask a question." },

@@ -43,6 +43,7 @@ const CATEGORY_STRIP: {
 ];
 
 const UTILITY_LINKS: { label: string; href: string; external?: boolean }[] = [
+  { label: "Sign & Decal Builder", href: "/signage-quotes" },
   { label: "Design Your Wrap", href: "/wrap-designer" },
   { label: "About", href: "/about" },
   { label: "Gallery", href: "/gallery" },
@@ -450,8 +451,7 @@ export default function HeaderClient({
               {[
                 { label: "Home", href: "/" },
                 { label: "Design Your Wrap", href: "/wrap-designer" },
-            { label: "Signage Quote", href: "/decal-quote" },
-                { label: "Decal Calculator", href: "/signage-quotes" },
+                { label: "Sign & Decal Builder", href: "/signage-quotes" },
                 { label: "Gallery", href: "/gallery" },
                 { label: "Blog", href: "/blog" },
                 { label: "About Us", href: "/about" },

@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // The two old calculators were merged into the Sign & Decal Builder.
+  async redirects() {
+    return [
+      { source: "/decal-quote", destination: "/signage-quotes", permanent: true },
+    ];
+  },
   images: {
     remotePatterns: [
       {

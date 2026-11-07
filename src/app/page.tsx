@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import CategoryGrid from "@/components/CategoryGrid";
 import CountUp from "@/components/CountUp";
 import TalkingAnthony from "@/components/TalkingAnthony";
+import Stage from "@/components/sign-builder/Stage";
 import { getAllCollections } from "@/lib/shopify-collections";
 
 export const revalidate = 300;
@@ -87,7 +88,7 @@ export default async function Home() {
                 style={{ animationDelay: "360ms" }}
               >
                 <Link
-                  href="/decal-quote"
+                  href="/signage-quotes"
                   className="group inline-flex animate-glow items-center justify-center gap-2 rounded-xl accent-gradient px-5 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black transition hover:brightness-110 active:scale-[0.98] sm:rounded-md sm:px-6 sm:py-3"
                 >
                   Get a Quote
@@ -505,126 +506,71 @@ export default async function Home() {
           </Link>
         </section>
 
-        {/* Instant quote tools — signage + decal calculators */}
+        {/* Instant quote tool — Sign & Decal Builder */}
         <section className="mx-auto max-w-7xl overflow-x-clip px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
-          <div className="mb-8 text-center sm:mb-10" data-reveal>
-            <span className="inline-block rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
-              Instant pricing
-            </span>
-            <h2 className="mt-3 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
-              Price it in{" "}
-              <span className="accent-gradient-text">seconds.</span>
-            </h2>
-            <p className="mx-auto mt-3 max-w-2xl text-sm text-foreground-muted">
-              No waiting on an email — enter your sizes and see your price
-              right away.
-            </p>
-          </div>
-
-          <div className="grid gap-5 lg:grid-cols-2">
-            {/* Signage Quote */}
-            <div
-              data-reveal="left"
-              className="relative flex flex-col overflow-hidden rounded-3xl border border-[#18d3e8]/30 bg-linear-to-br from-[#18d3e8]/10 via-surface to-[#18d3e8]/5 p-6 sm:p-10"
-            >
-              <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#18d3e8]/20 blur-3xl" />
-              <div className="relative flex flex-1 flex-col">
+          <div
+            data-reveal
+            className="relative overflow-hidden rounded-3xl border border-[#d9f000]/30 bg-linear-to-br from-[#18d3e8]/10 via-surface to-[#d94cb3]/10 p-6 sm:p-10"
+          >
+            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#18d3e8]/20 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-[#d9f000]/10 blur-3xl" />
+            <div className="relative grid items-center gap-8 lg:grid-cols-[1fr_1.1fr]">
+              <div>
                 <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#18d3e8]/40 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#18d3e8]">
                   <span className="h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />
-                  Window film · Wall vinyl
+                  Instant pricing
                 </span>
-                <h3 className="mt-4 font-display text-2xl font-black uppercase tracking-tight sm:text-3xl">
-                  Signage Quote{" "}
-                  <span className="bg-linear-to-r from-[#18d3e8] to-[#d9f000] bg-clip-text text-transparent">
-                    Calculator
-                  </span>
-                </h3>
+                <h2 className="mt-4 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
+                  Sign &amp; Decal{" "}
+                  <span className="accent-gradient-text">Builder</span>
+                </h2>
                 <p className="mt-3 text-sm text-foreground-muted sm:text-base">
-                  Add panels for doors, windows, walls, wood, or metal — pick
-                  a vinyl material and get instant pricing with 7% Martin
-                  County tax included.
+                  Window decals, wall graphics, vehicle lettering and sign
+                  panels — pick where it goes, drag it to size, and see it at
+                  real scale before you order. Print only, design &amp; print,
+                  or full installation.
                 </p>
-
-                <div className="mt-6 rounded-2xl border border-border-soft bg-background/80 p-4 text-sm shadow-2xl shadow-black/40 backdrop-blur sm:p-5">
-                  <div className="mb-3 flex items-center gap-2 font-headline text-xs uppercase tracking-[0.2em] text-foreground-muted">
-                    <span className="h-2 w-2 rounded-full bg-[#18d3e8]" />
-                    Sample Quote
-                  </div>
-                  <div className="space-y-2">
-                    <CalcRow label="🚪 Door" value="12″ × 12″" />
-                    <CalcRow label="Material" value="Full Vinyl" />
-                    <CalcRow label="Tax (7%)" value="$1.12" />
-                    <div className="my-2 border-t border-border-soft" />
-                    <div className="flex items-center justify-between text-base">
-                      <span className="font-semibold">Total</span>
-                      <span className="font-bold text-[#18d3e8]">$17.12</span>
-                    </div>
-                  </div>
-                </div>
-
-                <Link
-                  href="/decal-quote"
-                  className="group mt-6 inline-flex items-center justify-center gap-2 rounded-xl cyan-gradient px-6 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#18d3e8]/30 transition hover:brightness-110 active:scale-[0.98] sm:w-fit sm:rounded-md sm:py-3"
-                >
-                  Open Signage Quote
-                  <span className="transition-transform duration-300 group-hover:translate-x-1">
-                    <Arrow />
-                  </span>
-                </Link>
-              </div>
-            </div>
-
-            {/* Decal Signage Calculator */}
-            <div
-              data-reveal="right"
-              style={delay(100)}
-              className="relative flex flex-col overflow-hidden rounded-3xl border border-[#d9f000]/30 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#d94cb3]/10 p-6 sm:p-10"
-            >
-              <div className="pointer-events-none absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-[#d94cb3]/15 blur-3xl" />
-              <div className="relative flex flex-1 flex-col">
-                <span className="inline-flex w-fit items-center gap-2 rounded-full border border-[#d9f000]/40 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#d9f000]" />
-                  Print &amp; install quote
-                </span>
-                <h3 className="mt-4 font-display text-2xl font-black uppercase tracking-tight sm:text-3xl">
-                  Decal Signage{" "}
-                  <span className="bg-linear-to-r from-[#d9f000] to-[#d94cb3] bg-clip-text text-transparent">
-                    Calculator
-                  </span>
-                </h3>
-                <p className="mt-3 text-sm text-foreground-muted sm:text-base">
-                  Enter width and length, pick a service tier — Print Only
-                  ($10/sq ft), Design &amp; Print ($12) or Full Install ($18) —
-                  and get an instant quote.
-                </p>
-
-                <div className="mt-6 rounded-2xl border border-border-soft bg-background/80 p-4 text-sm shadow-2xl shadow-black/40 backdrop-blur sm:p-5">
-                  <div className="mb-3 flex items-center gap-2 font-headline text-xs uppercase tracking-[0.2em] text-foreground-muted">
-                    <span className="h-2 w-2 rounded-full bg-[#d9f000]" />
-                    Sample Quote
-                  </div>
-                  <div className="space-y-2">
-                    <CalcRow label="Width × Length" value="1′ × 1.7′" />
-                    <CalcRow label="Service" value="Full Install" />
-                    <CalcRow label="Rate" value="$18.00 / sq ft" />
-                    <div className="my-2 border-t border-border-soft" />
-                    <div className="flex items-center justify-between text-base">
-                      <span className="font-semibold">Grand Total</span>
-                      <span className="font-bold text-[#d9f000]">$30.60</span>
-                    </div>
-                  </div>
-                </div>
-
+                <ul className="mt-5 grid gap-2 text-sm sm:grid-cols-2">
+                  <li className="flex items-center gap-2"><CheckIcon /> Real-scale visual preview</li>
+                  <li className="flex items-center gap-2"><CheckIcon /> Multiple pieces, one quote</li>
+                  <li className="flex items-center gap-2"><CheckIcon /> Old decal &amp; wrap removal</li>
+                  <li className="flex items-center gap-2"><CheckIcon /> Free travel in Martin &amp; St. Lucie</li>
+                </ul>
                 <Link
                   href="/signage-quotes"
-                  className="group mt-6 inline-flex items-center justify-center gap-2 rounded-xl accent-gradient px-6 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 transition hover:brightness-110 active:scale-[0.98] sm:w-fit sm:rounded-md sm:py-3"
+                  className="group mt-7 inline-flex items-center justify-center gap-2 rounded-xl accent-gradient px-6 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/30 transition hover:brightness-110 active:scale-[0.98] sm:w-fit sm:rounded-md sm:py-3"
                 >
-                  Open Calculator
+                  Build My Sign
                   <span className="transition-transform duration-300 group-hover:translate-x-1">
                     <Arrow />
                   </span>
                 </Link>
               </div>
+              <Link
+                href="/signage-quotes"
+                aria-label="Open the Sign & Decal Builder"
+                className="block overflow-hidden rounded-2xl border border-border-soft bg-[#0e0e11] shadow-2xl shadow-black/40 transition hover:border-[#d9f000]/40"
+              >
+                <div className="aspect-[16/10] w-full">
+                  <Stage
+                    interactive={false}
+                    piece={{
+                      surface: "window",
+                      shape: "rounded",
+                      material: "printed-vinyl",
+                      widthIn: 48,
+                      heightIn: 22,
+                      offsetX: 0,
+                      offsetY: -12,
+                      label: "OPEN 9–5",
+                    }}
+                  />
+                </div>
+                <div className="flex items-center justify-between border-t border-border-soft px-4 py-2.5 text-xs">
+                  <span className="text-foreground-muted">4′ × 1′ 10″ on an 8′ storefront window</span>
+                  <span className="font-bold text-[#d9f000]">Try it →</span>
+                </div>
+              </Link>
             </div>
           </div>
         </section>
@@ -814,14 +760,6 @@ function StickerCheckIcon() {
   );
 }
 
-function CalcRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-foreground-muted">{label}</span>
-      <span className="font-medium">{value}</span>
-    </div>
-  );
-}
 
 function PromiseItem({
   num,

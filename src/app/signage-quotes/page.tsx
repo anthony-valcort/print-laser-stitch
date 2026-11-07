@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PageCopy from "@/components/PageCopy";
-import SignageCalculator from "@/components/SignageCalculator";
+import SignDecalBuilder from "@/components/sign-builder/SignDecalBuilder";
 
 export const metadata: Metadata = {
-  title: "Sign & Decal Pricing Calculator | Print Laser Stitch, Stuart FL",
+  title: "Sign & Decal Builder — Instant Quote | Print Laser Stitch, Stuart FL",
   description:
-    "Instant quotes for printed signs and decals: print only, design and print, or full installation around Stuart and the Treasure Coast.",
+    "See your window decal, wall graphic, vehicle lettering or sign at real scale and get an instant price — print only, design and print, or full installation. No travel fee in Martin or St. Lucie County.",
   alternates: { canonical: "/signage-quotes" },
 };
 
@@ -16,21 +16,21 @@ export default function SignageQuotesPage() {
     <>
       <Header />
       <main className="flex-1">
-        <SignageCalculator />
+        <SignDecalBuilder />
         <PageCopy
           heading="Custom signs and decals in Stuart, FL"
           paragraphs={[
-            "Print Laser Stitch makes custom signs, window and wall decals, and printed graphics for businesses and homeowners in Stuart and across the Treasure Coast. Use the calculator above for an instant price, then send your request and we will follow up to confirm the details.",
-            "Choose the level of help you need: print only if you already have artwork, design and print if you want us to create or clean up the artwork, or full installation if you would rather not do it yourself. The calculator shows your price up front, so there are no surprises when you order.",
+            "Most people have no idea what size to order — so the builder shows you. Pick where it's going (a storefront window, glass door, wall, vehicle or sign board), choose a popular size or drag it to fit, and you'll see it at real scale next to a 5′9″ person, with your wording or logo on it.",
+            "Add as many pieces as the job needs, choose print only, design and print, or full installation, and the price updates as you go. For installs we can remove old decals, window film or wraps first, and there's no travel fee anywhere in Martin or St. Lucie County.",
           ]}
           points={[
-            { title: "Print only", text: "Send finished artwork and we print it to your size on the material you choose." },
-            { title: "Design and print", text: "Need artwork created or cleaned up? Our graphic design service can handle it before printing." },
-            { title: "Full installation", text: "We print and install around Stuart, Jensen Beach, Palm City, Hobe Sound and nearby." },
-            { title: "Local shop", text: "Everything is produced at our shop at 3153 SE Dominica Terrace, Stuart, FL." },
+            { title: "See it before you buy", text: "Real-scale preview with a person for reference, so 24 × 18 inches finally makes sense." },
+            { title: "One quote for the whole job", text: "Mix window, door, wall and vehicle pieces in a single order." },
+            { title: "Removal handled", text: "Old decals, tint or wraps removed and cleaned before we install the new ones." },
+            { title: "Local installers", text: "Free travel in Stuart, Palm City, Jensen Beach, Hobe Sound, Port St. Lucie, Fort Pierce and nearby." },
           ]}
           links={[
-            { href: "/decal-quote", label: "Decal quote by panel size" },
+            { href: "/wrap-designer", label: "Design a vehicle wrap" },
             { href: "/vehicle-stickers", label: "Vehicle decal kits" },
             { href: "/products/banners", label: "Vinyl banners" },
             { href: "/contact", label: "Talk to us" },

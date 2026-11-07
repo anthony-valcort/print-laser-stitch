@@ -11,7 +11,9 @@
  *   - vinyl-sticker → 1 custom-title line
  *   - tshirt        → N variant-id lines (one per size, custom override price)
  *   - product       → 1 variant-id line
- *   - signage       → 1 custom-title line  (quote-only signage doesn't go through cart)
+ *   - signage       → 1 custom-title line  (legacy carts only)
+ *   - decal         → 1 custom-title line  (legacy carts only)
+ *   - sign-job      → graphics line + optional removal + travel lines
  */
 
 import { type NextRequest, NextResponse } from "next/server";
@@ -43,6 +45,24 @@ import {
   type MaterialKey as DecalMaterialKey,
   type PanelType,
 } from "@/lib/decal-pricing";
+import {
+  MAX_PIECES as MAX_SIGN_PIECES,
+  REMOVAL_MIN as SIGN_REMOVAL_MIN,
+  REMOVAL_TYPES as SIGN_REMOVAL_TYPES,
+  SHAPES as SIGN_SHAPES,
+  TRAVEL_MIN as SIGN_TRAVEL_MIN,
+  TRAVEL_RATE_PER_MILE as SIGN_TRAVEL_RATE,
+  calcSignJob,
+  fmtFtIn,
+  getMaterial as getSignMaterial,
+  getService as getSignService,
+  getSurface as getSignSurface,
+  getTravelArea as getSignTravelArea,
+  type MaterialKey as SignMaterialKey,
+  type RemovalKey as SignRemovalKey,
+  type ShapeKey as SignShapeKey,
+  type SurfaceKey as SignSurfaceKey,
+} from "@/lib/sign-decal-pricing";
 import type { CartItem } from "@/lib/cart-types";
 
 const SHAPES = new Set<StickerShape>(["custom", "circle", "oval", "square", "rectangle"]);
@@ -678,6 +698,133 @@ export async function POST(req: NextRequest) {
       });
       noteParts.push(
         `Signage Quote ${mat.label} ${recomputed.totalAreaSqFt.toFixed(2)} sqft`,
+      );
+    } else if (item.kind === "sign-job") {
+      // Sign & Decal Builder — every number below is recomputed from
+      // sign-decal-pricing.ts; only the configuration comes from the browser.
+      if (!Array.isArray(item.pieces) || item.pieces.length === 0) {
+        return NextResponse.json(
+          { error: "Your sign job needs at least one piece" },
+          { status: 400 },
+        );
+      }
+      if (item.pieces.length > MAX_SIGN_PIECES) {
+        return NextResponse.json(
+          { error: "Too many pieces in one job — please call us" },
+          { status: 400 },
+        );
+      }
+      const service = getSignService(String(item.service));
+      if (!service) {
+        return NextResponse.json({ error: "Invalid service" }, { status: 400 });
+      }
+      const pieces = item.pieces.map((p) => ({
+        surface: (getSignSurface(String(p.surface))?.key ?? "sign") as SignSurfaceKey,
+        shape: (SIGN_SHAPES.find((s) => s.key === p.shape)?.key ?? "rect") as SignShapeKey,
+        material: String(p.material) as SignMaterialKey,
+        widthIn: Number(p.widthIn),
+        heightIn: Number(p.heightIn),
+        qty: Number(p.qty),
+      }));
+      const job = calcSignJob({
+        pieces,
+        service: service.key,
+        removal: {
+          type: (String(item.removal?.type ?? "none") as SignRemovalKey),
+          sameAsNew: Boolean(item.removal?.sameAsNew),
+          widthFt: Number(item.removal?.widthFt) || 0,
+          heightFt: Number(item.removal?.heightFt) || 0,
+        },
+        travelArea: String(item.travelArea ?? ""),
+      });
+      if (job.blockers.length > 0) {
+        return NextResponse.json(
+          { error: `${job.blockers[0]}. Questions? Call (772) 985-2854.` },
+          { status: 400 },
+        );
+      }
+
+      const pieceLines = item.pieces.map((p, i) => {
+        const mat = getSignMaterial(String(p.material));
+        const surf = getSignSurface(String(p.surface));
+        const shape = SIGN_SHAPES.find((s) => s.key === p.shape);
+        const r = job.pieces[i];
+        const label = typeof p.label === "string" && p.label.trim() ? ` "${p.label.trim().slice(0, 80)}"` : "";
+        const note = typeof p.note === "string" && p.note.trim() ? ` (Note: ${p.note.trim().slice(0, 300)})` : "";
+        return `${i + 1}.${label} ${surf?.label ?? "Surface"} · ${shape?.label ?? "Shape"} · ${mat?.label ?? "Material"} · ${fmtFtIn(Number(p.widthIn))} W × ${fmtFtIn(Number(p.heightIn))} H × ${pieces[i].qty} = ${r.areaSqFt.toFixed(2)} sq ft @ $${(r.rate ?? 0).toFixed(2)} → $${r.price.toFixed(2)}${note}`;
+      });
+
+      const properties: { name: string; value: string }[] = [
+        { name: "Service", value: service.label },
+        { name: "Pieces", value: pieceLines.join("\n").slice(0, 4000) },
+        { name: "Total Area", value: `${job.totalAreaSqFt.toFixed(2)} sq ft` },
+        { name: "Graphics", value: `$${job.graphics.toFixed(2)}` },
+        { name: "Tax (7% Martin County)", value: `$${job.tax.toFixed(2)}` },
+      ];
+      item.pieces.forEach((p, i) => {
+        if (typeof p.imageUrl === "string" && p.imageUrl.trim()) {
+          properties.push({ name: `Piece ${i + 1} Artwork Image`, value: p.imageUrl.trim() });
+        }
+      });
+      if (Array.isArray(item.imageUrls)) {
+        item.imageUrls.slice(0, 20).forEach((url, i) => {
+          if (typeof url === "string" && url.trim()) {
+            properties.push({ name: `Site Photo Image ${i + 1}`, value: url.trim() });
+          }
+        });
+      }
+      if (job.isInstall) {
+        const area = getSignTravelArea(String(item.travelArea));
+        properties.push({
+          name: "Install Area",
+          value: `${area?.label ?? item.travelArea}${job.travelFree ? " (free travel zone)" : ` (~${job.travelMiles} mi)`}`,
+        });
+        if (typeof item.installAddress === "string" && item.installAddress.trim()) {
+          properties.push({ name: "Install Address", value: item.installAddress.trim().slice(0, 300) });
+        }
+      }
+      if (item.notes?.trim()) {
+        properties.push({ name: "Project Notes", value: item.notes.trim().slice(0, 2000) });
+      }
+
+      lineItems.push({
+        title: `Signs & Decals · ${service.label} · ${job.totalAreaSqFt.toFixed(2)} sq ft`,
+        price: (job.graphics + job.tax).toFixed(2),
+        quantity: 1,
+        requires_shipping: true, // same as the old calculators — address doubles as install site
+        taxable: false, // 7% already included above
+        properties,
+      });
+      if (job.removal > 0) {
+        const rType = SIGN_REMOVAL_TYPES.find((r) => r.key === item.removal?.type);
+        lineItems.push({
+          title: `Old Graphic Removal · ${rType?.label ?? "Removal"}`,
+          price: job.removal.toFixed(2),
+          quantity: 1,
+          requires_shipping: false,
+          taxable: false,
+          properties: [
+            { name: "Area", value: `${job.removalAreaSqFt.toFixed(2)} sq ft` },
+            { name: "Rate", value: `$${(rType?.ratePerSqFt ?? 0).toFixed(2)} / sq ft (min $${SIGN_REMOVAL_MIN})` },
+          ],
+        });
+      }
+      if (job.travel > 0) {
+        const area = getSignTravelArea(String(item.travelArea));
+        lineItems.push({
+          title: `Install Travel Fee · ${area?.label ?? "Outside Treasure Coast"}`,
+          price: job.travel.toFixed(2),
+          quantity: 1,
+          requires_shipping: false,
+          taxable: false,
+          properties: [
+            { name: "Distance", value: `~${job.travelMiles} mi one way from Stuart` },
+            { name: "Rate", value: `$${SIGN_TRAVEL_RATE.toFixed(2)} / mile (min $${SIGN_TRAVEL_MIN})` },
+          ],
+        });
+      }
+      noteParts.push(
+        `Signs & Decals ${service.label} ${job.totalAreaSqFt.toFixed(2)} sqft${job.removal > 0 ? " + removal" : ""}${job.travel > 0 ? " + travel" : ""}`,
       );
     }
   }

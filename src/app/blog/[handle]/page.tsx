@@ -180,7 +180,7 @@ export default async function ArticlePage({
               </p>
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                 <Link
-                  href="/decal-quote"
+                  href="/signage-quotes"
                   className="inline-flex items-center justify-center gap-2 rounded-xl accent-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/25 transition hover:brightness-110 sm:rounded-md"
                 >
                   Get a Quote

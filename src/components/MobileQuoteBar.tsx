@@ -83,7 +83,7 @@ export default function MobileQuoteBar() {
           Call
         </a>
         <Link
-          href="/decal-quote"
+          href="/signage-quotes"
           tabIndex={show ? 0 : -1}
           className="inline-flex items-center justify-center gap-2 rounded-xl accent-gradient px-4 py-3 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d9f000]/25"
         >

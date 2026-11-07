@@ -941,9 +941,9 @@ export default function WrapEditor({ tpl, src, initial, onChange, onContinue, on
           {/* status bar */}
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl bg-[#14141c] px-4 py-3 text-xs">
             <span className="font-headline uppercase tracking-widest text-white/50">Vehicle</span>
-            <b className="text-sm">{tpl.year} {tpl.make} {tpl.model}</b>
+            <b className="text-sm">{tpl.make === "Custom" ? tpl.label : `${tpl.year} ${tpl.make} ${tpl.model}`}</b>
             <span className="text-white/65">length: {tpl.lengthIn}&quot; ({ftIn(tpl.lengthIn)})</span>
-            <span className="text-white/65">wheelbase: {tpl.wheelbaseIn}&quot; ({ftIn(tpl.wheelbaseIn)})</span>
+            {tpl.wheelbaseIn > 0 && <span className="text-white/65">wheelbase: {tpl.wheelbaseIn}&quot; ({ftIn(tpl.wheelbaseIn)})</span>}
             <span className="rounded-full bg-[#d94cb3]/25 px-3 py-1 font-bold text-[#ffb6e6]">
               coverage: {cov ? `${cov.sqft.toFixed(1)} sq ft · ~${Math.round(cov.pct)}%` : "…"}
             </span>

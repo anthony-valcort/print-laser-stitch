@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { WRAP_TEMPLATES, type WrapTemplate } from "@/lib/wrap-templates";
 import WrapEditor from "./WrapEditor";
+import { buildSheet, makeTemplate, parseVector, type BuildResult, type Parsed } from "./wrap-import";
 import {
   downloadUrl,
+  sheetSvg,
   jpegToPdf,
   loadDraft,
   loadSaved,
@@ -47,6 +49,11 @@ export default function WrapDesigner() {
   const designRef = useRef(design);
   designRef.current = design;
   const cache = useRef(new Map<string, SheetSrc>());
+  const [custom, setCustom] = useState<WrapTemplate[]>([]);
+  const [imp, setImp] = useState<{ name: string; parsed: Parsed; built: BuildResult; format: string; preview: string } | null>(null);
+  const [impBusy, setImpBusy] = useState(false);
+  const [impErr, setImpErr] = useState("");
+  const tplFile = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     setSaved(loadSaved());
@@ -160,6 +167,52 @@ export default function WrapDesigner() {
     }
   };
 
+  const previewFor = (b: BuildResult) => {
+    const s = parseSheet(b.svg);
+    const svg = sheetSvg(s, { color: "#e9edf2", layers: [] }, { width: 1100, keepOnBody: true, lines: true, labels: true });
+    return URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+  };
+
+  const rebuild = (parsed: Parsed, name: string, glass?: number[]) => {
+    const built = buildSheet(parsed, glass ? { glass } : {});
+    setImp((old) => {
+      if (old?.preview) URL.revokeObjectURL(old.preview);
+      return { name, parsed, built, format: parsed.format, preview: previewFor(built) };
+    });
+  };
+
+  const onTemplateFile = async (f: File | undefined) => {
+    if (!f) return;
+    setImpErr("");
+    setImpBusy(true);
+    try {
+      if (f.size > 60 * 1024 * 1024) throw new Error("That file is over 60 MB.");
+      const parsed = await parseVector(new Uint8Array(await f.arrayBuffer()));
+      rebuild(parsed, f.name);
+    } catch (e) {
+      setImpErr(e instanceof Error ? e.message : "Couldn't read that file.");
+    }
+    setImpBusy(false);
+    if (tplFile.current) tplFile.current.value = "";
+  };
+
+  const useImported = () => {
+    if (!imp) return;
+    const id = `custom-${uid()}`;
+    const t = makeTemplate(imp.name, id, imp.built, `blob:${id}`);
+    cache.current.set(id, parseSheet(imp.built.svg));
+    setCustom((c) => [t, ...c]);
+    setImp(null);
+    openTemplate(t);
+  };
+
+  const downloadSheet = () => {
+    if (!imp) return;
+    const url = URL.createObjectURL(new Blob([imp.built.svg], { type: "image/svg+xml" }));
+    downloadUrl(url, "sheet.svg");
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  };
+
   const stepIdx = STEPS.findIndex((s) => s.key === step);
 
   return (
@@ -201,7 +254,7 @@ export default function WrapDesigner() {
             </button>
           )}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {WRAP_TEMPLATES.map((t) => (
+            {[...custom, ...WRAP_TEMPLATES].map((t) => (
               <button
                 key={t.id}
                 type="button"
@@ -210,11 +263,20 @@ export default function WrapDesigner() {
                 className="rounded-2xl border border-white/10 bg-surface p-4 text-left transition hover:border-[#18d3e8]/60"
               >
                 <span className="font-headline text-[11px] uppercase tracking-widest text-[#18d3e8]">{t.category}</span>
-                <span className="mt-1 block text-lg font-bold">{t.year} {t.make} {t.model}</span>
+                <span className="mt-1 block text-lg font-bold">{t.make === "Custom" ? t.label : `${t.year} ${t.make} ${t.model}`}</span>
                 <span className="block text-sm text-white/60">{t.bodyStyle}</span>
-                <span className="mt-2 block text-xs text-white/45">{t.lengthIn}&quot; long · {t.wheelbaseIn}&quot; wheelbase · {t.views.length} views</span>
+                <span className="mt-2 block text-xs text-white/45">{t.lengthIn}&quot; long {t.wheelbaseIn > 0 ? `· ${t.wheelbaseIn}" wheelbase ` : ""}· {t.views.length} views</span>
               </button>
             ))}
+          </div>
+          <div className="mt-4 rounded-2xl border border-dashed border-[#d94cb3]/50 bg-[#d94cb3]/5 p-4">
+            <p className="font-headline text-xs uppercase tracking-widest text-[#d94cb3]">Have your own template?</p>
+            <p className="mt-1 text-sm text-white/70">Upload a 1:20 vehicle template (.eps, .ai or .pdf) and we&apos;ll build it automatically: views, body color and windows.</p>
+            <button type="button" className={btn + " mt-3"} disabled={impBusy} onClick={() => tplFile.current?.click()}>
+              {impBusy ? "Building template…" : "Upload template (.eps, .ai, .pdf)"}
+            </button>
+            <input ref={tplFile} type="file" accept=".eps,.ai,.pdf,application/pdf,application/postscript,application/illustrator" className="hidden" onChange={(e) => onTemplateFile(e.target.files?.[0])} />
+            {impErr && <p className="mt-3 text-sm text-[#ff9aa2]">{impErr}</p>}
           </div>
           {loading && <p className="mt-4 text-sm text-white/70">Loading template…</p>}
           {loadErr && <p className="mt-4 text-sm text-[#ff9aa2]">{loadErr}</p>}
@@ -262,7 +324,7 @@ export default function WrapDesigner() {
 
           <form onSubmit={submit} className="space-y-3 rounded-2xl border border-white/10 bg-surface p-4">
             <h2 className="font-display text-xl">Request a wrap quote</h2>
-            <p className="text-sm text-white/65">{tpl.year} {tpl.make} {tpl.model}. We&apos;ll get back to you with pricing.</p>
+            <p className="text-sm text-white/65">{tpl.make === "Custom" ? tpl.label : `${tpl.year} ${tpl.make} ${tpl.model}`}. We&apos;ll get back to you with pricing.</p>
             <input required className={field} placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} autoComplete="name" />
             <input required type="email" className={field} placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} autoComplete="email" />
             <input className={field} placeholder="Phone (optional)" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} autoComplete="tel" />
@@ -273,6 +335,38 @@ export default function WrapDesigner() {
             {sent === "ok" && <p className="text-sm text-[#d9f000]">Sent! We&apos;ll be in touch soon. 💛</p>}
             {sent && sent !== "ok" && sent !== "sending" && <p className="text-sm text-[#ff9aa2]">{sent}</p>}
           </form>
+        </div>
+      )}
+
+      {imp && (
+        <div className="fixed inset-0 z-50 grid place-items-center overflow-auto bg-black/75 p-4" onClick={() => setImp(null)}>
+          <div className="w-full max-w-3xl rounded-2xl border border-white/15 bg-[#14141c] p-5" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-display text-xl">Template built</h3>
+            <p className="mt-1 text-sm text-white/65">{imp.name} · {imp.format} · {imp.built.stats.views} views found · {imp.built.stats.bodyPaths} body panels</p>
+            <div className="mt-3 overflow-hidden rounded-xl bg-white">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={imp.preview} alt="Built template preview" className="block h-auto w-full" />
+            </div>
+            <p className="mt-3 text-xs text-white/60">
+              Detected: {imp.built.views.map((v) => `${v.label} (${(v.w * 20 / 72).toFixed(0)}" × ${(v.h * 20 / 72).toFixed(0)}")`).join(" · ")}. Assumes the file is drawn at 1:20 scale.
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+              <span className="text-white/70">Window / glass shade:</span>
+              <button type="button" onClick={() => rebuild(imp.parsed, imp.name, [])} className={`${btn} h-8 ${imp.built.glass.length === 0 ? "border-[#d9f000]/70" : ""}`}>None</button>
+              {imp.built.glassCandidates.map((g) => (
+                <button key={g} type="button" onClick={() => rebuild(imp.parsed, imp.name, [g])} className={`${btn} h-8 gap-2 ${imp.built.glass.includes(g) ? "border-[#d9f000]/70" : ""}`}>
+                  <span className="h-4 w-4 rounded border border-white/30" style={{ background: `rgb(${g},${g},${g})` }} />
+                  {g}
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button type="button" className="accent-gradient inline-flex h-11 items-center rounded-full px-6 text-sm font-bold uppercase tracking-wide text-black" onClick={useImported}>Use this template</button>
+              <button type="button" className={btn + " h-11"} onClick={downloadSheet}>Download sheet.svg</button>
+              <button type="button" className={btn + " h-11"} onClick={() => setImp(null)}>Cancel</button>
+            </div>
+            <p className="mt-3 text-[11px] text-white/45">Imported templates stay in this browser session. To add one permanently for every visitor, send us the sheet.svg and we&apos;ll add it to the vehicle list.</p>
+          </div>
         </div>
       )}
 

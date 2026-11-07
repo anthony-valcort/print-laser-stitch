@@ -195,7 +195,7 @@ export default function Stage({
           <stop offset="100%" stopColor="#0d1a22" />
         </linearGradient>
         <clipPath id={`clip-${uid}`}>
-          <ShapePath shape={piece.shape} r={P} />
+          <ShapePath shape={piece.shape} box={P} />
         </clipPath>
       </defs>
 
@@ -249,7 +249,7 @@ export default function Stage({
               )}
             </g>
           )}
-          <ShapePath shape={piece.shape === "contour" ? "rect" : piece.shape} r={P} fill="none" stroke={piece.shape === "contour" ? "none" : "rgba(255,255,255,0.85)"} strokeWidth={1.5} />
+          <ShapePath shape={piece.shape === "contour" ? "rect" : piece.shape} box={P} fill="none" stroke={piece.shape === "contour" ? "none" : "rgba(255,255,255,0.85)"} strokeWidth={1.5} />
 
           {/* width dimension */}
           <g fill="#d9f000" stroke="#d9f000">
@@ -294,33 +294,35 @@ export default function Stage({
 
 // ─── pieces ───────────────────────────────────────────────────────────────
 
+type ShapeExtra = Omit<React.SVGProps<SVGRectElement>, "ref" | "r">;
+
 export function ShapePath({
   shape,
-  r,
+  box,
   ...rest
-}: { shape: ShapeKey; r: Rect } & React.SVGProps<SVGRectElement & SVGEllipseElement>) {
+}: { shape: ShapeKey; box: Rect } & ShapeExtra) {
   if (shape === "oval") {
     return (
       <ellipse
-        cx={r.x + r.w / 2}
-        cy={r.y + r.h / 2}
-        rx={r.w / 2}
-        ry={r.h / 2}
+        cx={box.x + box.w / 2}
+        cy={box.y + box.h / 2}
+        rx={box.w / 2}
+        ry={box.h / 2}
         vectorEffect="non-scaling-stroke"
-        {...(rest as React.SVGProps<SVGEllipseElement>)}
+        {...(rest as Omit<React.SVGProps<SVGEllipseElement>, "ref">)}
       />
     );
   }
-  const rad = shape === "rounded" ? Math.min(r.w, r.h) * 0.18 : 0;
+  const rad = shape === "rounded" ? Math.min(box.w, box.h) * 0.18 : 0;
   return (
     <rect
-      x={r.x}
-      y={r.y}
-      width={r.w}
-      height={r.h}
+      x={box.x}
+      y={box.y}
+      width={box.w}
+      height={box.h}
       rx={rad}
       vectorEffect="non-scaling-stroke"
-      {...(rest as React.SVGProps<SVGRectElement>)}
+      {...rest}
     />
   );
 }
@@ -464,7 +466,7 @@ export function ShapeThumb({
           Aa
         </text>
       ) : (
-        <ShapePath shape={shape} r={r} fill={active ? "#d9f000" : "rgba(255,255,255,0.25)"} />
+        <ShapePath shape={shape} box={r} fill={active ? "#d9f000" : "rgba(255,255,255,0.25)"} />
       )}
     </svg>
   );

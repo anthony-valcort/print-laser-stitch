@@ -4,10 +4,9 @@ import Footer from "@/components/Footer";
 import WrapDesigner from "./WrapDesigner";
 
 export const metadata: Metadata = {
-  title: "Vehicle Wrap Designer | Print Laser Stitch",
+  title: "Design Your Vehicle Wrap | Print Laser Stitch",
   description:
-    "Preview logos, lettering and colors on your vehicle, then request a wrap quote from Print Laser Stitch in Stuart, Florida.",
-  robots: { index: false, follow: false },
+    "Design your vehicle wrap online: upload artwork, add text and shapes in real inches on a 1:20 template of your truck, then request a quote from Print Laser Stitch in Stuart, Florida.",
 };
 
 export default function WrapDesignerPage() {

@@ -308,6 +308,43 @@ export default async function Home() {
           )}
         </section>
 
+        {/* Vehicle Wrap Designer — design a wrap on the exact truck */}
+        <section className="mx-auto max-w-7xl px-4 pb-6 pt-2 sm:px-6 lg:px-8">
+          <Link
+            href="/wrap-designer"
+            data-reveal
+            className="group relative flex flex-col overflow-hidden rounded-3xl border border-[#d94cb3]/30 bg-linear-to-br from-[#d94cb3]/15 via-surface to-[#18d3e8]/10 p-6 sm:p-10 lg:flex-row lg:items-center lg:gap-10"
+          >
+            <div className="pointer-events-none absolute -left-16 -top-16 h-64 w-64 rounded-full bg-[#d94cb3]/20 blur-3xl" />
+            <div className="relative flex-1">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#d94cb3]/40 bg-[#d94cb3]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d94cb3]">
+                New · Free design tool
+              </span>
+              <h2 className="mt-4 font-display text-3xl font-black uppercase tracking-tight sm:text-4xl">
+                Design your{" "}
+                <span className="bg-linear-to-r from-[#d94cb3] to-[#18d3e8] bg-clip-text text-transparent">
+                  vehicle wrap.
+                </span>
+              </h2>
+              <p className="mt-3 max-w-xl text-sm text-foreground-muted sm:text-base">
+                Drop your logo, lettering and shapes onto a true-to-scale template of your truck. See every side, work in real inches, then send it to us for a quote.
+              </p>
+              <ul className="mt-4 grid gap-1.5 text-sm text-foreground/85 sm:grid-cols-2">
+                <li>✓ All sides: left, right, front, back and top</li>
+                <li>✓ Real sizes in inches (1:20 scale)</li>
+                <li>✓ Upload artwork, add text and shapes</li>
+                <li>✓ Download a PNG or PDF proof</li>
+              </ul>
+              <span className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-[#d94cb3] to-[#18d3e8] px-6 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#d94cb3]/30 transition group-hover:brightness-110 sm:w-auto sm:rounded-md sm:py-3">
+                Design your wrap →
+              </span>
+            </div>
+            <div aria-hidden className="relative mt-6 flex items-center justify-center text-[7rem] leading-none sm:text-[9rem] lg:mt-0 lg:w-72">
+              🛻
+            </div>
+          </Link>
+        </section>
+
         {/* Team & business orders — automatic polo volume discounts */}
         <section className="mx-auto max-w-7xl overflow-x-clip px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
           <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br from-surface via-background-soft to-surface p-6 sm:p-12">

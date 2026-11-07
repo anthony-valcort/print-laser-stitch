@@ -43,6 +43,7 @@ const CATEGORY_STRIP: {
 ];
 
 const UTILITY_LINKS: { label: string; href: string; external?: boolean }[] = [
+  { label: "Design Your Wrap", href: "/wrap-designer" },
   { label: "About", href: "/about" },
   { label: "Gallery", href: "/gallery" },
   { label: "Blog", href: "/blog" },
@@ -448,7 +449,8 @@ export default function HeaderClient({
             <div className="mb-3 grid grid-cols-2 gap-2">
               {[
                 { label: "Home", href: "/" },
-                { label: "Signage Quote", href: "/decal-quote" },
+                { label: "Design Your Wrap", href: "/wrap-designer" },
+            { label: "Signage Quote", href: "/decal-quote" },
                 { label: "Decal Calculator", href: "/signage-quotes" },
                 { label: "Gallery", href: "/gallery" },
                 { label: "Blog", href: "/blog" },

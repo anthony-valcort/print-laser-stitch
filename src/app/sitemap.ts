@@ -21,6 +21,7 @@ const STATIC_PAGES: { path: string; priority: number }[] = [
   { path: "/signage-quotes", priority: 0.8 },
   { path: "/decal-quote", priority: 0.7 },
   { path: "/vehicle-stickers", priority: 0.7 },
+  { path: "/wrap-designer", priority: 0.8 },
   { path: "/collections", priority: 0.7 },
   { path: "/gallery", priority: 0.6 },
   { path: "/about", priority: 0.6 },

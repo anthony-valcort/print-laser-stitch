@@ -13,7 +13,8 @@
  *   removal   = old-graphic area × removal rate (min charge)  — install only
  *   travel    = one-way road miles × $/mile (min charge)       — install only
  *               $0 anywhere in Martin or St. Lucie County
- *   total     = graphics + tax + removal + travel
+ *   minimum   = Full Install jobs top up to INSTALL_MIN_JOB (before tax)
+ *   total     = graphics + tax + removal + travel + minimum top-up
  *
  * Every $ figure Anthony may want to change lives in the CONSTANTS below.
  */
@@ -251,6 +252,9 @@ export const MATERIALS: Material[] = [
   },
 ];
 
+/** Smallest Full Install job (graphics + removal + travel, before tax). */
+export const INSTALL_MIN_JOB = 100;
+
 /** Martin County, FL — same rate the old Signage Quote used. */
 export const TAX_RATE = 0.07;
 
@@ -388,6 +392,8 @@ export type SignJobResult = {
   travelMiles: number;
   travelFree: boolean;
   travel: number;
+  /** Extra charged so a Full Install job reaches INSTALL_MIN_JOB. */
+  minimumTopUp: number;
   total: number;
   isInstall: boolean;
   /** Every reason the job can't go straight to checkout. Empty = good to go. */
@@ -485,6 +491,12 @@ export function calcSignJob(input: SignJobInput): SignJobResult {
     }
   }
 
+  const jobBeforeTax = graphics + removal + travel;
+  const minimumTopUp =
+    isInstall && graphics > 0 && jobBeforeTax < INSTALL_MIN_JOB
+      ? round2(INSTALL_MIN_JOB - jobBeforeTax)
+      : 0;
+
   return {
     pieces,
     totalAreaSqFt: round2(totalArea),
@@ -495,7 +507,8 @@ export function calcSignJob(input: SignJobInput): SignJobResult {
     travelMiles,
     travelFree,
     travel,
-    total: round2(graphics + tax + removal + travel),
+    minimumTopUp,
+    total: round2(graphics + tax + removal + travel + minimumTopUp),
     isInstall,
     blockers,
   };

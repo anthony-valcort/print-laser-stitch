@@ -50,6 +50,7 @@ import {
   REMOVAL_MIN as SIGN_REMOVAL_MIN,
   REMOVAL_TYPES as SIGN_REMOVAL_TYPES,
   SHAPES as SIGN_SHAPES,
+  INSTALL_MIN_JOB as SIGN_INSTALL_MIN,
   TRAVEL_MIN as SIGN_TRAVEL_MIN,
   TRAVEL_RATE_PER_MILE as SIGN_TRAVEL_RATE,
   calcSignJob,
@@ -820,6 +821,18 @@ export async function POST(req: NextRequest) {
           properties: [
             { name: "Distance", value: `~${job.travelMiles} mi one way from Stuart` },
             { name: "Rate", value: `$${SIGN_TRAVEL_RATE.toFixed(2)} / mile (min $${SIGN_TRAVEL_MIN})` },
+          ],
+        });
+      }
+      if (job.minimumTopUp > 0) {
+        lineItems.push({
+          title: `Install Minimum ($${SIGN_INSTALL_MIN} job)`,
+          price: job.minimumTopUp.toFixed(2),
+          quantity: 1,
+          requires_shipping: false,
+          taxable: false,
+          properties: [
+            { name: "Why", value: `Full Install jobs have a $${SIGN_INSTALL_MIN} minimum before tax` },
           ],
         });
       }

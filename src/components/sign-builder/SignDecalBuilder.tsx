@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
   MATERIALS,
+  INSTALL_MIN_JOB,
   REMOVAL_MIN,
   REMOVAL_TYPES,
   SERVICES,
@@ -319,7 +320,7 @@ export default function SignDecalBuilder() {
         isInstall && travel ? ` · ${travel.label.replace("Somewhere else · ", "")}` : ""
       }`,
       thumbnail: "🪧",
-      unitLabel: `Includes ${(TAX_RATE * 100).toFixed(0)}% tax${result.removal ? " · removal" : ""}${result.travel ? " · travel" : ""}`,
+      unitLabel: `Includes ${(TAX_RATE * 100).toFixed(0)}% tax${result.removal ? " · removal" : ""}${result.travel ? " · travel" : ""}${result.minimumTopUp ? " · install minimum" : ""}`,
       totalPrice: result.total,
       quantity: qtyTotal,
       pieces: pieces.map((p) => ({
@@ -461,7 +462,7 @@ export default function SignDecalBuilder() {
             {/* Step 2 — size & shape with the live stage */}
             <Card n={2} color="#d9f000" kicker="Size & shape" title="Make it the right size">
               <div className="overflow-hidden rounded-2xl border border-border-soft bg-[#0e0e11]">
-                <div className="relative aspect-[16/10] w-full sm:aspect-[16/9]">
+                <div className="relative aspect-[4/3] w-full sm:aspect-[16/9]">
                   <Stage
                     piece={{ ...active, imageUrl: previewUrl(active.id) }}
                     onChange={(patch) => patchActive(patch)}
@@ -572,7 +573,7 @@ export default function SignDecalBuilder() {
                     onChange={(e) => patchActive({ label: e.target.value.slice(0, 60) })}
                     rows={2}
                     placeholder={"e.g. OPEN 9–5\nor your business name"}
-                    className="w-full resize-none rounded-xl border border-border-soft bg-background/60 px-3 py-2.5 text-sm outline-none ring-[#d9f000]/40 placeholder:text-foreground-muted/60 focus:ring-2"
+                    className="w-full resize-none rounded-xl border border-border-soft bg-background/60 px-3 py-2.5 text-base outline-none sm:text-sm ring-[#d9f000]/40 placeholder:text-foreground-muted/60 focus:ring-2"
                     suppressHydrationWarning
                   />
                   <p className="mt-1 text-[11px] text-foreground-muted">Shows on the preview so you can judge how readable it is.</p>
@@ -644,7 +645,7 @@ export default function SignDecalBuilder() {
                   value={active.note}
                   onChange={(e) => patchActive({ note: e.target.value.slice(0, 300) })}
                   placeholder="e.g. Left front window, white lettering"
-                  className="w-full rounded-xl border border-border-soft bg-background/60 px-3 py-2.5 text-sm outline-none ring-[#d94cb3]/40 placeholder:text-foreground-muted/60 focus:ring-2"
+                  className="w-full rounded-xl border border-border-soft bg-background/60 px-3 py-2.5 text-base outline-none sm:text-sm ring-[#d94cb3]/40 placeholder:text-foreground-muted/60 focus:ring-2"
                   suppressHydrationWarning
                 />
               </div>
@@ -683,6 +684,9 @@ export default function SignDecalBuilder() {
                       <span className="text-2xl">{s.icon}</span>
                       <span className="mt-2 block text-sm font-bold">{s.label}</span>
                       <span className="mt-1 block text-[11px] text-foreground-muted">{s.blurb}</span>
+                      {s.key === "full-install" && (
+                        <span className="mt-1.5 block text-[10px] font-semibold text-[#d9f000]/80">{money(INSTALL_MIN_JOB)} minimum install job</span>
+                      )}
                       {on && <span className="absolute right-3 top-3 grid h-5 w-5 place-items-center rounded-full bg-[#d9f000] text-[10px] font-black text-black">✓</span>}
                     </button>
                   );
@@ -791,7 +795,7 @@ export default function SignDecalBuilder() {
                         onChange={(e) => { setTouched(true); setAddress(e.target.value.slice(0, 300)); }}
                         placeholder="Street, city"
                         autoComplete="street-address"
-                        className="w-full rounded-xl border border-border-soft bg-background/60 px-3 py-2.5 text-sm outline-none ring-[#d9f000]/40 placeholder:text-foreground-muted/60 focus:ring-2"
+                        className="w-full rounded-xl border border-border-soft bg-background/60 px-3 py-2.5 text-base outline-none sm:text-sm ring-[#d9f000]/40 placeholder:text-foreground-muted/60 focus:ring-2"
                         suppressHydrationWarning
                       />
                     </div>
@@ -807,7 +811,7 @@ export default function SignDecalBuilder() {
                 onChange={(e) => { setTouched(true); setNotes(e.target.value.slice(0, 2000)); }}
                 rows={3}
                 placeholder="Deadline, colors, best time to install…"
-                className="w-full resize-none rounded-2xl border border-border-soft bg-background/60 px-4 py-3 text-sm outline-none ring-[#d94cb3]/40 placeholder:text-foreground-muted/60 focus:ring-2"
+                className="w-full resize-none rounded-2xl border border-border-soft bg-background/60 px-4 py-3 text-base outline-none sm:text-sm ring-[#d94cb3]/40 placeholder:text-foreground-muted/60 focus:ring-2"
                 suppressHydrationWarning
               />
               <div className="mt-4">
@@ -861,6 +865,9 @@ export default function SignDecalBuilder() {
                       value={!travel ? "choose area" : travel.free ? "FREE" : travel.miles > 150 ? "call us" : money(result.travel)}
                       accent={!!travel?.free}
                     />
+                  )}
+                  {result.minimumTopUp > 0 && (
+                    <Row label={`Install minimum (${money(INSTALL_MIN_JOB)} job)`} value={money(result.minimumTopUp)} />
                   )}
                   <div className="my-2 border-t border-border-soft" />
                   <div className="flex items-center justify-between text-base">
@@ -1094,7 +1101,7 @@ function FtInput({ label, value, onChange }: { label: string; value: number; onC
         value={value || ""}
         onChange={(e) => onChange(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
         placeholder="0"
-        className="w-full rounded-xl border border-border-soft bg-background/60 px-3 py-2.5 text-sm outline-none ring-[#d9f000]/40 focus:ring-2"
+        className="w-full rounded-xl border border-border-soft bg-background/60 px-3 py-2.5 text-base outline-none sm:text-sm ring-[#d9f000]/40 focus:ring-2"
         suppressHydrationWarning
       />
     </label>

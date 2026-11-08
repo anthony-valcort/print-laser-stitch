@@ -409,3 +409,21 @@ export default function TeeDesigner({
     </div>
   );
 }
+
+export function packLogo(l?: Logo) {
+  if (!l || !l.fileUrl || l.uploading) return null;
+  return { u: l.fileUrl, n: l.name, r: l.ratio, p: l.pxW, v: l.vector, x: l.nx, y: l.ny, w: l.wIn };
+}
+
+export function unpackLogo(raw: unknown): Logo | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const o = raw as Record<string, unknown>;
+  const num = (v: unknown, lo: number, hi: number) => (typeof v === "number" && v >= lo && v <= hi ? v : null);
+  const r = num(o.r, 0.01, 100);
+  const p = num(o.p, 1, 100000);
+  const x = num(o.x, 0, 1);
+  const y = num(o.y, 0, 1);
+  const w = num(o.w, 0.25, 20);
+  if (typeof o.u !== "string" || !o.u.startsWith("https://") || r == null || p == null || x == null || y == null || w == null) return undefined;
+  return { url: o.u, fileUrl: o.u, name: typeof o.n === "string" ? o.n.slice(0, 120) : "design", ratio: r, pxW: p, vector: o.v === true, nx: x, ny: y, wIn: w };
+}

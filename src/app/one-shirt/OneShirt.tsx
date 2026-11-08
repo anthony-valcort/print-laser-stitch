@@ -1,12 +1,15 @@
 "use client";
 
-import { useRef, useState, type FormEvent, type PointerEvent as RPointerEvent, type RefObject } from "react";
+import { useRef, useState, type FormEvent, type PointerEvent as RPointerEvent } from "react";
 
 type Style = "tee" | "polo";
 type Fabric = "cotton" | "polyester";
 type Side = "front" | "back";
 type Logo = { url: string; ratio: number; cx: number; cy: number; w: number };
 
+// Real garment photos live in /public/one-shirt/<style>-<fabric>-<sleeve>-<side>.jpg.
+// Add a key here once its photo is uploaded; until then a drawing is shown.
+const PHOTOS = new Set<string>([]);
 const SIZES = ["S", "M", "L", "XL", "2XL"];
 const AREA: Record<Side, { x: number; y: number; w: number; h: number }> = {
   front: { x: 120, y: 118, w: 160, h: 200 },
@@ -27,20 +30,25 @@ function shirtPath(style: Style, long: boolean, side: Side) {
 }
 
 function ShirtSvg({
-  style, long, side, logo, svgRef, onDown,
+  style, long, side, logo, setRef, onDown, photo,
 }: {
   style: Style; long: boolean; side: Side; logo?: Logo;
-  svgRef: RefObject<SVGSVGElement | null>;
+  setRef: (el: SVGSVGElement | null) => void;
   onDown: (e: RPointerEvent<SVGImageElement>) => void;
+  photo?: string;
 }) {
   const a = AREA[side];
   const lw = logo ? logo.w : 0;
   const lh = logo ? lw * logo.ratio : 0;
   return (
-    <svg ref={svgRef} viewBox="0 0 400 440" className="mx-auto block w-full max-w-md touch-none select-none">
+    <svg ref={setRef} viewBox="0 0 400 440" className="mx-auto block w-full touch-none select-none">
       <rect width="400" height="440" fill="#d9dde3" />
-      <path d={shirtPath(style, long, side)} fill="#121214" stroke="#3b3b42" strokeWidth="2" strokeLinejoin="round" />
-      {style === "polo" && side === "front" && (
+      {photo ? (
+        <image href={photo} x="0" y="0" width="400" height="440" preserveAspectRatio="xMidYMid meet" />
+      ) : (
+        <path d={shirtPath(style, long, side)} fill="#121214" stroke="#3b3b42" strokeWidth="2" strokeLinejoin="round" />
+      )}
+      {!photo && style === "polo" && side === "front" && (
         <g stroke="#3b3b42" strokeWidth="2" fill="none">
           <path d="M135 30 L170 78 L200 52 L230 78 L265 30" />
           <path d="M200 52 V150" />
@@ -48,7 +56,7 @@ function ShirtSvg({
           <circle cx="200" cy="112" r="2.5" fill="#3b3b42" />
         </g>
       )}
-      {style === "polo" && side === "back" && (
+      {!photo && style === "polo" && side === "back" && (
         <path d="M135 30 Q200 56 265 30" stroke="#3b3b42" strokeWidth="2" fill="none" />
       )}
       <rect x={a.x} y={a.y} width={a.w} height={a.h} rx="6" fill="none" stroke="#18d3e8" strokeWidth="1.5" strokeDasharray="6 5" opacity="0.8" />
@@ -110,23 +118,25 @@ export default function OneShirt() {
   const [fabric, setFabric] = useState<Fabric>("cotton");
   const [long, setLong] = useState(false);
   const [size, setSize] = useState("L");
-  const [side, setSide] = useState<Side>("front");
   const [logos, setLogos] = useState<Partial<Record<Side, Logo>>>({});
   const [msg, setMsg] = useState("");
   const [form, setForm] = useState({ name: "", email: "", phone: "", notes: "" });
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [err, setErr] = useState("");
-  const svgRef = useRef<SVGSVGElement | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
-  const drag = useRef<{ dx: number; dy: number } | null>(null);
+  const svgs = useRef<Record<Side, SVGSVGElement | null>>({ front: null, back: null });
+  const files = useRef<Record<Side, HTMLInputElement | null>>({ front: null, back: null });
+  const drag = useRef<{ side: Side; dx: number; dy: number } | null>(null);
+  const fabricKey = style === "polo" ? "polo" : fabric;
+  const photoFor = (s: Side) => {
+    const k = `${style}-${fabricKey}-${long ? "long" : "short"}-${s}`;
+    return PHOTOS.has(k) ? `/one-shirt/${k}.jpg` : undefined;
+  };
 
   const total = price(style, size, long);
-  const logo = logos[side];
-  const area = AREA[side];
 
-  function toSvg(e: { clientX: number; clientY: number }) {
-    const svg = svgRef.current;
+  function toSvg(e: { clientX: number; clientY: number }, side: Side) {
+    const svg = svgs.current[side];
     if (!svg) return { x: 0, y: 0 };
     const pt = svg.createSVGPoint();
     pt.x = e.clientX; pt.y = e.clientY;
@@ -134,24 +144,32 @@ export default function OneShirt() {
     return m ? pt.matrixTransform(m.inverse()) : { x: 0, y: 0 };
   }
   function move(e: RPointerEvent) {
-    if (!drag.current || !logo) return;
-    const p = toSvg(e);
-    const cx = Math.min(area.x + area.w, Math.max(area.x, p.x - drag.current.dx));
-    const cy = Math.min(area.y + area.h, Math.max(area.y, p.y - drag.current.dy));
-    setLogos((l) => ({ ...l, [side]: { ...logo, cx, cy } }));
+    const d = drag.current;
+    if (!d) return;
+    const lg = logos[d.side];
+    if (!lg) return;
+    const area = AREA[d.side];
+    const p = toSvg(e, d.side);
+    const cx = Math.min(area.x + area.w, Math.max(area.x, p.x - d.dx));
+    const cy = Math.min(area.y + area.h, Math.max(area.y, p.y - d.dy));
+    setLogos((l) => ({ ...l, [d.side]: { ...lg, cx, cy } }));
   }
-  function down(e: RPointerEvent<SVGImageElement>) {
-    if (!logo) return;
-    const p = toSvg(e);
-    drag.current = { dx: p.x - logo.cx, dy: p.y - logo.cy };
-    (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+  function down(side: Side) {
+    return (e: RPointerEvent<SVGImageElement>) => {
+      const lg = logos[side];
+      if (!lg) return;
+      const p = toSvg(e, side);
+      drag.current = { side, dx: p.x - lg.cx, dy: p.y - lg.cy };
+      (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
+    };
   }
-  async function pick(file?: File) {
+  async function pick(side: Side, file?: File) {
     if (!file) return;
     setMsg("");
     if (!/^image\/(png|jpe?g|svg\+xml|webp|gif)$/.test(file.type)) { setMsg("Please pick a picture (PNG, JPG or SVG)."); return; }
     if (file.size > 8_000_000) { setMsg("That file is too big. Try one under 8 MB."); return; }
     try {
+      const area = AREA[side];
       const { url, ratio } = await readLogo(file);
       const w = area.w * 0.6;
       setLogos((l) => ({ ...l, [side]: { url, ratio, w, cx: area.x + area.w / 2, cy: area.y + Math.min(area.h / 2, (w * ratio) / 2 + 8) } }));
@@ -159,24 +177,20 @@ export default function OneShirt() {
       setMsg("We couldn't open that picture. Try another one.");
     }
   }
-  function resize(pct: number) {
-    if (!logo) return;
-    const w = (area.w * pct) / 100;
-    setLogos((l) => ({ ...l, [side]: { ...logo, w } }));
+  function resize(side: Side, pct: number) {
+    const lg = logos[side];
+    if (!lg) return;
+    setLogos((l) => ({ ...l, [side]: { ...lg, w: (AREA[side].w * pct) / 100 } }));
   }
   async function submit(e: FormEvent) {
     e.preventDefault();
     setBusy(true); setErr("");
     try {
       const images: { view: string; dataUrl: string }[] = [];
-      const cur = side;
       for (const s of ["front", "back"] as Side[]) {
-        if (!logos[s]) continue;
-        setSide(s);
-        await new Promise((r) => setTimeout(r, 80));
-        if (svgRef.current) images.push({ view: s, dataUrl: await svgToJpeg(svgRef.current) });
+        const el = svgs.current[s];
+        if (logos[s] && el) images.push({ view: s, dataUrl: await svgToJpeg(el) });
       }
-      setSide(cur);
       const kind = style === "polo" ? "Polo (printed only)" : `${fabric === "cotton" ? "Cotton" : "Polyester"} T-shirt`;
       const res = await fetch("/api/shirt-order", {
         method: "POST",
@@ -230,19 +244,35 @@ export default function OneShirt() {
         </div>
       </div>
 
-      <div className="mt-8 grid gap-6 md:grid-cols-2">
-        <div onPointerMove={move} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }}>
-          <div className="mb-3 grid grid-cols-2 gap-2">
-            {(["front", "back"] as Side[]).map((s) => (
-              <button key={s} type="button" className={chip(side === s)} onClick={() => setSide(s)}>{s === "front" ? "Front" : "Back"}{logos[s] ? " ✓" : ""}</button>
-            ))}
-          </div>
-          <div className="overflow-hidden rounded-2xl border border-white/10">
-            <ShirtSvg style={style} long={long} side={side} logo={logo} svgRef={svgRef} onDown={down} />
-          </div>
-          <p className="mt-2 text-center text-xs text-white/50">Drag your logo inside the blue box.</p>
-        </div>
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-6" onPointerMove={move} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }}>
+        {(["front", "back"] as Side[]).map((s) => {
+          const lg = logos[s];
+          return (
+            <div key={s}>
+              <p className="mb-2 text-center font-headline text-xs uppercase tracking-widest text-[#18d3e8]">{s === "front" ? "Front" : "Back"}</p>
+              <div className="overflow-hidden rounded-2xl border border-white/10">
+                <ShirtSvg style={style} long={long} side={s} logo={lg} setRef={(el) => { svgs.current[s] = el; }} onDown={down(s)} photo={photoFor(s)} />
+              </div>
+              <input ref={(el) => { files.current[s] = el; }} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" className="hidden" onChange={(e) => { void pick(s, e.target.files?.[0]); e.target.value = ""; }} />
+              <button type="button" className="mt-2 w-full rounded-xl bg-[#d9f000] px-2 py-3 text-sm font-bold text-black" onClick={() => files.current[s]?.click()}>
+                {lg ? "Change picture" : "Add picture"}
+              </button>
+              {lg ? (
+                <div className="mt-2 flex items-center gap-2">
+                  <input aria-label="Size" type="range" min={20} max={100} value={Math.round((lg.w / AREA[s].w) * 100)} onChange={(e) => resize(s, Number(e.target.value))} className="min-w-0 flex-1" />
+                  <button type="button" className="shrink-0 text-xs text-white/60 underline" onClick={() => setLogos((l) => ({ ...l, [s]: undefined }))}>Remove</button>
+                </div>
+              ) : (
+                <p className="mt-2 text-center text-xs text-white/45">Optional</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <p className="mt-2 text-center text-xs text-white/50">Drag a picture to move it. Use the slider to make it bigger or smaller.</p>
+      {msg && <p className="mt-2 text-center text-sm text-[#ff9aa2]">{msg}</p>}
 
+      <div className="mt-8 grid gap-6 md:grid-cols-2">
         <div className="space-y-5">
           <section>
             <h2 className="mb-2 font-headline text-xs uppercase tracking-widest text-[#18d3e8]">1 · Shirt</h2>
@@ -263,54 +293,33 @@ export default function OneShirt() {
               <button type="button" className={chip(long)} onClick={() => setLong(true)}>Long sleeve +$2</button>
             </div>
           </section>
-
           <section>
             <h2 className="mb-2 font-headline text-xs uppercase tracking-widest text-[#18d3e8]">2 · Size</h2>
             <div className="grid grid-cols-5 gap-2">
-              {SIZES.map((s) => (
-                <button key={s} type="button" className={chip(size === s) + " px-1"} onClick={() => setSize(s)}>{s}</button>
+              {SIZES.map((z) => (
+                <button key={z} type="button" className={chip(size === z) + " px-1"} onClick={() => setSize(z)}>{z}</button>
               ))}
             </div>
             {size === "2XL" && <p className="mt-1 text-xs text-white/55">2XL is +$4.</p>}
           </section>
-
-          <section>
-            <h2 className="mb-2 font-headline text-xs uppercase tracking-widest text-[#18d3e8]">3 · Your logo ({side})</h2>
-            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" className="hidden" onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ""; }} />
-            <div className="flex gap-2">
-              <button type="button" className="flex-1 rounded-xl bg-[#d9f000] px-4 py-3 font-bold text-black" onClick={() => fileRef.current?.click()}>
-                {logo ? "Change picture" : "Add picture"}
-              </button>
-              {logo && (
-                <button type="button" className={chip(false)} onClick={() => setLogos((l) => ({ ...l, [side]: undefined }))}>Remove</button>
-              )}
-            </div>
-            {logo && (
-              <label className="mt-3 block text-xs text-white/60">
-                Size
-                <input type="range" min={20} max={100} value={Math.round((logo.w / area.w) * 100)} onChange={(e) => resize(Number(e.target.value))} className="mt-1 w-full" />
-              </label>
-            )}
-            {msg && <p className="mt-2 text-sm text-[#ff9aa2]">{msg}</p>}
-          </section>
-
-          <section className="rounded-2xl border border-white/10 bg-surface p-4">
-            <div className="flex items-end justify-between">
-              <span className="text-sm text-white/70">Total</span>
-              <span className="font-display text-4xl font-black text-[#d9f000]">${total}</span>
-            </div>
-            <p className="text-xs text-white/50">Print front and back included. Pay at pickup.</p>
-            <form onSubmit={submit} className="mt-4 space-y-2">
-              <input required className={field} placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} autoComplete="name" />
-              <input required type="email" className={field} placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} autoComplete="email" />
-              <input className={field} type="tel" placeholder="Phone (optional)" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} autoComplete="tel" />
-              <button type="submit" disabled={busy} className="w-full rounded-xl bg-[#18d3e8] px-4 py-3.5 text-base font-black uppercase text-black disabled:opacity-60">
-                {busy ? "Sending…" : "Reserve my shirt"}
-              </button>
-              {err && <p className="text-sm text-[#ff9aa2]">{err}</p>}
-            </form>
-          </section>
         </div>
+
+        <section className="rounded-2xl border border-white/10 bg-surface p-4">
+          <div className="flex items-end justify-between">
+            <span className="text-sm text-white/70">Total</span>
+            <span className="font-display text-4xl font-black text-[#d9f000]">${total}</span>
+          </div>
+          <p className="text-xs text-white/50">Print front and back included. Pay at pickup.</p>
+          <form onSubmit={submit} className="mt-4 space-y-2">
+            <input required className={field} placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} autoComplete="name" />
+            <input required type="email" className={field} placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} autoComplete="email" />
+            <input className={field} type="tel" placeholder="Phone (optional)" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} autoComplete="tel" />
+            <button type="submit" disabled={busy} className="w-full rounded-xl bg-[#18d3e8] px-4 py-3.5 text-base font-black uppercase text-black disabled:opacity-60">
+              {busy ? "Sending…" : "Reserve my shirt"}
+            </button>
+            {err && <p className="text-sm text-[#ff9aa2]">{err}</p>}
+          </form>
+        </section>
       </div>
     </div>
   );

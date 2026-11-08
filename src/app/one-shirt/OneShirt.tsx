@@ -20,26 +20,49 @@ type Logo = {
 
 // Photo sizes + print boxes (pixels of each photo; inches = real print size).
 // ppi of a box = w / inW. Sleeves are not printable.
-const PHOTO: Record<PhotoKey, Record<Side, { w: number; h: number; zone: Zone }>> = {
+const IMG: Record<PhotoKey, Record<Side, { w: number; h: number }>> = {
+  polo: { front: { w: 744, h: 866 }, back: { w: 733, h: 896 } },
+  "tee-short": { front: { w: 690, h: 883 }, back: { w: 678, h: 883 } },
+  "tee-long": { front: { w: 752, h: 916 }, back: { w: 745, h: 917 } },
+};
+const ZONE: Record<PhotoKey, { full?: Zone; chest: Zone; back: Zone }> = {
   polo: {
-    front: { w: 744, h: 866, zone: { x: 425, y: 190, w: 88, h: 88, inW: 5, inH: 5, label: "Left chest" } },
-    back: { w: 733, h: 896, zone: { x: 252, y: 120, w: 210, h: 245, inW: 12, inH: 14, label: "Full back" } },
+    chest: { x: 425, y: 190, w: 88, h: 88, inW: 5, inH: 5, label: "Left chest" },
+    back: { x: 252, y: 120, w: 210, h: 245, inW: 12, inH: 14, label: "Full back" },
   },
   "tee-short": {
-    front: { w: 690, h: 883, zone: { x: 234, y: 165, w: 237, h: 276, inW: 12, inH: 14, label: "Full front" } },
-    back: { w: 678, h: 883, zone: { x: 218, y: 105, w: 237, h: 276, inW: 12, inH: 14, label: "Full back" } },
+    full: { x: 234, y: 165, w: 237, h: 276, inW: 12, inH: 14, label: "Full front" },
+    chest: { x: 395, y: 175, w: 99, h: 99, inW: 5, inH: 5, label: "Left chest" },
+    back: { x: 218, y: 105, w: 237, h: 276, inW: 12, inH: 14, label: "Full back" },
   },
   "tee-long": {
-    front: { w: 752, h: 916, zone: { x: 260, y: 150, w: 240, h: 280, inW: 12, inH: 14, label: "Full front" } },
-    back: { w: 745, h: 917, zone: { x: 248, y: 120, w: 240, h: 280, inW: 12, inH: 14, label: "Full back" } },
+    full: { x: 260, y: 150, w: 240, h: 280, inW: 12, inH: 14, label: "Full front" },
+    chest: { x: 440, y: 170, w: 100, h: 100, inW: 5, inH: 5, label: "Left chest" },
+    back: { x: 248, y: 120, w: 240, h: 280, inW: 12, inH: 14, label: "Full back" },
   },
 };
 
-const GARMENTS: Record<Garment, { label: string; sub: string; base: number; polo: boolean }> = {
-  cotton: { label: "Cotton tee", sub: "Soft and classic", base: 25, polo: false },
-  performance: { label: "Performance tee", sub: "Polyester, stays dry", base: 25, polo: false },
-  polo: { label: "Polo", sub: "Printed, no embroidery", base: 40, polo: true },
+// Zoomed-in view around the print box so designs are easy to see.
+function cropBox(z: Zone, dim: { w: number; h: number }) {
+  const vw = Math.min(dim.w, Math.max(z.w * 1.9, 260));
+  const vh = Math.min(dim.h, Math.max(z.h * 1.6, vw * 1.1));
+  const x = Math.min(dim.w - vw, Math.max(0, z.x + z.w / 2 - vw / 2));
+  const y = Math.min(dim.h - vh, Math.max(0, z.y - (vh - z.h) * 0.3));
+  return { x, y, w: vw, h: vh };
+}
+
+const GARMENTS: Record<Garment, { label: string; base: number; polo: boolean }> = {
+  cotton: { label: "Cotton tee", base: 25, polo: false },
+  performance: { label: "Performance tee", base: 25, polo: false },
+  polo: { label: "Polo", base: 40, polo: true },
 };
+const CHOICES: Array<{ g: Garment; long: boolean; sub: string }> = [
+  { g: "cotton", long: false, sub: "Short sleeve" },
+  { g: "cotton", long: true, sub: "Long sleeve" },
+  { g: "performance", long: false, sub: "Short sleeve" },
+  { g: "performance", long: true, sub: "Long sleeve" },
+  { g: "polo", long: false, sub: "Short sleeve" },
+];
 const SIZES = ["S", "M", "L", "XL", "2XL"];
 const RUSH_FEE = 15;
 const ACCEPT = "image/png,image/jpeg,image/svg+xml,image/webp,image/gif";
@@ -127,7 +150,7 @@ function ShirtView({
   const lw = logo ? logo.wIn * ppi : 0;
   const lh = logo ? lw * logo.ratio : 0;
   return (
-    <svg ref={setRef} viewBox={`0 0 ${dim.w} ${dim.h}`} className="block w-full select-none" role="img" aria-label={`${side} of the shirt`}>
+    <svg ref={setRef} viewBox={(() => { const c = cropBox(zone, dim); return `${c.x} ${c.y} ${c.w} ${c.h}`; })()} className="block w-full select-none" role="img" aria-label={`${side} of the shirt`}>
       <rect width={dim.w} height={dim.h} fill="#fff" />
       <image href={photo} x="0" y="0" width={dim.w} height={dim.h} />
       <rect
@@ -156,13 +179,13 @@ function ShirtView({
 export default function OneShirt() {
   const [garment, setGarment] = useState<Garment>("cotton");
   const [long, setLong] = useState(false);
+  const [chest, setChest] = useState(false);
   const [size, setSize] = useState("L");
   const [proof, setProof] = useState(true);
   const [rush, setRush] = useState(false);
-  const [agree, setAgree] = useState(false);
   const [logos, setLogos] = useState<Partial<Record<Side, Logo>>>({});
   const [msg, setMsg] = useState("");
-  const [form, setForm] = useState({ name: "", email: "", phone: "", notes: "" });
+  const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState("");
   const [err, setErr] = useState("");
   const svgs = useRef<Record<Side, SVGSVGElement | null>>({ front: null, back: null });
@@ -173,25 +196,29 @@ export default function OneShirt() {
   const g = GARMENTS[garment];
   const isLong = !g.polo && long;
   const photoKey: PhotoKey = g.polo ? "polo" : isLong ? "tee-long" : "tee-short";
+  const zones = ZONE[photoKey];
+  const frontChest = g.polo || chest;
+  const zoneOf = (s: Side): Zone => (s === "back" ? zones.back : frontChest ? zones.chest : (zones.full ?? zones.chest));
   const price = g.base + (isLong ? 2 : 0) + (size === "2XL" ? 4 : 0);
   const total = price + (rush ? RUSH_FEE : 0);
   const hasArt = !!(logos.front || logos.back);
+  const refit = `${photoKey}-${frontChest}`;
 
-  // Re-fit logos if the garment changes (different photo / print box).
+  // Re-fit designs when the shirt or print spot changes.
   useEffect(() => {
     setLogos((cur) => {
       const next: Partial<Record<Side, Logo>> = {};
       for (const s of ["front", "back"] as Side[]) {
         const l = cur[s];
         if (!l) continue;
-        const z = PHOTO[photoKey][s].zone;
-        const maxW = Math.min(z.inW, z.inH / l.ratio);
-        const wIn = Math.min(l.wIn, maxW);
+        const z = s === "back" ? ZONE[photoKey].back : frontChest ? ZONE[photoKey].chest : (ZONE[photoKey].full ?? ZONE[photoKey].chest);
+        const wIn = Math.min(l.wIn, Math.min(z.inW, z.inH / l.ratio));
         next[s] = { ...l, wIn, cx: z.x + z.w / 2, cy: z.y + z.h / 2 };
       }
       return next;
     });
-  }, [photoKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refit]);
 
   function toSvg(e: { clientX: number; clientY: number }, side: Side) {
     const svg = svgs.current[side];
@@ -202,7 +229,7 @@ export default function OneShirt() {
     return m ? pt.matrixTransform(m.inverse()) : { x: 0, y: 0 };
   }
   function clampPos(side: Side, l: Logo, cx: number, cy: number) {
-    const z = PHOTO[photoKey][side].zone;
+    const z = zoneOf(side);
     const ppi = z.w / z.inW;
     const hw = (l.wIn * ppi) / 2;
     const hh = (l.wIn * ppi * l.ratio) / 2;
@@ -239,14 +266,14 @@ export default function OneShirt() {
     try {
       const file = await shrinkToUploadLimit(original);
       const { url, ratio, pxW } = await readLogo(file);
-      const z = PHOTO[photoKey][side].zone;
+      const z = zoneOf(side);
       const maxW = Math.min(z.inW, z.inH / ratio);
-      const wIn = Math.max(1, Math.round(maxW * 0.8 * 4) / 4);
+      const wIn = Math.min(maxW, Math.max(1, Math.round(maxW * 0.8 * 4) / 4));
       setLogos((cur) => {
         if (cur[side]) URL.revokeObjectURL(cur[side]!.url);
         return {
           ...cur,
-          [side]: { url, file, ratio, pxW, vector: file.type === "image/svg+xml", wIn: Math.min(wIn, maxW), cx: z.x + z.w / 2, cy: z.y + z.h / 2 },
+          [side]: { url, file, ratio, pxW, vector: file.type === "image/svg+xml", wIn, cx: z.x + z.w / 2, cy: z.y + z.h / 2 },
         };
       });
     } catch {
@@ -270,7 +297,7 @@ export default function OneShirt() {
     e.preventDefault();
     setErr("");
     if (!hasArt) {
-      setMsg("Add a picture to the front or back first.");
+      setMsg("Upload a design for the front or back first.");
       artRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
@@ -279,26 +306,28 @@ export default function OneShirt() {
       for (const s of ["front", "back"] as Side[]) {
         const l = logos[s];
         if (!l) continue;
-        setBusy(`Uploading your ${s} picture…`);
-        const ph = PHOTO[photoKey][s];
+        setBusy(`Uploading ${s}…`);
+        const dim = IMG[photoKey][s];
+        const z = zoneOf(s);
         const q = quality(l);
         const orig = await uploadFile(l.file, l.file.name || `${s}-art`);
-        const mock = await renderMockup(`/one-shirt/${photoKey}-${s}.jpg`, ph.w, ph.h, ph.zone, l);
+        const mock = await renderMockup(`/one-shirt/${photoKey}-${s}.jpg`, dim.w, dim.h, z, l);
         const mockUrl = await uploadFile(mock, `${s}-mockup.jpg`);
         out[s] = {
           fileUrl: orig,
           fileName: l.file.name,
           mockupUrl: mockUrl,
+          area: z.label,
           widthIn: l.wIn,
           heightIn: l.wIn * l.ratio,
           quality: q.level === "vector" ? "Vector (sharp at any size)" : `${q.dpi} DPI at print size (${q.level})`,
         };
       }
-      setBusy("Taking you to checkout…");
+      setBusy("Opening checkout…");
       const res = await fetch("/api/one-shirt-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ garment, long: isLong, size, rush, proof, ...form, ...out }),
+        body: JSON.stringify({ garment, long: isLong, size, rush, proof, notes, ...out }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string; invoiceUrl?: string };
       if (!res.ok || !data.invoiceUrl) throw new Error(data.error || "Could not start checkout. Please call (772) 985-2854.");
@@ -310,194 +339,201 @@ export default function OneShirt() {
   }
 
   const chip = (on: boolean) =>
-    "rounded-xl border px-3 py-3 text-sm font-bold transition " +
+    "rounded-xl border px-3 py-2.5 text-sm font-bold transition " +
     (on ? "border-[#18d3e8] bg-[#18d3e8]/15 text-[#18d3e8]" : "border-white/15 bg-surface text-white/80");
   const h2 = "mb-2 font-headline text-xs uppercase tracking-widest text-[#18d3e8]";
   const card = (on: boolean) =>
     "flex w-full items-start gap-3 rounded-xl border p-3 text-left transition " +
     (on ? "border-[#18d3e8] bg-[#18d3e8]/10" : "border-white/15 bg-surface");
+  const dot = (on: boolean, sq = false) =>
+    "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center border-2 text-[10px] leading-none " +
+    (sq ? "rounded " : "rounded-full ") +
+    (on ? "border-[#18d3e8] bg-[#18d3e8] text-black" : "border-white/40");
+
+  const buyBtn = (cls: string) => (
+    <button type="submit" form="os-form" disabled={!!busy}
+      className={"min-h-12 rounded-xl bg-[#18d3e8] px-4 py-3 text-base font-black uppercase text-black disabled:opacity-60 " + cls}>
+      {busy || "Buy now"}
+    </button>
+  );
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-32 pt-8 sm:px-6">
+    <div className="mx-auto max-w-6xl px-4 pb-32 pt-8 sm:px-6 lg:pb-12">
       <div className="text-center">
         <h1 className="font-display text-4xl font-black uppercase tracking-tight sm:text-5xl">
           One shirt. <span className="bg-linear-to-r from-[#d94cb3] to-[#18d3e8] bg-clip-text text-transparent">No minimum.</span>
         </h1>
-        <p className="mt-2 text-base text-white/75">Pick it. Add your art. Pay. We print it.</p>
-        <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs font-bold uppercase">
-          <span className="rounded-full bg-white px-3 py-1.5 text-black">Black · in stock</span>
-          <span className="rounded-full border border-white/20 px-3 py-1.5">Pickup in Stuart</span>
-          <span className="rounded-full border border-white/20 px-3 py-1.5">Print included</span>
-        </div>
+        <p className="mt-2 text-base text-white/75">Pick it. Upload your design. Check out.</p>
       </div>
 
-      <section className="mt-8">
-        <h2 className={h2}>1 · Pick your shirt</h2>
-        <div className="grid grid-cols-3 gap-2">
-          {(Object.keys(GARMENTS) as Garment[]).map((k) => {
-            const it = GARMENTS[k];
-            return (
-              <button key={k} type="button" onClick={() => setGarment(k)} aria-pressed={garment === k}
-                className={"overflow-hidden rounded-xl border text-center transition " + (garment === k ? "border-[#18d3e8] bg-[#18d3e8]/10" : "border-white/15 bg-surface")}>
-                <div className="bg-white">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`/one-shirt/${it.polo ? "polo" : "tee-short"}-front.jpg`} alt="" className="mx-auto h-24 w-full object-contain sm:h-32" loading="lazy" />
-                </div>
-                <div className="px-1 py-2">
-                  <div className="text-sm font-bold leading-tight">{it.label}</div>
-                  <div className="text-xs text-white/60">from ${it.base}</div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-        <p className="mt-2 text-xs text-white/55">{g.sub}.</p>
-        {!g.polo && (
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <button type="button" className={chip(!long)} onClick={() => setLong(false)}>Short sleeve</button>
-            <button type="button" className={chip(long)} onClick={() => setLong(true)}>Long sleeve +$2</button>
-          </div>
-        )}
-      </section>
-
-      <section className="mt-8" ref={artRef}>
-        <h2 className={h2}>2 · Add your art</h2>
-        <div
-          className="grid grid-cols-2 gap-3 sm:gap-5"
-          onPointerMove={move}
-          onPointerUp={() => { drag.current = null; }}
-          onPointerCancel={() => { drag.current = null; }}
-        >
-          {(["front", "back"] as Side[]).map((s) => {
-            const ph = PHOTO[photoKey][s];
-            const l = logos[s];
-            const q = l ? quality(l) : null;
-            const maxW = l ? Math.min(ph.zone.inW, ph.zone.inH / l.ratio) : 0;
-            return (
-              <div key={s}>
-                <p className="mb-1 text-center text-sm font-bold">
-                  {s === "front" ? "Front" : "Back"}
-                  <span className="block text-xs font-normal text-white/55">{ph.zone.label} · up to {ph.zone.inW}×{ph.zone.inH} in</span>
-                </p>
-                <div className="overflow-hidden rounded-2xl border border-white/10 bg-white">
-                  <ShirtView
-                    photo={`/one-shirt/${photoKey}-${s}.jpg`} side={s} logo={l} zone={ph.zone} dim={{ w: ph.w, h: ph.h }}
-                    setRef={(el) => { svgs.current[s] = el; }} onDown={down(s)}
-                  />
-                </div>
-                <input ref={(el) => { files.current[s] = el; }} type="file" accept={ACCEPT} className="hidden"
-                  onChange={(e) => { void pick(s, e.target.files?.[0]); e.target.value = ""; }} />
-                <button type="button" className="mt-2 w-full rounded-xl bg-[#d9f000] px-2 py-3 text-sm font-bold text-black"
-                  onClick={() => files.current[s]?.click()}>
-                  {l ? "Change picture" : "Add picture"}
-                </button>
-                {l && q ? (
-                  <div className="mt-2 space-y-1">
-                    <input aria-label={`${s} size`} type="range" min={1} max={Math.max(1, Math.round(maxW * 4) / 4)} step={0.25}
-                      value={Math.min(l.wIn, maxW)} onChange={(e) => setWidth(s, Number(e.target.value))} className="w-full" />
-                    <div className="flex items-center justify-between text-xs text-white/65">
-                      <span>{l.wIn.toFixed(1)} × {(l.wIn * l.ratio).toFixed(1)} in</span>
-                      <button type="button" className="underline" onClick={() => removeLogo(s)}>Remove</button>
+      <div className="mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-8">
+        <div>
+          <section>
+            <h2 className={h2}>1 · Pick your shirt</h2>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+              {CHOICES.map((c) => {
+                const it = GARMENTS[c.g];
+                const on = garment === c.g && (it.polo || long === c.long);
+                const p = it.base + (c.long ? 2 : 0);
+                return (
+                  <button key={c.g + c.long} type="button" aria-pressed={on}
+                    onClick={() => { setGarment(c.g); setLong(c.long); }}
+                    className={"overflow-hidden rounded-2xl border text-center transition " + (on ? "border-[#18d3e8] ring-2 ring-[#18d3e8]/50" : "border-white/15 bg-surface")}>
+                    <div className="bg-white p-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={`/one-shirt/${it.polo ? "polo" : c.long ? "tee-long" : "tee-short"}-front.jpg`} alt={`${it.label}, ${c.sub.toLowerCase()}`}
+                        className="mx-auto h-40 w-full object-contain sm:h-48" loading="lazy" />
                     </div>
-                    <p className={"rounded-md px-2 py-1 text-xs font-bold " +
-                      (q.level === "low" ? "bg-[#ff9aa2]/15 text-[#ff9aa2]" : "bg-[#d9f000]/10 text-[#d9f000]")}>
-                      {q.level === "vector" && "✓ Sharp at any size"}
-                      {q.level === "great" && "✓ Great quality"}
-                      {q.level === "good" && "✓ Good quality"}
-                      {q.level === "low" && "Looks blurry at this size. Make it smaller, or use a bigger file."}
-                    </p>
+                    <div className="px-2 py-3">
+                      <div className="text-sm font-bold leading-tight">{it.label}</div>
+                      <div className="text-xs text-white/60">{c.sub}</div>
+                      <div className="mt-1 font-display text-xl font-black text-[#d9f000]">${p}</div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="mt-8" ref={artRef}>
+            <h2 className={h2}>2 · Upload your designs</h2>
+            <div
+              className="grid grid-cols-2 gap-3 sm:gap-5"
+              onPointerMove={move}
+              onPointerUp={() => { drag.current = null; }}
+              onPointerCancel={() => { drag.current = null; }}
+            >
+              {(["front", "back"] as Side[]).map((s) => {
+                const dim = IMG[photoKey][s];
+                const z = zoneOf(s);
+                const l = logos[s];
+                const q = l ? quality(l) : null;
+                const maxW = l ? Math.min(z.inW, z.inH / l.ratio) : 0;
+                return (
+                  <div key={s}>
+                    <p className="text-center text-base font-bold">{s === "front" ? "Front" : "Back"}</p>
+                    {s === "front" && !g.polo ? (
+                      <div className="mb-2 mt-1 grid grid-cols-2 gap-1">
+                        <button type="button" className={chip(!chest) + " py-1.5 text-xs"} onClick={() => setChest(false)}>Full front</button>
+                        <button type="button" className={chip(chest) + " py-1.5 text-xs"} onClick={() => setChest(true)}>Left chest</button>
+                      </div>
+                    ) : (
+                      <p className="mb-2 mt-1 text-center text-xs text-white/55">{z.label}</p>
+                    )}
+                    <div className="overflow-hidden rounded-2xl border border-white/10 bg-white">
+                      <ShirtView
+                        photo={`/one-shirt/${photoKey}-${s}.jpg`} side={s} logo={l} zone={z} dim={dim}
+                        setRef={(el) => { svgs.current[s] = el; }} onDown={down(s)}
+                      />
+                    </div>
+                    <p className="mt-1 text-center text-xs text-white/50">Up to {z.inW}×{z.inH} in</p>
+                    <input ref={(el) => { files.current[s] = el; }} type="file" accept={ACCEPT} className="hidden"
+                      onChange={(e) => { void pick(s, e.target.files?.[0]); e.target.value = ""; }} />
+                    <button type="button" className="mt-2 w-full rounded-xl bg-[#d9f000] px-2 py-3 text-sm font-bold text-black"
+                      onClick={() => files.current[s]?.click()}>
+                      {l ? "Change design" : "Upload your design"}
+                    </button>
+                    {l && q ? (
+                      <div className="mt-2 space-y-1">
+                        <input aria-label={`${s} size`} type="range" min={1} max={Math.max(1, Math.round(maxW * 4) / 4)} step={0.25}
+                          value={Math.min(l.wIn, maxW)} onChange={(e) => setWidth(s, Number(e.target.value))} className="w-full" />
+                        <div className="flex items-center justify-between text-xs text-white/65">
+                          <span>{l.wIn.toFixed(1)} × {(l.wIn * l.ratio).toFixed(1)} in</span>
+                          <button type="button" className="underline" onClick={() => removeLogo(s)}>Remove</button>
+                        </div>
+                        <p className={"rounded-md px-2 py-1 text-xs font-bold " +
+                          (q.level === "low" ? "bg-[#ff9aa2]/15 text-[#ff9aa2]" : "bg-[#d9f000]/10 text-[#d9f000]")}>
+                          {q.level === "vector" && "✓ Sharp at any size"}
+                          {q.level === "great" && "✓ Great quality"}
+                          {q.level === "good" && "✓ Good quality"}
+                          {q.level === "low" && "Blurry at this size. Make it smaller or upload a bigger file."}
+                        </p>
+                      </div>
+                    ) : null}
                   </div>
-                ) : (
-                  <p className="mt-2 text-center text-xs text-white/45">Optional</p>
-                )}
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+            <p className="mt-3 text-center text-xs text-white/55">Drag to move. Slide to resize. One side is fine.</p>
+            {msg && <p className="mt-2 text-center text-sm text-[#ff9aa2]">{msg}</p>}
+            <details className="mt-3 rounded-xl border border-white/10 bg-surface px-3 py-2 text-sm text-white/75">
+              <summary className="cursor-pointer font-bold text-white">Tips for a sharp print</summary>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-relaxed">
+                <li>Best: SVG, or a PNG with a see-through background. Aim for 300 DPI (200 minimum).</li>
+                <li>Light colors show best on black. Dark art can disappear.</li>
+                <li>AI-made art (ChatGPT and similar) may need a redraw. We&apos;ll tell you before we print.</li>
+                <li>Need design help? Order first, then message us.</li>
+              </ul>
+            </details>
+          </section>
         </div>
-        <p className="mt-3 text-center text-xs text-white/55">Drag a picture to move it. Slide to make it bigger or smaller. Sleeves aren&apos;t printed.</p>
-        {msg && <p className="mt-2 text-center text-sm text-[#ff9aa2]">{msg}</p>}
-        <details className="mt-3 rounded-xl border border-white/10 bg-surface px-3 py-2 text-sm text-white/75">
-          <summary className="cursor-pointer font-bold text-white">Tips for sharp prints</summary>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-relaxed">
-            <li>Best: SVG, or a PNG with a see-through background.</li>
-            <li>For a clean print we want at least 200 DPI at print size. 300 DPI is best. Screenshots and small web pictures often look blurry.</li>
-            <li>Black shirt: light and bright colors print best. Dark art can disappear.</li>
-            <li>Made your art with AI (ChatGPT and similar)? It often needs to be redrawn to print cleanly. If yours does, we&apos;ll tell you before we print.</li>
-            <li>Need help with your design? Place your order first, then message us. Our design team will take it from there.</li>
-          </ul>
-        </details>
-      </section>
 
-      <section className="mt-8">
-        <h2 className={h2}>3 · Size</h2>
-        <div className="grid grid-cols-5 gap-2">
-          {SIZES.map((z) => (
-            <button key={z} type="button" className={chip(size === z) + " px-1"} onClick={() => setSize(z)}>{z}</button>
-          ))}
-        </div>
-        {size === "2XL" && <p className="mt-1 text-xs text-white/55">2XL is +$4.</p>}
-      </section>
+        <form id="os-form" onSubmit={submit} className="mt-8 space-y-6 lg:sticky lg:top-24 lg:mt-0 lg:rounded-2xl lg:border lg:border-white/10 lg:bg-black/30 lg:p-5">
+          <section>
+            <h2 className={h2}>3 · Size</h2>
+            <div className="grid grid-cols-5 gap-2">
+              {SIZES.map((z) => (
+                <button key={z} type="button" className={chip(size === z) + " px-1"} onClick={() => setSize(z)}>{z}</button>
+              ))}
+            </div>
+            {size === "2XL" && <p className="mt-1 text-xs text-white/55">2XL is +$4.</p>}
+          </section>
 
-      <section className="mt-8">
-        <h2 className={h2}>4 · Proof</h2>
-        <div className="space-y-2">
-          <button type="button" className={card(proof)} onClick={() => setProof(true)} aria-pressed={proof}>
-            <span className={"mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 " + (proof ? "border-[#18d3e8] bg-[#18d3e8]" : "border-white/40")} />
-            <span>
-              <span className="block text-sm font-bold">Send me a proof <span className="font-normal text-[#d9f000]">· free</span></span>
-              <span className="block text-xs text-white/65">We email you a picture of your shirt. Nothing prints until you say OK.</span>
-            </span>
-          </button>
-          <button type="button" className={card(!proof)} onClick={() => setProof(false)} aria-pressed={!proof}>
-            <span className={"mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 " + (!proof ? "border-[#18d3e8] bg-[#18d3e8]" : "border-white/40")} />
-            <span>
-              <span className="block text-sm font-bold">Skip the proof. Print it just like this.</span>
-              <span className="block text-xs text-white/65">Fastest. It prints exactly how you placed it above, so check spelling, size and spot first.</span>
-            </span>
-          </button>
-        </div>
-      </section>
+          <section>
+            <h2 className={h2}>4 · Proof</h2>
+            <div className="space-y-2">
+              <button type="button" className={card(proof)} onClick={() => setProof(true)} aria-pressed={proof}>
+                <span className={dot(proof)} />
+                <span>
+                  <span className="block text-sm font-bold">Send me a proof <span className="font-normal text-[#d9f000]">· free</span></span>
+                  <span className="block text-xs text-white/65">Nothing prints until you say OK.</span>
+                </span>
+              </button>
+              <button type="button" className={card(!proof)} onClick={() => setProof(false)} aria-pressed={!proof}>
+                <span className={dot(!proof)} />
+                <span>
+                  <span className="block text-sm font-bold">No proof. Print it as shown.</span>
+                  <span className="block text-xs text-white/65">Fastest. Prints exactly like your picture above.</span>
+                </span>
+              </button>
+            </div>
+          </section>
 
-      <section className="mt-8">
-        <h2 className={h2}>5 · Speed</h2>
-        <button type="button" className={card(rush)} onClick={() => setRush(!rush)} aria-pressed={rush}>
-          <span className={"mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 text-[10px] leading-none " + (rush ? "border-[#18d3e8] bg-[#18d3e8] text-black" : "border-white/40")}>{rush ? "✓" : ""}</span>
-          <span>
-            <span className="block text-sm font-bold">Rush: ready in 2 business days <span className="font-normal text-[#d9f000]">· +$15</span></span>
-            <span className="block text-xs text-white/65">Guaranteed. Mon–Fri only. The clock starts when you&apos;ve paid{proof ? " and approved your proof" : ""}. Without rush: about 3–5 business days.</span>
-          </span>
-        </button>
-      </section>
+          <section>
+            <h2 className={h2}>5 · Speed</h2>
+            <button type="button" className={card(rush)} onClick={() => setRush(!rush)} aria-pressed={rush}>
+              <span className={dot(rush, true)}>{rush ? "✓" : ""}</span>
+              <span>
+                <span className="block text-sm font-bold">Rush: 2 business days <span className="font-normal text-[#d9f000]">· +$15</span></span>
+                <span className="block text-xs text-white/65">Otherwise 3–5 business days.</span>
+              </span>
+            </button>
+          </section>
 
-      <form id="os-form" onSubmit={submit} className="mt-8">
-        <h2 className={h2}>6 · Your info</h2>
-        <div className="space-y-2">
-          <input required className={field} placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} autoComplete="name" />
-          <input required type="email" className={field} placeholder="Email (we send your proof here)" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} autoComplete="email" />
-          <input className={field} type="tel" placeholder="Phone (optional)" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} autoComplete="tel" />
-          <textarea className={field} rows={2} placeholder="Anything we should know? (optional)" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-          <label className="flex items-start gap-3 rounded-xl border border-white/10 bg-surface p-3 text-xs leading-relaxed text-white/75">
-            <input required type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>
-              I own this art or have permission to print it. I checked the spelling and placement. I know custom shirts are made just for me and can&apos;t be returned,
-              but Print Laser Stitch will fix any mistake we make.
-            </span>
-          </label>
-        </div>
-        {err && <p className="mt-3 text-sm text-[#ff9aa2]">{err}</p>}
-        <p className="mt-3 text-center text-xs text-white/50">You pay at checkout. We start after you&apos;ve paid. Pickup in Stuart, we email you when it&apos;s ready.</p>
-      </form>
+          <section>
+            <textarea className={field} rows={2} placeholder="Notes for us (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </section>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#0b0b0f]/95 px-4 py-3 backdrop-blur">
+          <div className="hidden lg:block">
+            <div className="mb-3 flex items-end justify-between">
+              <span className="text-sm text-white/70">Total</span>
+              <span className="font-display text-4xl font-black text-[#d9f000]">${total}</span>
+            </div>
+            {buyBtn("w-full")}
+            {err && <p className="mt-2 text-sm text-[#ff9aa2]">{err}</p>}
+            <p className="mt-2 text-center text-xs text-white/50">Custom item. Final sale unless we make a mistake.</p>
+          </div>
+          {err && <p className="text-sm text-[#ff9aa2] lg:hidden">{err}</p>}
+        </form>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#0b0b0f]/95 px-4 py-3 backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-3xl items-center gap-3">
           <div className="leading-tight">
             <div className="text-xs text-white/60">Total{rush ? " (rush)" : ""}</div>
             <div className="font-display text-3xl font-black text-[#d9f000]">${total}</div>
           </div>
-          <button type="submit" form="os-form" disabled={!!busy}
-            className="min-h-12 flex-1 rounded-xl bg-[#18d3e8] px-4 py-3 text-base font-black uppercase text-black disabled:opacity-60">
-            {busy || "Buy now"}
-          </button>
+          {buyBtn("flex-1")}
         </div>
       </div>
     </div>

@@ -22,6 +22,7 @@ type SideIn = {
   mockupUrl?: string;
   widthIn?: number;
   heightIn?: number;
+  area?: string;
   quality?: string;
 };
 type Body = {
@@ -30,8 +31,8 @@ type Body = {
   size: string;
   rush?: boolean;
   proof?: boolean; // true = send a proof first, false = print exactly as placed
-  name: string;
-  email: string;
+  name?: string;
+  email?: string;
   phone?: string;
   notes?: string;
   front?: SideIn;
@@ -59,11 +60,6 @@ export async function POST(req: NextRequest) {
   if (!g) return NextResponse.json({ error: "Pick a shirt." }, { status: 400 });
   if (!SIZES.includes(b.size)) return NextResponse.json({ error: "Pick a size." }, { status: 400 });
   const long = !g.polo && !!b.long; // polos are short sleeve only
-  const name = clean(b.name, 120);
-  const email = clean(b.email, 200);
-  if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return NextResponse.json({ error: "Please add your name and a good email." }, { status: 400 });
-  }
 
   const sides: Array<["Front" | "Back", SideIn]> = [];
   if (b.front?.fileUrl) sides.push(["Front", b.front]);
@@ -99,7 +95,7 @@ export async function POST(req: NextRequest) {
     { name: "Speed", value: rush ? "RUSH - guaranteed 2 business days" : "Standard" },
   ];
   for (const [side, s] of sides) {
-    props.push({ name: `${side} print`, value: areaName(side) });
+    props.push({ name: `${side} print`, value: clean(s.area, 40) || areaName(side) });
     if (s.widthIn && s.heightIn) {
       props.push({
         name: `${side} size`,
@@ -148,12 +144,10 @@ export async function POST(req: NextRequest) {
   const total = price + (rush ? RUSH_FEE : 0);
   const draft = {
     draft_order: {
-      email,
       line_items,
       tags,
-      note: `ONE SHIRT | ${name} | ${wantsProof ? "PROOF FIRST" : "NO PROOF"}${rush ? " | RUSH 2 BUSINESS DAYS" : ""} | Pickup in Stuart | Total $${total.toFixed(2)}${phone ? ` | ${phone}` : ""}`,
+      note: `ONE SHIRT | ${wantsProof ? "PROOF FIRST" : "NO PROOF"}${rush ? " | RUSH 2 BUSINESS DAYS" : ""} | Total $${total.toFixed(2)}${phone ? ` | ${phone}` : ""}`,
       note_attributes: [
-        { name: "Customer name", value: name },
         { name: "Proof", value: wantsProof ? "Proof first" : "No proof" },
         { name: "Rush", value: rush ? "Yes" : "No" },
       ],

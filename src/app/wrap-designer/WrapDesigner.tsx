@@ -322,10 +322,10 @@ export default function WrapDesigner() {
                 disabled={loading}
                 className="flex flex-col rounded-xl border border-white/10 bg-surface p-3 text-left transition active:scale-[0.98] hover:border-[#18d3e8]/60"
               >
-                <span className="flex items-center justify-between text-[#18d3e8]">
-                  <VehicleIcon kind={kindOf(t.category)} className="h-6 w-auto" />
-                  <span className="rounded-full px-2 py-0.5 text-[10px] font-black uppercase text-white" style={{ background: BRAND_COLOR[t.make] ?? "#555" }}>{t.make === "Mercedes-Benz" ? "Mercedes" : t.make}</span>
+                <span className="flex h-16 items-center justify-center rounded-lg bg-white p-1.5 text-black">
+                  {t.id.startsWith("custom-") ? <VehicleIcon kind={kindOf(t.category)} className="h-9 w-auto" /> : /* eslint-disable-next-line @next/next/no-img-element */ <img src={`/wrap/thumbs/${t.id}.png`} alt="" loading="lazy" className="max-h-full max-w-full object-contain" />}
                 </span>
+                <span className="mt-2 inline-block self-start rounded-full px-2 py-0.5 text-[10px] font-black uppercase text-white" style={{ background: BRAND_COLOR[t.make] ?? "#555" }}>{t.make === "Mercedes-Benz" ? "Mercedes" : t.make}</span>
                 <span className="mt-2 block text-base font-bold leading-tight">{t.make === "Custom" ? t.label : `${t.year} ${t.model}`}</span>
               </button>
             ))}

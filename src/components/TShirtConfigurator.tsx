@@ -232,6 +232,17 @@ export default function TShirtConfigurator({
   const [backUpload, setBackUpload] = useState<UploadSlot>(EMPTY_UPLOAD_SLOT);
 
   const tee = !!singleProduct;
+  // Is the visitor a guest? (page is cached, so ask the server from the browser)
+  const [guest, setGuest] = useState(false);
+  const [vidIdx, setVidIdx] = useState(0);
+  useEffect(() => {
+    if (!singleProduct) return;
+    let live = true;
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((r) => { if (live && r.status === 401) setGuest(true); })
+      .catch(() => {});
+    return () => { live = false; };
+  }, [singleProduct]);
   const [oneMode, setOneMode] = useState(false);
   const [oneSize, setOneSize] = useState("L");
   const [rush, setRush] = useState(false);
@@ -883,8 +894,9 @@ export default function TShirtConfigurator({
                 {product.title.replace(/\s*\([^)]*\)\s*$/, "")}
               </h1>
               <p className="mt-1.5 text-sm text-foreground-muted">
-                {product.title.match(/\(([^)]*)\)\s*$/)?.[1]}{product.title.match(/\(([^)]*)\)\s*$/) ? ". " : ""}Choose your options below and order online in minutes.
+                {tee ? "Custom shirts, made easy. No stress. No 47-step forms. Just pick, upload, done. 😎" : <>{product.title.match(/\(([^)]*)\)\s*$/)?.[1]}{product.title.match(/\(([^)]*)\)\s*$/) ? ". " : ""}Choose your options below and order online in minutes.</>}
               </p>
+              {tee && <TeeTrust />}
               <a
                 href="#order-options"
                 className="mt-3 inline-flex items-center gap-2 rounded-full accent-gradient px-5 py-2.5 font-headline text-sm font-bold uppercase tracking-wide text-black shadow-lg shadow-[#d9f000]/25 transition active:scale-95"
@@ -907,7 +919,20 @@ export default function TShirtConfigurator({
                 />
               </div>
             )}
-            <ProductGallery
+            {tee && displayImages.some((m) => m.type === "video") && (
+              <div className="mt-4">
+                <h2 className="mb-2 font-display text-sm font-black uppercase tracking-tight text-[#d9f000]">
+                  See how we make it 🎬
+                </h2>
+                <ProductGallery
+                  images={displayImages.filter((m) => m.type === "video")}
+                  idx={vidIdx}
+                  setIdx={setVidIdx}
+                  title={product.title}
+                />
+              </div>
+            )}
+            {!tee && <ProductGallery
               images={displayImages}
               idx={galleryIdx}
               setIdx={setGalleryIdx}
@@ -921,7 +946,7 @@ export default function TShirtConfigurator({
                   />
                 ) : undefined
               }
-            />
+            />}
 
             {logoPreviewUrl && mockupPhoto && !mockupPhoto.matchesColor && mockupColor && (
               <p className="mt-3 text-xs text-foreground-muted">
@@ -950,7 +975,7 @@ export default function TShirtConfigurator({
               </p>
             )}
 
-            {howToOrderVideoId && (
+            {howToOrderVideoId && !tee && (
               <div className="mt-6 hidden lg:block">
                 <h2 className="font-display text-xl font-black uppercase tracking-tight text-[#d9f000]">
                   How to Order
@@ -980,6 +1005,14 @@ export default function TShirtConfigurator({
               <h1 className="hidden text-3xl font-bold tracking-tight sm:text-4xl lg:block">
                 {product.title}
               </h1>
+              {tee && (
+                <div className="mt-2 hidden lg:block">
+                  <p className="text-base font-medium text-foreground">
+                    Custom shirts, made easy. No stress. No 47-step forms. Just pick, upload, done. 😎
+                  </p>
+                  <TeeTrust />
+                </div>
+              )}
               <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <AnimatedPrice
                   value={oneMode ? onePrice : perShirtPrice * (1 - volumePct / 100)}
@@ -1037,7 +1070,7 @@ export default function TShirtConfigurator({
               if (tee && /sleeve/i.test(opt.name)) {
                 return (
                   <Section key={opt.id} title="Pick your shirt" value={value}>
-                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-2.5">
                       {opt.values.map((v) => {
                         const long = /long/i.test(v);
                         const poly = /poly|perf/i.test(v);
@@ -1057,20 +1090,20 @@ export default function TShirtConfigurator({
                               v === value ? "border-highlight ring-2 ring-[#18d3e8]/50" : "border-border-soft bg-white/3 hover:bg-white/6"
                             }`}
                           >
-                            <div className="bg-white p-1.5">
+                            <div className="bg-white p-1 sm:p-1.5">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={`/one-shirt/${long ? "tee-long" : "tee-short"}-front.jpg`}
                                 alt={`${label}, ${sub.toLowerCase()}`}
-                                className="mx-auto h-24 w-full object-contain"
+                                className="mx-auto h-14 w-full object-contain sm:h-24"
                                 loading="lazy"
                               />
                             </div>
                             <div className="px-1.5 py-2">
-                              <div className="text-xs font-bold leading-tight">{label}</div>
+                              <div className="text-[11px] font-bold leading-tight sm:text-xs">{label}</div>
                               <div className="text-[11px] text-foreground-muted">{sub}</div>
                               {from != null && (
-                                <div className="mt-0.5 text-sm font-black text-[#d9f000]">
+                                <div className="mt-0.5 text-xs font-black text-[#d9f000] sm:text-sm">
                                   {oneMode ? "" : "from "}${from.toFixed(from % 1 ? 2 : 0)}
                                 </div>
                               )}
@@ -1082,9 +1115,9 @@ export default function TShirtConfigurator({
                         href="/products/embroidered-polos"
                         className="overflow-hidden rounded-2xl border border-border-soft bg-white/3 text-center transition hover:bg-white/6"
                       >
-                        <div className="bg-white p-1.5">
+                        <div className="bg-white p-1 sm:p-1.5">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src="/one-shirt/polo-front.jpg" alt="Embroidered polo" className="mx-auto h-24 w-full object-contain" loading="lazy" />
+                          <img src="/one-shirt/polo-front.jpg" alt="Embroidered polo" className="mx-auto h-14 w-full object-contain sm:h-24" loading="lazy" />
                         </div>
                         <div className="px-1.5 py-2">
                           <div className="text-xs font-bold leading-tight">Polo</div>
@@ -1678,7 +1711,21 @@ export default function TShirtConfigurator({
               </button>
             )}
             {teeErr && <p className="text-center text-sm text-[#ff9aa2]">{teeErr}</p>}
-            {tee && (
+            {tee && guest && (
+              <div className="rounded-2xl border border-[#18d3e8]/40 bg-[#18d3e8]/8 p-3 text-center">
+                <div className="text-sm font-bold">New here? Make a free account 👋</div>
+                <p className="mt-0.5 text-xs text-foreground-muted">
+                  It saves your design and logo, so you never start over.
+                </p>
+                <Link
+                  href="/signup?redirect=/products/cotton-t-shirts"
+                  className="mt-2 inline-block rounded-full bg-[#18d3e8] px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-black"
+                >
+                  Create account
+                </Link>
+              </div>
+            )}
+            {tee && !guest && (
               <p className="text-center text-[11px] text-foreground-muted">
                 Your design is saved on this device for 30 days.{" "}
                 <Link href="/signup?redirect=/products/tshirts" className="underline">
@@ -1703,7 +1750,7 @@ export default function TShirtConfigurator({
 
           {/* How-to video: below the product on phones */}
           {howToOrderVideoId && (
-            <div className="lg:hidden">
+            <div className={tee ? "mt-8" : "lg:hidden"}>
               <h2 className="font-display text-xl font-black uppercase tracking-tight text-[#d9f000]">
                 How to Order
               </h2>
@@ -1740,5 +1787,17 @@ export default function TShirtConfigurator({
         </div>
       )}
     </section>
+  );
+}
+
+/** Playful trust line under the title. */
+function TeeTrust() {
+  return (
+    <div className="mt-2 space-y-1 text-sm text-foreground-muted">
+      <p>
+        <span className="font-bold text-foreground">🇺🇸 Made in the USA</span> · printed in-house, right here in Rio, FL.
+      </p>
+      <p>Want to watch your shirt get made? Pop into the shop! ❤️ Handmade with love, every order.</p>
+    </div>
   );
 }

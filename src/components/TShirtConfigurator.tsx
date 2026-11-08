@@ -3,6 +3,7 @@
 
 import MobileBuyBar from "@/components/MobileBuyBar";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   PRINT_LOCATIONS,
@@ -55,6 +56,19 @@ import { SizeQtyStepper } from "@/components/configurator/QuantityStepper";
 import { ExpandableDescription } from "@/components/configurator/ExpandableDescription";
 import { HOW_TO_ORDER_VIDEO_IDS } from "@/lib/how-to-order-videos";
 import { DraftNote, useDraft } from "@/components/configurator/useDraft";
+import TeeDesigner, {
+  packLogo,
+  quality,
+  renderMockup,
+  tintPhoto,
+  unpackLogo,
+  uploadBlob,
+  zoneFor,
+  type DesignerLogos,
+  type PhotoKey,
+  type Side,
+} from "@/components/configurator/TeeDesigner";
+import type { ProductCartItem } from "@/lib/cart-types";
 import {
   cleanColorMatrix,
   cleanOptions,
@@ -75,6 +89,8 @@ export type ApparelConfiguratorProps = {
   showPrintLocations?: boolean;
   /** Single-design upload label when print location is hidden (e.g. "Embroidery Artwork"). */
   singleUploadLabel?: string;
+  /** Hidden "1 shirt, no minimum" Shopify product. When set, this page also offers a single-shirt option. */
+  singleProduct?: ShopifyProduct | null;
 };
 
 export default function TShirtConfigurator({
@@ -83,7 +99,9 @@ export default function TShirtConfigurator({
   minQuantity: minQuantityProp,
   showPrintLocations = true,
   singleUploadLabel = "Design",
+  singleProduct = null,
 }: ApparelConfiguratorProps) {
+  const router = useRouter();
   const { addItem, items: cartItems } = useCart();
   const minQuantity = minQuantityProp ?? TSHIRT_MIN_QUANTITY;
   // Separate "Size" out from the other options — Size becomes a per-size
@@ -210,6 +228,16 @@ export default function TShirtConfigurator({
   const [frontUpload, setFrontUpload] = useState<UploadSlot>(EMPTY_UPLOAD_SLOT);
   const [backUpload, setBackUpload] = useState<UploadSlot>(EMPTY_UPLOAD_SLOT);
 
+  const tee = !!singleProduct;
+  const [oneMode, setOneMode] = useState(false);
+  const [oneSize, setOneSize] = useState("L");
+  const [rush, setRush] = useState(false);
+  const [proof, setProof] = useState(true);
+  const [chest, setChest] = useState(false);
+  const [logos, setLogos] = useState<DesignerLogos>({});
+  const [teeBusy, setTeeBusy] = useState(false);
+  const [teeErr, setTeeErr] = useState("");
+
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [galleryIdx, setGalleryIdx] = useState(0);
   // The gallery image is the thing that flies into the cart icon on add.
@@ -230,6 +258,13 @@ export default function TShirtConfigurator({
       p: phone,
       fu: packUpload(frontUpload),
       bu: packUpload(backUpload),
+      om: oneMode,
+      os: oneSize,
+      ru: rush,
+      pr: proof,
+      ch: chest,
+      lf: packLogo(logos.front),
+      lb: packLogo(logos.back),
     },
     hasContent:
       Object.values(sizeQuantities).some((n) => n > 0) ||
@@ -239,7 +274,9 @@ export default function TShirtConfigurator({
       !!instructions.trim() ||
       !!phone.trim() ||
       !!frontUpload.fileUrl ||
-      !!backUpload.fileUrl,
+      !!backUpload.fileUrl ||
+      !!packLogo(logos.front) ||
+      !!packLogo(logos.back),
     restore: (d) => {
       const sizes = sizeOption?.values ?? [];
       setSelectedOptions((prev) => cleanOptions(d.o, nonSizeOptions, prev));
@@ -259,6 +296,16 @@ export default function TShirtConfigurator({
       if (fu) setFrontUpload(fu);
       const bu = unpackUpload(d.bu);
       if (bu) setBackUpload(bu);
+      if (tee) {
+        if (d.om === true) setOneMode(true);
+        if (typeof d.os === "string" && ["S", "M", "L", "XL", "2XL"].includes(d.os)) setOneSize(d.os);
+        if (typeof d.ru === "boolean") setRush(d.ru);
+        if (typeof d.pr === "boolean") setProof(d.pr);
+        if (typeof d.ch === "boolean") setChest(d.ch);
+        const lf = unpackLogo(d.lf);
+        const lb = unpackLogo(d.lb);
+        setLogos({ ...(lf ? { front: lf } : {}), ...(lb ? { back: lb } : {}) });
+      }
     },
   });
 
@@ -377,7 +424,15 @@ export default function TShirtConfigurator({
   const volumeTiers = volumeTiersFor(product.title);
   const volumePct = volumeDiscountPercent(product.title, totalQuantity);
   const volumeSavings = Math.round(totalPrice * volumePct) / 100;
-  const finalPrice = Math.round((totalPrice - volumeSavings) * 100) / 100;
+  const bulkFinalPrice = Math.round((totalPrice - volumeSavings) * 100) / 100;
+  const STYLE_NAME = selectedOptions["Sleeve Type"] ?? "Cotton Short Sleeve";
+  const RUSH_LABEL = "Rush - 2 business days";
+  const oneVariant = singleProduct?.variants.find((v) => {
+    const o = (n: string) => v.selectedOptions.find((x) => x.name === n)?.value;
+    return o("Style") === STYLE_NAME && o("Size") === oneSize && o("Speed") === (rush ? RUSH_LABEL : "Standard");
+  });
+  const onePrice = Number(oneVariant?.price ?? 0);
+  const finalPrice = oneMode ? onePrice : bulkFinalPrice;
   const upcomingTier = nextVolumeTier(product.title, totalQuantity);
 
   // Build gallery: reference variant image first, then product media, dedup'd.
@@ -466,6 +521,11 @@ export default function TShirtConfigurator({
   }, [referenceVariant?.id]);
 
   useEffect(() => {
+    if (tee && new URLSearchParams(window.location.search).get("mode") === "one") setOneMode(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 3500);
     return () => clearTimeout(t);
@@ -474,18 +534,27 @@ export default function TShirtConfigurator({
   // Validation: each enabled upload slot needs a successful file. When print
   // locations are hidden, the front slot is the single design and back is
   // unused.
+  const teeUploading = !!(logos.front?.uploading || logos.back?.uploading);
+  const teeArtOk =
+    !!(logos.front || logos.back) &&
+    !teeUploading &&
+    !logos.front?.error &&
+    !logos.back?.error;
   const needsFront =
+    tee ||
     !showPrintLocations ||
     printLocation === "front" ||
     printLocation === "both";
   const needsBack =
+    !tee &&
     showPrintLocations &&
     (printLocation === "back" || printLocation === "both");
-  const frontReady =
-    !needsFront || (!!frontUpload.fileUrl && !frontUpload.isUploading);
+  const frontReady = tee
+    ? teeArtOk
+    : !needsFront || (!!frontUpload.fileUrl && !frontUpload.isUploading);
   const backReady =
     !needsBack || (!!backUpload.fileUrl && !backUpload.isUploading);
-  const anyUploading = frontUpload.isUploading || backUpload.isUploading;
+  const anyUploading = tee ? teeUploading : frontUpload.isUploading || backUpload.isUploading;
 
   // Mix & Match: apparel already in the cart counts toward this order's
   // minimum, so a customer can take 6 polos and 6 tees instead of 12 of
@@ -520,16 +589,126 @@ export default function TShirtConfigurator({
     otherLines: cartGarmentLines,
   });
 
-  const qtyOk = mixGate.ok;
+  const qtyOk = oneMode ? true : mixGate.ok;
   const canCheckout =
+    !teeBusy &&
     qtyOk &&
     frontReady &&
     backReady &&
     !anyUploading &&
     !isCheckingOut;
 
-  function handleAddToCart() {
+  const teeStyleLong = /long/i.test(STYLE_NAME);
+  const teePhoto: PhotoKey = teeStyleLong ? "tee-long" : "tee-short";
+  const teeColorHex = (() => {
+    if (oneMode) return null;
+    const c = openColors[0];
+    if (!c || /^black$/i.test(c)) return null;
+    return colorHex(c) ?? null;
+  })();
+
+  async function teeMockups(): Promise<Partial<Record<Side, string>>> {
+    const out: Partial<Record<Side, string>> = {};
+    for (const sd of ["front", "back"] as Side[]) {
+      const l = logos[sd];
+      if (!l) continue;
+      try {
+        const base = `/one-shirt/${teePhoto}-${sd}.jpg`;
+        const photo = teeColorHex ? await tintPhoto(base, teeColorHex) : base;
+        const blob = await renderMockup(photo, sd, teePhoto, zoneFor(teePhoto, sd, chest), l);
+        out[sd] = await uploadBlob(blob, `${sd}-mockup.jpg`);
+      } catch {
+        /* the original file is still attached */
+      }
+    }
+    return out;
+  }
+
+  function teePlacement(mocks: Partial<Record<Side, string>>): string[] {
+    const lines: string[] = [];
+    for (const sd of ["front", "back"] as Side[]) {
+      const l = logos[sd];
+      if (!l) continue;
+      const z = zoneFor(teePhoto, sd, chest);
+      const q = quality(l);
+      lines.push(
+        `${sd === "front" ? "Front" : "Back"}: ${z.label}, ${l.wIn.toFixed(1)}x${(l.wIn * l.ratio).toFixed(1)} in, ` +
+          (q.level === "vector" ? "vector" : `${q.dpi} DPI (${q.level})`),
+      );
+      if (mocks[sd]) lines.push(`${sd === "front" ? "Front" : "Back"} mockup: ${mocks[sd]}`);
+    }
+    lines.push(proof ? "Proof: send me a proof first" : "Proof: print exactly as shown");
+    return lines;
+  }
+
+  async function addOne(goCart: boolean) {
+    if (!singleProduct || !oneVariant) {
+      setTeeErr("That option is not available.");
+      return;
+    }
+    const mocks = await teeMockups();
+    const props: Record<string, string> = {};
+    if (logos.front?.fileUrl) props["Front design"] = logos.front.fileUrl;
+    if (mocks.front) props["Front mockup"] = mocks.front;
+    if (logos.back?.fileUrl) props["Back design"] = logos.back.fileUrl;
+    if (mocks.back) props["Back mockup"] = mocks.back;
+    const place = teePlacement({}).filter((t) => !/mockup/.test(t));
+    props["Print placement"] = place.join(" | ");
+    props["Shirt color"] = "Black";
+    props["Proof"] = proof ? "Send me a proof first" : "No proof - print exactly as shown";
+    if (instructions.trim()) props["Notes"] = instructions.trim();
+    if (phone.trim()) props["Phone"] = phone.trim();
+    const unit = Number(oneVariant.price);
+    const item: Omit<ProductCartItem, "id" | "addedAt"> = {
+      kind: "product",
+      title: "Custom T-Shirt (1 shirt)",
+      subtitle: `${STYLE_NAME} · Black · ${oneSize}${rush ? " · Rush" : ""}`,
+      thumbnail: mocks.front ?? mocks.back ?? `/one-shirt/${teePhoto}-front.jpg`,
+      unitLabel: `$${unit.toFixed(2)} each`,
+      totalPrice: unit,
+      quantity: 1,
+      variantId: oneVariant.id,
+      productTitle: singleProduct.title,
+      selectedOptions: { Style: STYLE_NAME, Size: oneSize, Speed: rush ? RUSH_LABEL : "Standard" },
+      qty: 1,
+      unitPrice: unit,
+      extraProperties: props,
+      editHref: `/products/${product.handle}`,
+    };
+    addItem(item);
+    draft.clear();
+    successFeedback();
+    if (goCart) {
+      router.push("/cart");
+    } else {
+      flyToCart(galleryRef.current?.querySelector("img") ?? null);
+      setTimeout(openCartDrawer, 650);
+    }
+  }
+
+  async function handleAddToCart(goCart = false) {
     if (!canCheckout) return;
+    setTeeErr("");
+    if (tee) {
+      setTeeBusy(true);
+      try {
+        if (oneMode) {
+          await addOne(goCart);
+          return;
+        }
+        const mocks = await teeMockups();
+        return await addBulk(goCart, mocks);
+      } catch (e) {
+        setTeeErr(e instanceof Error ? e.message : "Something went wrong. Please try again.");
+        return;
+      } finally {
+        setTeeBusy(false);
+      }
+    }
+    return addBulk(goCart, {});
+  }
+
+  function addBulk(goCart: boolean, mocks: Partial<Record<Side, string>>) {
 
     // Build line items from the qty matrix, with the variant price snapshot
     // we'll display in cart. The server re-fetches live prices at checkout —
@@ -625,15 +804,25 @@ export default function TShirtConfigurator({
       quantity: totalQuantity,
       productTitle: product.title,
       selectedOptions,
-      printLocation: showPrintLocations ? printLocation : undefined,
+      printLocation: tee
+        ? logos.front && logos.back
+          ? "both"
+          : logos.back
+            ? "back"
+            : "front"
+        : showPrintLocations
+          ? printLocation
+          : undefined,
       uploadLabel: showPrintLocations ? undefined : singleUploadLabel,
       sizeVariants,
-      frontFileUrl: frontUpload.fileUrl ?? undefined,
-      frontFileName: frontUpload.file?.name,
-      backFileUrl: backUpload.fileUrl ?? undefined,
-      backFileName: backUpload.file?.name,
+      frontFileUrl: (tee ? logos.front?.fileUrl : frontUpload.fileUrl) ?? undefined,
+      frontFileName: tee ? logos.front?.name : frontUpload.file?.name,
+      backFileUrl: (tee ? logos.back?.fileUrl : backUpload.fileUrl) ?? undefined,
+      backFileName: tee ? logos.back?.name : backUpload.file?.name,
       phone: phone.trim() || undefined,
-      instructions: instructions || undefined,
+      instructions: tee
+        ? [instructions.trim(), ...teePlacement(mocks)].filter(Boolean).join("\n") || undefined
+        : instructions || undefined,
       editHref: `/products/${product.handle}`,
     };
 
@@ -643,7 +832,8 @@ export default function TShirtConfigurator({
     flyToCart(galleryRef.current?.querySelector("img") ?? null);
     // Keep them on the product page — the cart comes to them instead.
     setIsCheckingOut(false);
-    setTimeout(openCartDrawer, 650);
+    if (goCart) router.push("/cart");
+    else setTimeout(openCartDrawer, 650);
   }
 
   return (
@@ -772,10 +962,10 @@ export default function TShirtConfigurator({
               </h1>
               <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <AnimatedPrice
-                  value={perShirtPrice * (1 - volumePct / 100)}
+                  value={oneMode ? onePrice : perShirtPrice * (1 - volumePct / 100)}
                   className="text-3xl font-bold accent-gradient-text"
                 />
-                {volumePct > 0 && (
+                {!oneMode && volumePct > 0 && (
                   <span className="text-base font-medium text-foreground-muted line-through">
                     ${perShirtPrice.toFixed(2)}
                   </span>
@@ -784,7 +974,7 @@ export default function TShirtConfigurator({
                   per shirt
                 </span>
               </div>
-              {volumeTiers.length > 0 && (
+              {!oneMode && volumeTiers.length > 0 && (
                 <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-[#d9f000]/30 bg-[#d9f000]/10 px-3 py-1 text-xs font-semibold text-[#d9f000]">
                   <span aria-hidden>🏷️</span>
                   {volumePct > 0
@@ -800,6 +990,30 @@ export default function TShirtConfigurator({
                 html={product.descriptionHtml}
                 className="prose-sm rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-sm leading-relaxed text-foreground-muted [&_a]:text-accent [&_a]:underline"
               />
+            )}
+
+            {tee && (
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { one: false, t: "12 or more", sub: "Bulk price · all colors" },
+                  { one: true, t: "Just 1 shirt", sub: "No minimum · black" },
+                ].map((o) => (
+                  <button
+                    key={o.t}
+                    type="button"
+                    aria-pressed={oneMode === o.one}
+                    onClick={() => setOneMode(o.one)}
+                    className={`rounded-2xl border p-3 text-center transition ${
+                      oneMode === o.one
+                        ? "border-highlight bg-highlight-soft ring-2 ring-[#18d3e8]/40"
+                        : "border-border-soft bg-white/3 hover:bg-white/6"
+                    }`}
+                  >
+                    <div className="font-display text-lg font-black uppercase">{o.t}</div>
+                    <div className="text-[11px] text-foreground-muted">{o.sub}</div>
+                  </button>
+                ))}
+              </div>
             )}
 
             {/* Single-pick non-size options (Fabric, Sleeve Type, …). Color,
@@ -832,6 +1046,68 @@ export default function TShirtConfigurator({
                   </Section>
                 );
               }
+              if (tee && /sleeve/i.test(opt.name)) {
+                return (
+                  <Section key={opt.id} title="Pick your shirt" value={value}>
+                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                      {opt.values.map((v) => {
+                        const long = /long/i.test(v);
+                        const poly = /poly|perf/i.test(v);
+                        const label = poly ? "Performance tee" : "Cotton tee";
+                        const sub = long ? "Long sleeve" : "Short sleeve";
+                        const prices = (oneMode ? singleProduct?.variants : product.variants)
+                          ?.filter((x) => x.selectedOptions.some((so) => (so.name === "Sleeve Type" || so.name === "Style") && so.value === v))
+                          .map((x) => Number(x.price)) ?? [];
+                        const from = prices.length ? Math.min(...prices) : null;
+                        return (
+                          <button
+                            key={v}
+                            type="button"
+                            aria-pressed={v === value}
+                            onClick={() => setOption(opt.name, v)}
+                            className={`overflow-hidden rounded-2xl border text-center transition ${
+                              v === value ? "border-highlight ring-2 ring-[#18d3e8]/50" : "border-border-soft bg-white/3 hover:bg-white/6"
+                            }`}
+                          >
+                            <div className="bg-white p-1.5">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={`/one-shirt/${long ? "tee-long" : "tee-short"}-front.jpg`}
+                                alt={`${label}, ${sub.toLowerCase()}`}
+                                className="mx-auto h-24 w-full object-contain"
+                                loading="lazy"
+                              />
+                            </div>
+                            <div className="px-1.5 py-2">
+                              <div className="text-xs font-bold leading-tight">{label}</div>
+                              <div className="text-[11px] text-foreground-muted">{sub}</div>
+                              {from != null && (
+                                <div className="mt-0.5 text-sm font-black text-[#d9f000]">
+                                  {oneMode ? "" : "from "}${from.toFixed(from % 1 ? 2 : 0)}
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                      <Link
+                        href="/products/embroidered-polos"
+                        className="overflow-hidden rounded-2xl border border-border-soft bg-white/3 text-center transition hover:bg-white/6"
+                      >
+                        <div className="bg-white p-1.5">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src="/one-shirt/polo-front.jpg" alt="Embroidered polo" className="mx-auto h-24 w-full object-contain" loading="lazy" />
+                        </div>
+                        <div className="px-1.5 py-2">
+                          <div className="text-xs font-bold leading-tight">Polo</div>
+                          <div className="text-[11px] text-foreground-muted">Embroidered</div>
+                          <div className="mt-0.5 text-[11px] font-bold text-[#18d3e8]">See polos →</div>
+                        </div>
+                      </Link>
+                    </div>
+                  </Section>
+                );
+              }
               // Generic pill picker for Fabric, Sleeve Type, etc.
               return (
                 <Section key={opt.id} title={opt.name} value={value}>
@@ -857,7 +1133,7 @@ export default function TShirtConfigurator({
 
             {/* Bulk pricing tiers — right above the quantities, so customers
                 see the per-shirt price drop as they add more. */}
-            {sizeOption && volumeTiers.length > 0 && (
+            {!oneMode && sizeOption && volumeTiers.length > 0 && (
               <BulkPricingLadder
                 tiers={volumeTiers}
                 minQuantity={minQuantity}
@@ -867,7 +1143,7 @@ export default function TShirtConfigurator({
             )}
 
             {/* Single-color size matrix — qty per size, total ≥ minQuantity */}
-            {sizeOption && !multiColor && (
+            {!oneMode && sizeOption && !multiColor && (
               <Section
                 title={`${sizeOption.name} & quantity`}
                 value={`${totalQuantity} / min ${minQuantity}`}
@@ -931,7 +1207,7 @@ export default function TShirtConfigurator({
 
             {/* Multi-color matrix — pick colors, set qty per size for each.
                 Total across every color must be ≥ minQuantity. */}
-            {sizeOption && multiColor && (
+            {!oneMode && sizeOption && multiColor && (
               <Section
                 title="Colors & quantity"
                 value={`${totalQuantity} / min ${minQuantity}`}
@@ -1064,6 +1340,7 @@ export default function TShirtConfigurator({
 
             {/* Mix & Match — apparel already in the cart counts toward this
                 order's minimum and its bulk tier. */}
+            {!oneMode && (
             <MixMatchPanel
               status={mix}
               thisStyleQty={totalQuantity}
@@ -1071,7 +1348,93 @@ export default function TShirtConfigurator({
               ownMinimum={minQuantity}
               cartLines={cartGarmentLines}
             />
+            )}
 
+            {tee && oneMode && (
+              <>
+                <Section title="Color" value="Black">
+                  <p className="rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-xs text-foreground-muted">
+                    1 shirt is always black. Want other colors? Tap “12 or more”.
+                  </p>
+                </Section>
+                <Section title="Size" value={oneSize}>
+                  <div className="grid grid-cols-5 gap-2">
+                    {["S", "M", "L", "XL", "2XL"].map((z) => (
+                      <button
+                        key={z}
+                        type="button"
+                        onClick={() => setOneSize(z)}
+                        className={`rounded-xl border px-1 py-2.5 text-sm font-bold transition ${
+                          oneSize === z ? "border-highlight bg-highlight-soft" : "border-border-soft bg-white/3 hover:bg-white/6"
+                        }`}
+                      >
+                        {z}
+                      </button>
+                    ))}
+                  </div>
+                  {oneSize === "2XL" && <p className="mt-1 text-[11px] text-foreground-muted">2XL is +$4.</p>}
+                </Section>
+                <Section title="Speed">
+                  <button
+                    type="button"
+                    aria-pressed={rush}
+                    onClick={() => setRush(!rush)}
+                    className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${
+                      rush ? "border-highlight bg-highlight-soft" : "border-border-soft bg-white/3"
+                    }`}
+                  >
+                    <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 text-[10px] ${rush ? "border-[#18d3e8] bg-[#18d3e8] text-black" : "border-white/40"}`}>
+                      {rush ? "✓" : ""}
+                    </span>
+                    <span>
+                      <span className="block text-sm font-bold">Rush: 2 business days <span className="font-normal text-[#d9f000]">· +$15</span></span>
+                      <span className="block text-xs text-foreground-muted">Otherwise 3–5 business days.</span>
+                    </span>
+                  </button>
+                </Section>
+              </>
+            )}
+
+
+            {tee ? (
+              <>
+                <Section title="Design your shirt">
+                  <TeeDesigner
+                    photoKey={teePhoto}
+                    colorHex={teeColorHex}
+                    chest={chest}
+                    setChest={setChest}
+                    logos={logos}
+                    setLogos={(fn) => setLogos(fn)}
+                  />
+                </Section>
+                <Section title="Proof">
+                  <div className="space-y-2">
+                    {[
+                      { v: true, t: "Send me a proof", d: "Free. Nothing prints until you say OK." },
+                      { v: false, t: "No proof. Print it as shown.", d: "Fastest. Prints exactly like your picture." },
+                    ].map((o) => (
+                      <button
+                        key={o.t}
+                        type="button"
+                        aria-pressed={proof === o.v}
+                        onClick={() => setProof(o.v)}
+                        className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${
+                          proof === o.v ? "border-highlight bg-highlight-soft" : "border-border-soft bg-white/3"
+                        }`}
+                      >
+                        <span className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 ${proof === o.v ? "border-[#18d3e8] bg-[#18d3e8]" : "border-white/40"}`} />
+                        <span>
+                          <span className="block text-sm font-bold">{o.t}</span>
+                          <span className="block text-xs text-foreground-muted">{o.d}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </Section>
+              </>
+            ) : (
+              <>
             {/* Print location (only shown for products that have it) */}
             {showPrintLocations && (
               <Section title="Print location">
@@ -1133,6 +1496,9 @@ export default function TShirtConfigurator({
               </div>
             </Section>
 
+              </>
+            )}
+
             {/* Phone (optional) */}
             <Section title="Phone number (optional)">
               <input
@@ -1161,6 +1527,19 @@ export default function TShirtConfigurator({
               />
             </Section>
 
+            {oneMode && (
+              <div className="overflow-hidden rounded-2xl total-gradient p-5">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-sm font-medium text-white/90">1 shirt{rush ? " · rush" : ""}</span>
+                  <span className="text-3xl font-bold text-white">${onePrice.toFixed(2)}</span>
+                </div>
+                <div className="mt-1 text-right text-xs font-medium text-white/80">
+                  {rush ? "Ready in 2 business days" : "Ready in 3–5 business days"}
+                </div>
+              </div>
+            )}
+            {!oneMode && (
+              <>
             {/* Order summary + Total */}
             <div className="overflow-hidden rounded-2xl total-gradient p-5">
               {totalQuantity > 0 && (
@@ -1236,10 +1615,13 @@ export default function TShirtConfigurator({
               </div>
             </div>
 
+              </>
+            )}
+
             <button
               id="buy-button"
               type="button"
-              onClick={handleAddToCart}
+              onClick={() => void handleAddToCart(false)}
               disabled={!canCheckout}
               className={`group flex w-full items-center justify-center gap-2 rounded-md px-6 py-4 font-headline text-sm font-bold uppercase tracking-wider transition ${
                 canCheckout
@@ -1274,6 +1656,30 @@ export default function TShirtConfigurator({
                 </>
               )}
             </button>
+            {tee && (
+              <button
+                type="button"
+                onClick={() => void handleAddToCart(true)}
+                disabled={!canCheckout}
+                className={`flex w-full items-center justify-center gap-2 rounded-md px-6 py-4 font-headline text-sm font-bold uppercase tracking-wider transition ${
+                  canCheckout
+                    ? "bg-[#18d3e8] text-black hover:brightness-110"
+                    : "cursor-not-allowed border border-border-soft bg-white/4 text-foreground-muted"
+                }`}
+              >
+                Buy now
+              </button>
+            )}
+            {teeErr && <p className="text-center text-sm text-[#ff9aa2]">{teeErr}</p>}
+            {tee && (
+              <p className="text-center text-[11px] text-foreground-muted">
+                Your design is saved on this device for 30 days.{" "}
+                <Link href="/signup?redirect=/products/tshirts" className="underline">
+                  Create an account
+                </Link>{" "}
+                to keep it everywhere.
+              </p>
+            )}
             <p className="text-center text-[11px] text-foreground-muted">
               You&apos;ll be redirected to Shopify checkout.
             </p>

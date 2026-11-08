@@ -282,26 +282,19 @@ export default function WrapDesigner() {
       {step === "vehicle" && (
         <div>
           <h2 className="font-display text-2xl">Choose your vehicle</h2>
-          <p className="mb-3 text-sm text-white/65">Pick the closest match. Every template is drawn at 1:20 scale, so sizes you enter are real inches.</p>
           {draftTpl && draft && (
             <button type="button" className={btn + " mb-4"} onClick={() => openTemplate(draftTpl, draft.design)}>
               Resume your last design ({draftTpl.model})
             </button>
           )}
-          <ol className="mb-3 flex gap-3 text-[11px] text-white/60">
-            <li><b className="text-[#18d3e8]">1</b> Pick a type</li>
-            <li><b className="text-[#18d3e8]">2</b> Pick a brand</li>
-            <li><b className="text-[#18d3e8]">3</b> Tap your vehicle</li>
-          </ol>
-          <div className="mb-3 grid grid-cols-5 gap-2">
+                    <div className="mb-3 grid grid-cols-5 gap-2">
             {catsAll.slice(0, 5).map((c) => {
-              const n = allT.filter((t) => c === "All" || t.category === c).length;
               const on = cat === c;
               return (
                 <button key={c} type="button" onClick={() => setCat(c)} aria-pressed={on} className={"flex flex-col items-center gap-1 rounded-xl border px-1 py-2 text-center transition " + (on ? "border-[#18d3e8] bg-[#18d3e8]/15 text-[#18d3e8]" : "border-white/10 bg-surface text-white/70")}>
-                  {c === "All" ? <span className="flex h-7 items-center text-lg font-black">★</span> : <VehicleIcon kind={kindOf(c)} className="h-7 w-auto" />}
-                  <span className="text-[10px] font-bold uppercase leading-tight tracking-wide">{c === "SUVs & Crossovers" ? "SUVs" : c}</span>
-                  <span className="text-[10px] text-white/40">{n}</span>
+                  {c === "All" ? <span className="flex h-7 items-center text-lg font-black">★</span> : <VehicleIcon kind={kindOf(c)} className="h-8 w-auto" />}
+                  <span className="text-[11px] font-bold uppercase leading-tight">{c === "SUVs & Crossovers" ? "SUVs" : c}</span>
+                  
                 </button>
               );
             })}
@@ -309,7 +302,7 @@ export default function WrapDesigner() {
           <div className="relative mb-3">
             <div className="flex snap-x gap-2 overflow-x-auto pb-1 pr-10 [scrollbar-width:none]">
               {brands.map((o) => (
-                <button key={o} type="button" onClick={() => setBrand(o)} aria-pressed={brandNow === o} className={"flex shrink-0 snap-start items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold transition " + (brandNow === o ? "border-[#18d3e8] bg-[#18d3e8]/15 text-[#18d3e8]" : "border-white/15 text-white/75")}>
+                <button key={o} type="button" onClick={() => setBrand(o)} aria-pressed={brandNow === o} className={"flex shrink-0 snap-start items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-bold transition " + (brandNow === o ? "border-[#18d3e8] bg-[#18d3e8]/15 text-[#18d3e8]" : "border-white/15 text-white/75")}>
                   {o !== "All" && <span className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black text-white" style={{ background: BRAND_COLOR[o] ?? "#555" }}>{o[0]}</span>}
                   {o === "All" ? "All brands" : o}
                 </button>
@@ -317,7 +310,6 @@ export default function WrapDesigner() {
             </div>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex w-10 items-center justify-end bg-gradient-to-l from-background to-transparent pr-1 text-white/60" aria-hidden="true">›</div>
           </div>
-          <p className="mb-2 text-xs text-white/45">{shown.length} vehicle{shown.length === 1 ? "" : "s"}</p>
           {shown.length === 0 && (
             <button type="button" className={btn} onClick={() => { setCat("All"); setBrand("All"); }}>Show all vehicles</button>
           )}
@@ -334,15 +326,13 @@ export default function WrapDesigner() {
                   <VehicleIcon kind={kindOf(t.category)} className="h-6 w-auto" />
                   <span className="rounded-full px-2 py-0.5 text-[10px] font-black uppercase text-white" style={{ background: BRAND_COLOR[t.make] ?? "#555" }}>{t.make === "Mercedes-Benz" ? "Mercedes" : t.make}</span>
                 </span>
-                <span className="mt-2 block text-sm font-bold leading-tight">{t.make === "Custom" ? t.label : `${t.year} ${t.model}`}</span>
-                <span className="mt-0.5 line-clamp-1 block text-[11px] text-white/55">{t.bodyStyle}</span>
-                <span className="mt-1 block text-[11px] text-white/40">{t.lengthIn}&quot; long</span>
+                <span className="mt-2 block text-base font-bold leading-tight">{t.make === "Custom" ? t.label : `${t.year} ${t.model}`}</span>
               </button>
             ))}
           </div>
           <div className="mt-4 rounded-2xl border border-dashed border-[#d94cb3]/50 bg-[#d94cb3]/5 p-4">
-            <p className="font-headline text-xs uppercase tracking-widest text-[#d94cb3]">Have your own template?</p>
-            <p className="mt-1 text-sm text-white/70">Upload a 1:20 vehicle template (.eps, .ai or .pdf) and we&apos;ll build it automatically: views, body color and windows.</p>
+            <p className="font-headline text-xs uppercase tracking-widest text-[#d94cb3]">Add your own template</p>
+            
             <button type="button" className={btn + " mt-3"} disabled={impBusy} onClick={() => tplFile.current?.click()}>
               {impBusy ? "Building template…" : "Upload template (.eps, .ai, .pdf)"}
             </button>
@@ -351,7 +341,6 @@ export default function WrapDesigner() {
           </div>
           {loading && <p className="mt-4 text-sm text-white/70">Loading template…</p>}
           {loadErr && <p className="mt-4 text-sm text-[#ff9aa2]">{loadErr}</p>}
-          <p className="mt-6 text-xs text-white/45">More vehicles (vans, box trucks, SUVs, sedans, trailers) are coming. Call (772) 985-2854 if yours isn&apos;t listed.</p>
           {saved.length > 0 && (
             <button type="button" className={btn + " mt-4"} onClick={() => setShowSaved(true)}>My designs ({saved.length})</button>
           )}

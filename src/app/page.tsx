@@ -309,6 +309,21 @@ export default async function Home() {
           )}
         </section>
 
+        {/* One Shirt, No Minimum */}
+        <section className="mx-auto max-w-7xl px-4 pb-4 pt-2 sm:px-6 lg:px-8">
+          <Link
+            href="/one-shirt"
+            data-reveal
+            className="flex items-center justify-between gap-4 rounded-3xl border border-[#d9f000]/30 bg-linear-to-r from-[#d9f000]/10 via-surface to-[#18d3e8]/10 p-5 sm:p-8"
+          >
+            <div>
+              <h2 className="font-display text-2xl font-black uppercase sm:text-3xl">One shirt. No minimum.</h2>
+              <p className="mt-1 text-sm text-foreground-muted sm:text-base">Black tees and polos from $25. Printed in Stuart. Pickup.</p>
+            </div>
+            <span className="shrink-0 rounded-xl bg-[#d9f000] px-4 py-2.5 text-sm font-black uppercase text-black">Design it</span>
+          </Link>
+        </section>
+
         {/* Vehicle Wrap Designer — design a wrap on the exact truck */}
         <section className="mx-auto max-w-7xl px-4 pb-6 pt-2 sm:px-6 lg:px-8">
           <Link

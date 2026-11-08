@@ -5,14 +5,14 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FAQSection from "@/components/FAQSection";
 import ReturnPolicyNote from "@/components/ReturnPolicyNote";
-import TeeConfigurator from "@/components/TeeConfigurator";
+import TShirtConfigurator from "@/components/TShirtConfigurator";
 import { getProductByHandle } from "@/lib/shopify-products";
 import { ShopifyError } from "@/lib/shopify";
 
 export const metadata: Metadata = {
   title: "Custom T-Shirt Printing in Stuart, FL | Print Laser Stitch",
   description:
-    "Custom printed t-shirts in every color and size from our Stuart, Florida shop. Upload your design, get instant pricing, 1 shirt or bulk. No minimum for one.",
+    "Custom printed t-shirts in every color and size from our Stuart, Florida shop. Upload your design, get instant pricing, delivered in 5–12 business days.",
   alternates: { canonical: "/products/tshirts" },
 };
 
@@ -46,7 +46,7 @@ export default async function TShirtsPage() {
       <main className="flex-1">
         {product && <ProductJsonLd product={product} />}
         {product ? (
-          <TeeConfigurator bulk={product} single={single} />
+          <TShirtConfigurator product={product} singleProduct={single} />
         ) : (
           <ProductMissingNotice handle={PRODUCT_HANDLE} error={fetchError} />
         )}

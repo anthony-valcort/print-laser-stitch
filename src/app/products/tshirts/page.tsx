@@ -5,14 +5,14 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FAQSection from "@/components/FAQSection";
 import ReturnPolicyNote from "@/components/ReturnPolicyNote";
-import TShirtConfigurator from "@/components/TShirtConfigurator";
+import TeeConfigurator from "@/components/TeeConfigurator";
 import { getProductByHandle } from "@/lib/shopify-products";
 import { ShopifyError } from "@/lib/shopify";
 
 export const metadata: Metadata = {
   title: "Custom T-Shirt Printing in Stuart, FL | Print Laser Stitch",
   description:
-    "Custom printed t-shirts in every color and size from our Stuart, Florida shop. Upload your design, get instant pricing, delivered in 5–12 business days.",
+    "Custom printed t-shirts in every color and size from our Stuart, Florida shop. Upload your design, get instant pricing, 1 shirt or bulk. No minimum for one.",
   alternates: { canonical: "/products/tshirts" },
 };
 
@@ -21,13 +21,16 @@ export const metadata: Metadata = {
 export const revalidate = 300;
 
 const PRODUCT_HANDLE = "cotton-t-shirts";
+const SINGLE_HANDLE = "single-custom-t-shirt";
 
 export default async function TShirtsPage() {
   let product = null;
+  let single = null;
   let fetchError: string | null = null;
 
   try {
     product = await getProductByHandle(PRODUCT_HANDLE);
+    single = await getProductByHandle(SINGLE_HANDLE).catch(() => null);
   } catch (err) {
     fetchError =
       err instanceof ShopifyError
@@ -43,7 +46,7 @@ export default async function TShirtsPage() {
       <main className="flex-1">
         {product && <ProductJsonLd product={product} />}
         {product ? (
-          <TShirtConfigurator product={product} />
+          <TeeConfigurator bulk={product} single={single} />
         ) : (
           <ProductMissingNotice handle={PRODUCT_HANDLE} error={fetchError} />
         )}

@@ -94,6 +94,12 @@ export default function WrapDesigner() {
   }, [tpl, design]);
 
   const draft = typeof window !== "undefined" ? loadDraft() : null;
+  const [cat, setCat] = useState("All");
+  const [brand, setBrand] = useState("All");
+  const allT = [...custom, ...WRAP_TEMPLATES];
+  const cats = ["All", ...Array.from(new Set(allT.map((t) => t.category)))];
+  const brands = ["All", ...Array.from(new Set(allT.map((t) => t.make))).sort()];
+  const shown = allT.filter((t) => (cat === "All" || t.category === cat) && (brand === "All" || t.make === brand));
   const draftTpl = draft ? WRAP_TEMPLATES.find((t) => t.id === draft.tplId) : undefined;
 
   const save = () => {
@@ -218,7 +224,7 @@ export default function WrapDesigner() {
   return (
     <section data-no-buddy className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6 lg:py-10">
       <div className="mb-5">
-        <p className="font-headline text-xs uppercase tracking-widest text-[#18d3e8]">Free design tool</p>
+        <p className="font-headline text-xs uppercase tracking-widest text-[#18d3e8]">Experimental preview</p>
         <h1 className="font-display mt-1 text-3xl sm:text-4xl">Vehicle Wrap Designer</h1>
       </div>
 
@@ -253,8 +259,17 @@ export default function WrapDesigner() {
               Resume your last design ({draftTpl.model})
             </button>
           )}
+          <div className="mb-4 space-y-2">
+            {[{ v: cat, set: setCat, opts: cats }, { v: brand, set: setBrand, opts: brands }].map((row, ri) => (
+              <div key={ri} className="flex gap-2 overflow-x-auto pb-1">
+                {row.opts.map((o) => (
+                  <button key={o} type="button" onClick={() => row.set(o)} className={"shrink-0 rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider transition " + (row.v === o ? "border-[#18d3e8] bg-[#18d3e8]/15 text-[#18d3e8]" : "border-white/15 text-white/70 hover:border-white/40")}>{o}</button>
+                ))}
+              </div>
+            ))}
+          </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[...custom, ...WRAP_TEMPLATES].map((t) => (
+            {shown.map((t) => (
               <button
                 key={t.id}
                 type="button"

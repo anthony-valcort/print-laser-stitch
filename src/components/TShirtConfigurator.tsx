@@ -60,6 +60,7 @@ import TeeDesigner, {
   packLogo,
   quality,
   renderMockup,
+  TeeShowcase,
   tintPhoto,
   unpackLogo,
   uploadBlob,
@@ -194,6 +195,7 @@ export default function TShirtConfigurator({
   >({});
 
   const addColor = (color: string) => {
+    setActiveColor(color);
     setOpenColors((prev) => (prev.includes(color) ? prev : [...prev, color]));
     setColorSizeQty((prev) =>
       prev[color]
@@ -207,6 +209,7 @@ export default function TShirtConfigurator({
     );
   };
   const removeColor = (color: string) => {
+    setActiveColor((a) => (a === color ? null : a));
     setOpenColors((prev) => prev.filter((c) => c !== color));
     setColorSizeQty((prev) => {
       const next = { ...prev };
@@ -236,6 +239,7 @@ export default function TShirtConfigurator({
   const [chest, setChest] = useState(false);
   const [logos, setLogos] = useState<DesignerLogos>({});
   const [teeBusy, setTeeBusy] = useState(false);
+  const [activeColor, setActiveColor] = useState<string | null>(null);
   const [teeErr, setTeeErr] = useState("");
 
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -602,10 +606,15 @@ export default function TShirtConfigurator({
   const teePhoto: PhotoKey = teeStyleLong ? "tee-long" : "tee-short";
   const teeColorHex = (() => {
     if (oneMode) return null;
-    const c = openColors[0];
+    const c = activeColor && openColors.includes(activeColor) ? activeColor : openColors[openColors.length - 1];
     if (!c || /^black$/i.test(c)) return null;
-    return colorHex(c) ?? null;
+    return swatchHex(c);
   })();
+  const teeColorName = oneMode
+    ? "Black"
+    : activeColor && openColors.includes(activeColor)
+      ? activeColor
+      : (openColors[openColors.length - 1] ?? "Black");
 
   async function teeMockups(): Promise<Partial<Record<Side, string>>> {
     const out: Partial<Record<Side, string>> = {};
@@ -887,6 +896,17 @@ export default function TShirtConfigurator({
                 </svg>
               </a>
             </div>
+            {tee && (
+              <div className="mb-3">
+                <TeeShowcase
+                  photoKey={teePhoto}
+                  colorHex={teeColorHex}
+                  chest={chest}
+                  logos={logos}
+                  label={`${teeColorName} · ${STYLE_NAME}`}
+                />
+              </div>
+            )}
             <ProductGallery
               images={displayImages}
               idx={galleryIdx}
@@ -984,38 +1004,6 @@ export default function TShirtConfigurator({
               )}
             </div>
 
-            {/* Description */}
-            {product.descriptionHtml && (
-              <ExpandableDescription
-                html={product.descriptionHtml}
-                className="prose-sm rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-sm leading-relaxed text-foreground-muted [&_a]:text-accent [&_a]:underline"
-              />
-            )}
-
-            {tee && (
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { one: false, t: "12 or more", sub: "Bulk price · all colors" },
-                  { one: true, t: "Just 1 shirt", sub: "No minimum · black" },
-                ].map((o) => (
-                  <button
-                    key={o.t}
-                    type="button"
-                    aria-pressed={oneMode === o.one}
-                    onClick={() => setOneMode(o.one)}
-                    className={`rounded-2xl border p-3 text-center transition ${
-                      oneMode === o.one
-                        ? "border-highlight bg-highlight-soft ring-2 ring-[#18d3e8]/40"
-                        : "border-border-soft bg-white/3 hover:bg-white/6"
-                    }`}
-                  >
-                    <div className="font-display text-lg font-black uppercase">{o.t}</div>
-                    <div className="text-[11px] text-foreground-muted">{o.sub}</div>
-                  </button>
-                ))}
-              </div>
-            )}
-
             {/* Single-pick non-size options (Fabric, Sleeve Type, …). Color,
                 when present, is handled by the per-color matrix below. */}
             {pickerOptions.map((opt) => {
@@ -1100,7 +1088,7 @@ export default function TShirtConfigurator({
                         </div>
                         <div className="px-1.5 py-2">
                           <div className="text-xs font-bold leading-tight">Polo</div>
-                          <div className="text-[11px] text-foreground-muted">Embroidered</div>
+                          <div className="text-[11px] font-black uppercase tracking-wide text-[#d94cb3]">Embroidery</div>
                           <div className="mt-0.5 text-[11px] font-bold text-[#18d3e8]">See polos →</div>
                         </div>
                       </Link>
@@ -1133,14 +1121,75 @@ export default function TShirtConfigurator({
 
             {/* Bulk pricing tiers — right above the quantities, so customers
                 see the per-shirt price drop as they add more. */}
-            {!oneMode && sizeOption && volumeTiers.length > 0 && (
-              <BulkPricingLadder
-                tiers={volumeTiers}
-                minQuantity={minQuantity}
-                unitPrice={perShirtPrice}
-                totalQuantity={totalQuantity}
-              />
+            {tee && (
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { one: false, t: "12 or more 💰", sub: "Bulk price · save up to 20%" },
+                  { one: true, t: "Try 1 shirt 🔥", sub: "No minimum · black" },
+                ].map((o) => (
+                  <button
+                    key={o.t}
+                    type="button"
+                    aria-pressed={oneMode === o.one}
+                    onClick={() => setOneMode(o.one)}
+                    className={`rounded-2xl border p-3 text-center transition ${
+                      oneMode === o.one
+                        ? "border-highlight bg-highlight-soft ring-2 ring-[#18d3e8]/40"
+                        : "border-border-soft bg-white/3 hover:bg-white/6"
+                    }`}
+                  >
+                    <div className="font-display text-lg font-black uppercase">{o.t}</div>
+                    <div className="text-[11px] text-foreground-muted">{o.sub}</div>
+                  </button>
+                ))}
+              </div>
             )}
+
+            {tee && oneMode && (
+              <>
+                <Section title="Color" value="Black">
+                  <p className="rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-xs text-foreground-muted">
+                    1 shirt is always black. Want other colors? Tap “12 or more”.
+                  </p>
+                </Section>
+                <Section title="Size" value={oneSize}>
+                  <div className="grid grid-cols-5 gap-2">
+                    {["S", "M", "L", "XL", "2XL"].map((z) => (
+                      <button
+                        key={z}
+                        type="button"
+                        onClick={() => setOneSize(z)}
+                        className={`rounded-xl border px-1 py-2.5 text-sm font-bold transition ${
+                          oneSize === z ? "border-highlight bg-highlight-soft" : "border-border-soft bg-white/3 hover:bg-white/6"
+                        }`}
+                      >
+                        {z}
+                      </button>
+                    ))}
+                  </div>
+                  {oneSize === "2XL" && <p className="mt-1 text-[11px] text-foreground-muted">2XL is +$4.</p>}
+                </Section>
+                <Section title="Speed">
+                  <button
+                    type="button"
+                    aria-pressed={rush}
+                    onClick={() => setRush(!rush)}
+                    className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${
+                      rush ? "border-highlight bg-highlight-soft" : "border-border-soft bg-white/3"
+                    }`}
+                  >
+                    <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 text-[10px] ${rush ? "border-[#18d3e8] bg-[#18d3e8] text-black" : "border-white/40"}`}>
+                      {rush ? "✓" : ""}
+                    </span>
+                    <span>
+                      <span className="block text-sm font-bold">Rush: 2 business days <span className="font-normal text-[#d9f000]">· +$15</span></span>
+                      <span className="block text-xs text-foreground-muted">Otherwise 3–5 business days.</span>
+                    </span>
+                  </button>
+                </Section>
+              </>
+            )}
+
 
             {/* Single-color size matrix — qty per size, total ≥ minQuantity */}
             {!oneMode && sizeOption && !multiColor && (
@@ -1219,10 +1268,6 @@ export default function TShirtConfigurator({
                   )
                 }
               >
-                <p className="mb-2 text-[11px] text-foreground-muted">
-                  Add the colors you want — each opens its own size row. You
-                  can mix different colors and sizes in one order.
-                </p>
                 <div className="mb-3 flex flex-wrap gap-2">
                   {colorChoices.map((c) => {
                     const open = openColors.includes(c);
@@ -1251,9 +1296,8 @@ export default function TShirtConfigurator({
                 </div>
 
                 {openColors.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-border-soft bg-white/3 px-4 py-6 text-center text-xs text-foreground-muted">
-                    Add one or more colors above, then set the quantity per
-                    size for each.
+                  <p className="rounded-xl border border-dashed border-border-soft bg-white/3 px-4 py-5 text-center text-xs text-foreground-muted">
+                    Tap a color to start 👆
                   </p>
                 ) : (
                   <div className="space-y-3">
@@ -1338,6 +1382,15 @@ export default function TShirtConfigurator({
               </Section>
             )}
 
+            {!oneMode && sizeOption && volumeTiers.length > 0 && (
+              <BulkPricingLadder
+                tiers={volumeTiers}
+                minQuantity={minQuantity}
+                unitPrice={perShirtPrice}
+                totalQuantity={totalQuantity}
+              />
+            )}
+
             {/* Mix & Match — apparel already in the cart counts toward this
                 order's minimum and its bulk tier. */}
             {!oneMode && (
@@ -1349,52 +1402,6 @@ export default function TShirtConfigurator({
               cartLines={cartGarmentLines}
             />
             )}
-
-            {tee && oneMode && (
-              <>
-                <Section title="Color" value="Black">
-                  <p className="rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-xs text-foreground-muted">
-                    1 shirt is always black. Want other colors? Tap “12 or more”.
-                  </p>
-                </Section>
-                <Section title="Size" value={oneSize}>
-                  <div className="grid grid-cols-5 gap-2">
-                    {["S", "M", "L", "XL", "2XL"].map((z) => (
-                      <button
-                        key={z}
-                        type="button"
-                        onClick={() => setOneSize(z)}
-                        className={`rounded-xl border px-1 py-2.5 text-sm font-bold transition ${
-                          oneSize === z ? "border-highlight bg-highlight-soft" : "border-border-soft bg-white/3 hover:bg-white/6"
-                        }`}
-                      >
-                        {z}
-                      </button>
-                    ))}
-                  </div>
-                  {oneSize === "2XL" && <p className="mt-1 text-[11px] text-foreground-muted">2XL is +$4.</p>}
-                </Section>
-                <Section title="Speed">
-                  <button
-                    type="button"
-                    aria-pressed={rush}
-                    onClick={() => setRush(!rush)}
-                    className={`flex w-full items-start gap-3 rounded-xl border p-3 text-left transition ${
-                      rush ? "border-highlight bg-highlight-soft" : "border-border-soft bg-white/3"
-                    }`}
-                  >
-                    <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border-2 text-[10px] ${rush ? "border-[#18d3e8] bg-[#18d3e8] text-black" : "border-white/40"}`}>
-                      {rush ? "✓" : ""}
-                    </span>
-                    <span>
-                      <span className="block text-sm font-bold">Rush: 2 business days <span className="font-normal text-[#d9f000]">· +$15</span></span>
-                      <span className="block text-xs text-foreground-muted">Otherwise 3–5 business days.</span>
-                    </span>
-                  </button>
-                </Section>
-              </>
-            )}
-
 
             {tee ? (
               <>
@@ -1683,6 +1690,15 @@ export default function TShirtConfigurator({
             <p className="text-center text-[11px] text-foreground-muted">
               You&apos;ll be redirected to Shopify checkout.
             </p>
+
+            {/* Description */}
+            {product.descriptionHtml && (
+              <ExpandableDescription
+                html={product.descriptionHtml}
+                className="prose-sm rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-sm leading-relaxed text-foreground-muted [&_a]:text-accent [&_a]:underline"
+              />
+            )}
+
           </div>
 
           {/* How-to video: below the product on phones */}

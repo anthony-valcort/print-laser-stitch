@@ -121,6 +121,10 @@ export default async function DynamicProductPage({
   // double-sided detection. When the title encodes a minimum (e.g. "6 Piece
   // Minimum" on the polo) we use that; otherwise default to Anthony's bulk
   // apparel minimum of 12.
+  const singleProduct =
+    product.handle === "cotton-t-shirts"
+      ? await getProductByHandle("single-custom-t-shirt").catch(() => null)
+      : null;
   const detectedMinQty = detectMinQuantityFromTitle(product.title);
   const sizeOption = product.options.find((o) => isSizeOption(o.name));
   const useSizeMatrix = sizeOption ? hasApparelSizes(sizeOption.values) : false;
@@ -150,6 +154,7 @@ export default async function DynamicProductPage({
             minQuantity={minQty}
             showPrintLocations={true}
             singleUploadLabel={apparelSingleUploadLabel}
+            singleProduct={singleProduct}
           />
         ) : (
           <GenericProductConfigurator

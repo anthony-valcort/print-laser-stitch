@@ -27,6 +27,32 @@ const STEPS: { key: Step; label: string }[] = [
   { key: "review", label: "Review & download" },
 ];
 const EMPTY: Design = { color: "#ffffff", layers: [] };
+type VKind = "truck" | "suv" | "sedan" | "van";
+const kindOf = (c: string): VKind => (c === "Trucks" ? "truck" : c === "Sedans" ? "sedan" : c === "Vans" ? "van" : "suv");
+const BODY: Record<VKind, string> = {
+  sedan: "M3 23V19Q3 17 6 16.5L16 15L23 9Q25 8 28 8H40Q43 8 45 10L50 15L58 16.5Q61 17.5 61 20V23Z",
+  suv: "M3 23V17Q3 15 6 14.5L12 13L17 7Q18 6 20 6H46Q49 6 51 9L55 14L58 15Q61 16 61 19V23Z",
+  van: "M3 23V9Q3 6 6 6H44Q47 6 49 9L55 15L58 16Q61 17 61 20V23Z",
+  truck: "M3 23V15H27V9Q27 7 29 7H39Q42 7 44 10L48 15H58Q61 16 61 19V23Z",
+};
+const WIN: Record<VKind, string> = {
+  sedan: "M26 10.5H31V15H21ZM34 10.5H40Q42 10.5 43.5 12L46 15H34Z",
+  suv: "M21 8H31V14H15ZM34 8H45Q46.5 8 47.5 10L50.5 14H34Z",
+  van: "M40 8H44Q45.5 8 46.5 9.5L50 14H40ZM8 8H18V13H8ZM21 8H31V13H21Z",
+  truck: "M30 9H38Q40 9 41.5 11L44 14H30Z",
+};
+function VehicleIcon({ kind, className = "h-8 w-auto" }: { kind: VKind; className?: string }) {
+  return (
+    <svg viewBox="0 0 64 30" className={className} aria-hidden="true">
+      <path d={BODY[kind]} fill="currentColor" />
+      <path d={WIN[kind]} fill="#050505" opacity="0.85" />
+      <circle cx="16" cy="23.5" r="4.6" fill="#050505" stroke="currentColor" strokeWidth="2" />
+      <circle cx="48" cy="23.5" r="4.6" fill="#050505" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+const BRAND_COLOR: Record<string, string> = { Ford: "#2f6bff", Toyota: "#eb0a1e", Jeep: "#6fae3c", Tesla: "#e82127", Hummer: "#d9a400", "Mercedes-Benz": "#9aa3ad", Custom: "#d94cb3" };
+
 const btn =
   "inline-flex h-10 items-center justify-center rounded-lg border border-white/15 bg-white/5 px-4 text-xs font-semibold text-white transition hover:border-[#18d3e8]/60";
 const field = "w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2.5 text-sm text-white";
@@ -97,9 +123,12 @@ export default function WrapDesigner() {
   const [cat, setCat] = useState("All");
   const [brand, setBrand] = useState("All");
   const allT = [...custom, ...WRAP_TEMPLATES];
-  const cats = ["All", ...Array.from(new Set(allT.map((t) => t.category)))];
-  const brands = ["All", ...Array.from(new Set(allT.map((t) => t.make))).sort()];
-  const shown = allT.filter((t) => (cat === "All" || t.category === cat) && (brand === "All" || t.make === brand));
+  const catList = ["Trucks", "SUVs & Crossovers", "Sedans", "Vans"];
+  const catsAll = ["All", ...catList, ...Array.from(new Set(allT.map((t) => t.category))).filter((c) => !catList.includes(c))];
+  const inCat = allT.filter((t) => cat === "All" || t.category === cat);
+  const brands = ["All", ...Array.from(new Set(inCat.map((t) => t.make))).sort()];
+  const brandNow = brands.includes(brand) ? brand : "All";
+  const shown = inCat.filter((t) => brandNow === "All" || t.make === brandNow);
   const draftTpl = draft ? WRAP_TEMPLATES.find((t) => t.id === draft.tplId) : undefined;
 
   const save = () => {
@@ -253,34 +282,61 @@ export default function WrapDesigner() {
       {step === "vehicle" && (
         <div>
           <h2 className="font-display text-2xl">Choose your vehicle</h2>
-          <p className="mb-5 text-sm text-white/65">Pick the closest match. Every template is drawn at 1:20 scale, so sizes you enter are real inches.</p>
+          <p className="mb-3 text-sm text-white/65">Pick the closest match. Every template is drawn at 1:20 scale, so sizes you enter are real inches.</p>
           {draftTpl && draft && (
             <button type="button" className={btn + " mb-4"} onClick={() => openTemplate(draftTpl, draft.design)}>
               Resume your last design ({draftTpl.model})
             </button>
           )}
-          <div className="mb-4 space-y-2">
-            {[{ v: cat, set: setCat, opts: cats }, { v: brand, set: setBrand, opts: brands }].map((row, ri) => (
-              <div key={ri} className="flex gap-2 overflow-x-auto pb-1">
-                {row.opts.map((o) => (
-                  <button key={o} type="button" onClick={() => row.set(o)} className={"shrink-0 rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider transition " + (row.v === o ? "border-[#18d3e8] bg-[#18d3e8]/15 text-[#18d3e8]" : "border-white/15 text-white/70 hover:border-white/40")}>{o}</button>
-                ))}
-              </div>
-            ))}
+          <ol className="mb-3 flex gap-3 text-[11px] text-white/60">
+            <li><b className="text-[#18d3e8]">1</b> Pick a type</li>
+            <li><b className="text-[#18d3e8]">2</b> Pick a brand</li>
+            <li><b className="text-[#18d3e8]">3</b> Tap your vehicle</li>
+          </ol>
+          <div className="mb-3 grid grid-cols-5 gap-2">
+            {catsAll.slice(0, 5).map((c) => {
+              const n = allT.filter((t) => c === "All" || t.category === c).length;
+              const on = cat === c;
+              return (
+                <button key={c} type="button" onClick={() => setCat(c)} aria-pressed={on} className={"flex flex-col items-center gap-1 rounded-xl border px-1 py-2 text-center transition " + (on ? "border-[#18d3e8] bg-[#18d3e8]/15 text-[#18d3e8]" : "border-white/10 bg-surface text-white/70")}>
+                  {c === "All" ? <span className="flex h-7 items-center text-lg font-black">★</span> : <VehicleIcon kind={kindOf(c)} className="h-7 w-auto" />}
+                  <span className="text-[10px] font-bold uppercase leading-tight tracking-wide">{c === "SUVs & Crossovers" ? "SUVs" : c}</span>
+                  <span className="text-[10px] text-white/40">{n}</span>
+                </button>
+              );
+            })}
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="relative mb-3">
+            <div className="flex snap-x gap-2 overflow-x-auto pb-1 pr-10 [scrollbar-width:none]">
+              {brands.map((o) => (
+                <button key={o} type="button" onClick={() => setBrand(o)} aria-pressed={brandNow === o} className={"flex shrink-0 snap-start items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold transition " + (brandNow === o ? "border-[#18d3e8] bg-[#18d3e8]/15 text-[#18d3e8]" : "border-white/15 text-white/75")}>
+                  {o !== "All" && <span className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-black text-white" style={{ background: BRAND_COLOR[o] ?? "#555" }}>{o[0]}</span>}
+                  {o === "All" ? "All brands" : o}
+                </button>
+              ))}
+            </div>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex w-10 items-center justify-end bg-gradient-to-l from-background to-transparent pr-1 text-white/60" aria-hidden="true">›</div>
+          </div>
+          <p className="mb-2 text-xs text-white/45">{shown.length} vehicle{shown.length === 1 ? "" : "s"}</p>
+          {shown.length === 0 && (
+            <button type="button" className={btn} onClick={() => { setCat("All"); setBrand("All"); }}>Show all vehicles</button>
+          )}
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
             {shown.map((t) => (
               <button
                 key={t.id}
                 type="button"
                 onClick={() => openTemplate(t)}
                 disabled={loading}
-                className="rounded-2xl border border-white/10 bg-surface p-4 text-left transition hover:border-[#18d3e8]/60"
+                className="flex flex-col rounded-xl border border-white/10 bg-surface p-3 text-left transition active:scale-[0.98] hover:border-[#18d3e8]/60"
               >
-                <span className="font-headline text-[11px] uppercase tracking-widest text-[#18d3e8]">{t.category}</span>
-                <span className="mt-1 block text-lg font-bold">{t.make === "Custom" ? t.label : `${t.year} ${t.make} ${t.model}`}</span>
-                <span className="block text-sm text-white/60">{t.bodyStyle}</span>
-                <span className="mt-2 block text-xs text-white/45">{t.lengthIn}&quot; long {t.wheelbaseIn > 0 ? `· ${t.wheelbaseIn}" wheelbase ` : ""}· {t.views.length} views</span>
+                <span className="flex items-center justify-between text-[#18d3e8]">
+                  <VehicleIcon kind={kindOf(t.category)} className="h-6 w-auto" />
+                  <span className="rounded-full px-2 py-0.5 text-[10px] font-black uppercase text-white" style={{ background: BRAND_COLOR[t.make] ?? "#555" }}>{t.make === "Mercedes-Benz" ? "Mercedes" : t.make}</span>
+                </span>
+                <span className="mt-2 block text-sm font-bold leading-tight">{t.make === "Custom" ? t.label : `${t.year} ${t.model}`}</span>
+                <span className="mt-0.5 line-clamp-1 block text-[11px] text-white/55">{t.bodyStyle}</span>
+                <span className="mt-1 block text-[11px] text-white/40">{t.lengthIn}&quot; long</span>
               </button>
             ))}
           </div>

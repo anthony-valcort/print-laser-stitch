@@ -399,15 +399,6 @@ export default function TeeDesigner({
       </div>
       <p className="mt-3 text-center text-xs text-white/55">Drag to move. Slide to resize. One side is fine.</p>
       {msg && <p className="mt-2 text-center text-sm text-[#ff9aa2]">{msg}</p>}
-      <details className="mt-3 rounded-xl border border-white/10 bg-surface px-3 py-2 text-sm text-white/75">
-        <summary className="cursor-pointer font-bold text-white">Tips for a sharp print</summary>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-relaxed">
-          <li>Best: SVG, or a PNG with a see-through background. Aim for 300 DPI (200 minimum).</li>
-          <li>Colors on the shirt photo are a preview. Dark art can disappear on dark shirts.</li>
-          <li>AI-made art may need a redraw. We&apos;ll tell you before we print.</li>
-          <li>Need design help? Order first, then message us.</li>
-        </ul>
-      </details>
     </div>
   );
 }

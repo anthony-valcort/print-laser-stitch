@@ -182,13 +182,17 @@ export function BulkProgress({
   const plural = (n: number) => `${unitLabel}${n === 1 ? "" : "s"}`;
 
   return (
-    <div className="mt-3 rounded-xl border border-border-soft bg-background/60 p-3">
+    <div
+      className="mt-3 rounded-xl border border-[#d9f000]/30 bg-background/60 p-3"
+      style={{ animation: "plsGlow 2.4s ease-in-out infinite" }}
+    >
+      <style>{`@keyframes plsGlow{0%,100%{box-shadow:0 0 0 0 rgba(217,240,0,0)}50%{box-shadow:0 0 18px 0 rgba(217,240,0,.22)}}@keyframes plsShine{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}`}</style>
       <div
         key={`${pct}-${next?.minQty ?? "max"}`}
         className="flex animate-fade-up items-start gap-2 text-[13px] leading-snug"
         style={{ animationDuration: "0.4s" }}
       >
-        <span className="text-base leading-none" aria-hidden>
+        <span className="animate-bounce text-xl leading-none" aria-hidden>
           {next ? (pct > 0 ? "🎉" : "🔥") : "🏆"}
         </span>
         <p>
@@ -226,9 +230,14 @@ export function BulkProgress({
       <div className="relative mt-3 pb-5">
         <div className="h-2.5 overflow-hidden rounded-full bg-white/8">
           <div
-            className="h-full rounded-full bg-linear-to-r from-[#18d3e8] via-[#d9f000] to-[#d9f000] transition-[width] duration-500 ease-out"
+            className="h-full overflow-hidden rounded-full bg-linear-to-r from-[#18d3e8] via-[#d9f000] to-[#d9f000] transition-[width] duration-500 ease-out"
             style={{ width: `${Math.max(2, Math.min(100, fill))}%` }}
-          />
+          >
+            <div
+              className="h-full w-1/3 bg-linear-to-r from-transparent via-white/50 to-transparent"
+              style={{ animation: "plsShine 1.8s linear infinite" }}
+            />
+          </div>
         </div>
         {asc.map((t, i) => {
           const left = (i + 1) * slice;

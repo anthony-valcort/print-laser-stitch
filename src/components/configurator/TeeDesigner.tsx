@@ -87,11 +87,13 @@ export async function tintPhoto(src: string, hex: string): Promise<string> {
   ctx.drawImage(im, 0, 0);
   const d = ctx.getImageData(0, 0, c.width, c.height);
   const p = d.data;
+  const lum = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+  const boost = 1 + 0.7 * lum * lum;
   for (let i = 0; i < p.length; i += 4) {
     const L = (p[i] + p[i + 1] + p[i + 2]) / 3;
     const a = Math.min(1, Math.max(0, (248 - L) / 30));
     const k = Math.min(1, Math.max(0, (L - 6) / 60));
-    const shade = 0.55 + 0.45 * k;
+    const shade = Math.min(1, (0.55 + 0.45 * k) * boost);
     p[i] = 255 * (1 - a) + rgb[0] * shade * a;
     p[i + 1] = 255 * (1 - a) + rgb[1] * shade * a;
     p[i + 2] = 255 * (1 - a) + rgb[2] * shade * a;
@@ -426,4 +428,43 @@ export function unpackLogo(raw: unknown): Logo | undefined {
   const w = num(o.w, 0.25, 20);
   if (typeof o.u !== "string" || !o.u.startsWith("https://") || r == null || p == null || x == null || y == null || w == null) return undefined;
   return { url: o.u, fileUrl: o.u, name: typeof o.n === "string" ? o.n.slice(0, 120) : "design", ratio: r, pxW: p, vector: o.v === true, nx: x, ny: y, wIn: w };
+}
+
+/** Front + back of the chosen shirt in the chosen color, with the customer's designs on it. */
+export function TeeShowcase({
+  photoKey, colorHex, chest, logos, label,
+}: {
+  photoKey: PhotoKey;
+  colorHex: string | null;
+  chest: boolean;
+  logos: DesignerLogos;
+  label: string;
+}) {
+  const front = useTintedPhoto(`/one-shirt/${photoKey}-front.jpg`, colorHex);
+  const back = useTintedPhoto(`/one-shirt/${photoKey}-back.jpg`, colorHex);
+  const photos: Record<Side, string> = { front, back };
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white p-2">
+      <div className="grid grid-cols-2 gap-2">
+        {(["front", "back"] as Side[]).map((sd) => {
+          const dim = IMG[photoKey][sd];
+          const z = zoneFor(photoKey, sd, chest);
+          const l = logos[sd];
+          const ppi = z.w / z.inW;
+          const lw = l ? l.wIn * ppi : 0;
+          const lh = l ? lw * l.ratio : 0;
+          return (
+            <svg key={sd} viewBox={`0 0 ${dim.w} ${dim.h}`} className="block w-full" role="img" aria-label={`${label} ${sd}`}>
+              <rect width={dim.w} height={dim.h} fill="#fff" />
+              <image href={photos[sd]} width={dim.w} height={dim.h} />
+              {l && (
+                <image href={l.url} x={z.x + l.nx * z.w - lw / 2} y={z.y + l.ny * z.h - lh / 2} width={lw} height={lh} preserveAspectRatio="xMidYMid meet" />
+              )}
+            </svg>
+          );
+        })}
+      </div>
+      <p className="mt-1 text-center text-xs font-bold text-black/70">{label}</p>
+    </div>
+  );
 }

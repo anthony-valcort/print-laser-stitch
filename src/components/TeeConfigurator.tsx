@@ -390,7 +390,7 @@ export default function TeeConfigurator({
       if (goCart) {
         router.push("/cart");
       } else {
-        flyToCart(artRef.current?.querySelector("svg") ?? null);
+        flyToCart(artRef.current);
         setTimeout(openCartDrawer, 650);
         setBusy("");
       }

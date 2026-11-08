@@ -716,13 +716,16 @@ export function buildSheet(parsed: Parsed, opts: { glass?: number[] } = {}): Bui
     v.y0 = Math.min(v.y0, p.bb[2]);
     v.y1 = Math.max(v.y1, p.bb[3]);
   }
-  const named = vb
-    .map((v) => ({ x: v.x0, y: v.y0, w: v.x1 - v.x0, h: v.y1 - v.y0 }))
-    .sort((a, b) => (Math.abs(a.x - b.x) > Math.max(W, H) * 0.05 ? a.x - b.x : a.y - b.y));
+  const named = vb.map((v) => ({ x: v.x0, y: v.y0, w: v.x1 - v.x0, h: v.y1 - v.y0 }));
+  // top view = tall/narrow; of the rest, the two widest are the sides, the others are front/rear
+  const isTop = (v: { w: number; h: number }) => v.w / v.h < 0.8;
+  const rest = named.filter((v) => !isTop(v)).sort((a, b) => b.w - a.w);
+  const sideSet = new Set<{ w: number; h: number }>(rest.slice(0, 2));
+  const kindOf = (v: { w: number; h: number }) => (isTop(v) ? "top" : sideSet.has(v) ? "side" : "end");
+  const reading = [...named].sort((a, b) => (Math.abs(a.x - b.x) > Math.max(W, H) * 0.05 ? a.x - b.x : a.y - b.y));
   const counts = { side: 0, end: 0, top: 0 };
-  const views: WrapView[] = named.map((v) => {
-    const asp = v.w / v.h;
-    const kind = asp > 2 ? "side" : asp < 0.7 ? "top" : "end";
+  const views: WrapView[] = reading.map((v) => {
+    const kind = kindOf(v);
     counts[kind]++;
     const label = kind === "side" ? `Side ${counts.side}` : kind === "top" ? `Top${counts.top > 1 ? ` ${counts.top}` : ""}` : `Front / rear ${counts.end}`;
     return { key: `${kind}-${counts[kind]}`, label, x: Math.round(v.x), y: Math.round(v.y), w: Math.round(v.w), h: Math.round(v.h) };

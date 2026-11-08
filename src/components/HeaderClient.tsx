@@ -44,6 +44,7 @@ const CATEGORY_STRIP: {
 
 const UTILITY_LINKS: { label: string; href: string; external?: boolean }[] = [
   { label: "Sign & Decal Builder", href: "/signage-quotes" },
+  { label: "One Shirt", href: "/one-shirt" },
   { label: "Design Your Wrap", href: "/wrap-designer" },
   { label: "About", href: "/about" },
   { label: "Gallery", href: "/gallery" },
@@ -450,6 +451,7 @@ export default function HeaderClient({
             <div className="mb-3 grid grid-cols-2 gap-2">
               {[
                 { label: "Home", href: "/" },
+                { label: "One Shirt, No Minimum", href: "/one-shirt" },
                 { label: "Design Your Wrap", href: "/wrap-designer" },
                 { label: "Sign & Decal Builder", href: "/signage-quotes" },
                 { label: "Gallery", href: "/gallery" },

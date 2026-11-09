@@ -238,13 +238,12 @@ export default function TShirtConfigurator({
   const [vidIdx, setVidIdx] = useState(0);
   const [authMode, setAuthMode] = useState<null | "login" | "signup">(null);
   useEffect(() => {
-    if (!singleProduct) return;
     let live = true;
     fetch("/api/auth/me", { cache: "no-store" })
       .then((r) => { if (live && r.status === 401) setGuest(true); })
       .catch(() => {});
     return () => { live = false; };
-  }, [singleProduct]);
+  }, []);
   const [oneMode, setOneMode] = useState(false);
   const [oneSize, setOneSize] = useState("L");
   const [rush, setRush] = useState(false);
@@ -942,10 +941,6 @@ export default function TShirtConfigurator({
                   Add {upcomingTier.qtyNeeded} more to get {upcomingTier.percent}% off
                 </div>
               )}
-              {!tee && <div className="mt-1 text-right text-xs font-medium text-white/80">
-                5-12 business days, for rush orders please contact
-                info@printlaserstitch.com
-              </div>}
             </div>
 
               </>
@@ -989,7 +984,7 @@ export default function TShirtConfigurator({
                 </>
               )}
             </button>
-            {tee && (
+            {(
               <button
                 type="button"
                 onClick={() => void handleAddToCart(true)}
@@ -1004,7 +999,7 @@ export default function TShirtConfigurator({
               </button>
             )}
             {teeErr && <p className="text-center text-sm text-[#ff9aa2]">{teeErr}</p>}
-            {tee && guest && (
+            {guest && (
               <div className="rounded-2xl border border-white/10 bg-white/4 p-3 text-center">
                 <div className="text-sm font-bold">Already a customer? 👋</div>
                 <div className="mt-2 grid grid-cols-2 gap-2">
@@ -1018,54 +1013,6 @@ export default function TShirtConfigurator({
                 <p className="mt-2 text-[11px] text-foreground-muted">Save your design · track orders · reorder fast</p>
               </div>
             )}
-            {!tee && <p className="text-center text-[11px] text-foreground-muted">
-              You&apos;ll be redirected to Shopify checkout.
-            </p>}
-    </>
-  );
-
-  const hdrUI = (
-    <>
-            <div>
-              <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-border-soft bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-foreground-muted">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />
-                {badge ?? `Custom apparel · min ${minQuantity} pcs`}
-              </div>
-              <h1 className="hidden text-3xl font-bold tracking-tight sm:text-4xl lg:block">
-                {product.title}
-              </h1>
-              {tee && (
-                <div className="mt-2 hidden lg:block">
-                  <p className="text-base font-medium text-foreground">
-                    Custom shirts, made easy. No stress. No 47-step forms. Just pick, upload, done. 😎
-                  </p>
-                  <TeeTrust />
-                </div>
-              )}
-              <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <AnimatedPrice
-                  value={oneMode ? onePrice : perShirtPrice * (1 - volumePct / 100)}
-                  className="text-3xl font-bold accent-gradient-text"
-                />
-                {!oneMode && volumePct > 0 && (
-                  <span className="text-base font-medium text-foreground-muted line-through">
-                    ${perShirtPrice.toFixed(2)}
-                  </span>
-                )}
-                <span className="text-sm font-medium text-foreground-muted">
-                  per shirt
-                </span>
-              </div>
-              {!oneMode && volumeTiers.length > 0 && (
-                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-[#d9f000]/30 bg-[#d9f000]/10 px-3 py-1 text-xs font-semibold text-[#d9f000]">
-                  <span aria-hidden>🏷️</span>
-                  {volumePct > 0
-                    ? `Bulk price unlocked — ${volumePct}% off`
-                    : `As low as $${(perShirtPrice * (1 - Math.max(...volumeTiers.map((t) => t.percent)) / 100)).toFixed(2)}/shirt in bulk`}
-                </div>
-              )}
-            </div>
-
     </>
   );
 
@@ -1469,7 +1416,7 @@ export default function TShirtConfigurator({
                 minQuantity={minQuantity}
                 unitPrice={perShirtPrice}
                 totalQuantity={totalQuantity}
-                compact={tee}
+                compact
               />
             )}
 
@@ -1580,157 +1527,9 @@ export default function TShirtConfigurator({
     </>
   );
 
-  const teeTitle = product.title.replace(/\s*\([^)]*\)\s*$/, "");
-  const teeVideos = displayImages.filter((m) => m.type === "video");
-  const teeLayout = (
-    <div className="mx-auto max-w-[1500px] px-4 py-3 sm:px-6 lg:px-8">
-      {draft.restored && <DraftNote onStartOver={draft.startOver} />}
-      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-3 lg:items-start lg:gap-5">
-        {/* Title bar: one slim line over everything */}
-        <div className="flex items-baseline justify-between gap-3 lg:col-span-3">
-          <h1 className="font-display text-2xl font-black uppercase tracking-tight sm:text-3xl">{teeTitle}</h1>
-          <div className="flex items-baseline gap-2">
-            <AnimatedPrice
-              value={oneMode ? onePrice : perShirtPrice * (1 - volumePct / 100)}
-              className="text-[1.65rem] font-bold accent-gradient-text"
-            />
-            {!oneMode && volumePct > 0 && (
-              <span className="text-sm font-medium text-foreground-muted line-through">${perShirtPrice.toFixed(2)}</span>
-            )}
-            <span className="text-xs font-medium text-foreground-muted">per shirt</span>
-          </div>
-        </div>
-
-        {/* Column 1: quantity, shirt, colors */}
-        <div id="order-options" className="scroll-mt-32 space-y-3">
-          <div >{toggleUI}</div>
-          <div >{optionsUI}</div>
-          <div className="space-y-3">{matricesUI}</div>
-          <div >{mixUI}</div>
-        </div>
-
-        {/* Column 2: the shirt + design */}
-        <div ref={galleryRef} className="space-y-3">
-          <div>
-            <TeeShowcase
-              photoKey={teePhoto}
-              colorHex={teeColorHex}
-              chest={chest}
-              logos={logos}
-              label={`${teeColorName} · ${STYLE_NAME}`}
-            />
-          </div>
-          <div >{designUI}</div>
-          {teeVideos.length > 0 && (
-            <div >
-              <h2 className="mb-2 font-display text-sm font-black uppercase tracking-tight text-[#d9f000]">See how we make it 🎬</h2>
-              <ProductGallery images={teeVideos} idx={vidIdx} setIdx={setVidIdx} title={product.title} />
-            </div>
-          )}
-        </div>
-
-        {/* Column 3: savings, proof, phone, then pay */}
-        <div className="space-y-3">
-          <div >{ladderUI}</div>
-          <div className="space-y-3">
-            {proofUI}
-            {phoneUI}
-            {notesUI}
-          </div>
-          <div className="space-y-3">{checkoutUI}</div>
-        </div>
-
-        {/* Bottom: all the words live here */}
-        <div className="mt-2 grid gap-5 border-t border-border-soft pt-5 lg:col-span-3 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
-          {howToOrderVideoId && (
-            <div>
-              <h2 className="font-display text-sm font-black uppercase tracking-tight text-[#d9f000]">How to order</h2>
-              <div className="mt-2 aspect-video w-full overflow-hidden rounded-xl border border-border-soft">
-                <iframe
-                  loading="lazy"
-                  src={`https://www.youtube-nocookie.com/embed/${howToOrderVideoId}`}
-                  title="How to order — Print Laser Stitch"
-                  className="h-full w-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                />
-              </div>
-            </div>
-          )}
-          <div className="space-y-3 text-sm text-foreground-muted">
-            <TeeTrust />
-            <ul className="space-y-1 text-xs">
-              <li>✔ Proof is free. Nothing prints until you say OK.</li>
-              <li>✔ 12+ shirts ready in 5–12 business days. Rush? Email info@printlaserstitch.com.</li>
-              <li>✔ Your design is saved on this device for 30 days.</li>
-              <li>✔ You&apos;ll finish checkout on Shopify.</li>
-            </ul>
-            {product.descriptionHtml && (
-              <ExpandableDescription
-                html={product.descriptionHtml}
-                className="prose-sm rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-sm leading-relaxed text-foreground-muted [&_a]:text-accent [&_a]:underline"
-              />
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <section className="relative">
-      {/* Breadcrumb */}
-      <div className="border-b border-border-soft bg-background-soft/60">
-        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 text-xs sm:px-6 lg:px-8">
-          <Link
-            href="/"
-            className="flex items-center gap-1 text-foreground-muted hover:text-foreground"
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            All Products
-          </Link>
-          <span className="text-foreground-muted/40">/</span>
-          <span className="font-medium">{product.title}</span>
-        </div>
-      </div>
-
-      {tee ? teeLayout : (
-      <div className={`mx-auto px-4 py-6 sm:px-6 lg:px-8 ${tee ? "max-w-[1500px]" : "max-w-7xl"}`}>
-        <div className={tee ? "flex flex-col gap-6 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8" : "grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)] lg:gap-12"}>
-          {/* LEFT: Sticky gallery */}
-          <div ref={galleryRef} className={tee ? "max-lg:contents lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto lg:pr-1" : "lg:sticky lg:top-20 lg:self-start"}>
-            {/* Phones: say what this is first, with a clear next step */}
-            <div className="mb-4 lg:hidden">
-              <h1 className="font-display text-2xl font-black uppercase leading-tight tracking-tight">
-                {product.title.replace(/\s*\([^)]*\)\s*$/, "")}
-              </h1>
-              <p className="mt-1.5 text-sm text-foreground-muted">
-                {tee ? "Custom shirts, made easy. No stress. No 47-step forms. Just pick, upload, done. 😎" : <>{product.title.match(/\(([^)]*)\)\s*$/)?.[1]}{product.title.match(/\(([^)]*)\)\s*$/) ? ". " : ""}Choose your options below and order online in minutes.</>}
-              </p>
-              {tee && <TeeTrust />}
-              <a
-                href="#order-options"
-                className="mt-3 inline-flex items-center gap-2 rounded-full accent-gradient px-5 py-2.5 font-headline text-sm font-bold uppercase tracking-wide text-black shadow-lg shadow-[#d9f000]/25 transition active:scale-95"
-              >
-                Choose your options
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <path d="M12 5v14" />
-                  <path d="m19 12-7 7-7-7" />
-                </svg>
-              </a>
-            </div>
-            {!tee && <ProductGallery
+  const galleryUI = (
+    <>
+            {<ProductGallery
               images={displayImages}
               idx={galleryIdx}
               setIdx={setGalleryIdx}
@@ -1773,45 +1572,12 @@ export default function TShirtConfigurator({
               </p>
             )}
 
-            {howToOrderVideoId && !tee && (
-              <div className="mt-6 hidden lg:block">
-                <h2 className="font-display text-xl font-black uppercase tracking-tight text-[#d9f000]">
-                  How to Order
-                </h2>
-                <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
-                  <iframe
-                    loading="lazy"
-                    src={`https://www.youtube-nocookie.com/embed/${howToOrderVideoId}`}
-                    title="How to order — Print Laser Stitch"
-                    className="h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
-                </div>
-              </div>
-            )}
-          </div>
 
-          {/* RIGHT: Configurator */}
-          <div id="order-options" className={tee ? "scroll-mt-32 space-y-6 max-lg:order-2 lg:col-span-2 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 lg:space-y-0" : "scroll-mt-32 space-y-6"}>
-            <div className="space-y-6">
-            {draft.restored && <DraftNote onStartOver={draft.startOver} />}
-            {hdrUI}
+    </>
+  );
 
-            {optionsUI}
-            {toggleUI}
-            {matricesUI}
-            {ladderUI}
-            {mixUI}
-            </div>
-            <div className="space-y-6">
-            {tee ? (
-              <>
-            {designUI}
-            {proofUI}
-              </>
-            ) : (
-              <>
+  const uploadUI = (
+    <>
             {/* Print location (only shown for products that have it) */}
             {showPrintLocations && (
               <Section title="Print location">
@@ -1873,32 +1639,85 @@ export default function TShirtConfigurator({
               </div>
             </Section>
 
-              </>
-            )}
 
+    </>
+  );
+
+  const teeTitle = product.title.replace(/\s*\([^)]*\)\s*$/, "");
+  const teeVideos = displayImages.filter((m) => m.type === "video");
+  const wideLayout = (
+    <div className="mx-auto max-w-[1500px] px-4 py-3 sm:px-6 lg:px-8">
+      {draft.restored && <DraftNote onStartOver={draft.startOver} />}
+      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-3 lg:items-start lg:gap-5">
+        {/* Title bar: one slim line over everything */}
+        <div className="flex items-baseline justify-between gap-3 lg:col-span-3">
+          <h1 className="font-display text-2xl font-black uppercase tracking-tight sm:text-3xl">{teeTitle}</h1>
+          <div className="flex items-baseline gap-2">
+            <AnimatedPrice
+              value={oneMode ? onePrice : perShirtPrice * (1 - volumePct / 100)}
+              className="text-[1.65rem] font-bold accent-gradient-text"
+            />
+            {!oneMode && volumePct > 0 && (
+              <span className="text-sm font-medium text-foreground-muted line-through">${perShirtPrice.toFixed(2)}</span>
+            )}
+            <span className="text-xs font-medium text-foreground-muted">per shirt{!tee && minQuantity > 1 ? ` · min ${minQuantity}` : ""}</span>
+          </div>
+        </div>
+
+        {/* Column 1: quantity, shirt, colors */}
+        <div id="order-options" className="scroll-mt-32 space-y-3">
+          <div >{toggleUI}</div>
+          <div >{optionsUI}</div>
+          <div className="space-y-3">{matricesUI}</div>
+          <div >{mixUI}</div>
+        </div>
+
+        {/* Column 2: the shirt + design */}
+        <div ref={galleryRef} className="space-y-3">
+          {tee ? (
+            <>
+              <div>
+                <TeeShowcase
+                  photoKey={teePhoto}
+                  colorHex={teeColorHex}
+                  chest={chest}
+                  logos={logos}
+                  label={`${teeColorName} · ${STYLE_NAME}`}
+                />
+              </div>
+              <div>{designUI}</div>
+            </>
+          ) : (
+            <>
+              <div>{galleryUI}</div>
+              <div className="space-y-3">{uploadUI}</div>
+            </>
+          )}
+          {tee && teeVideos.length > 0 && (
+            <div >
+              <h2 className="mb-2 font-display text-sm font-black uppercase tracking-tight text-[#d9f000]">See how we make it 🎬</h2>
+              <ProductGallery images={teeVideos} idx={vidIdx} setIdx={setVidIdx} title={product.title} />
+            </div>
+          )}
+        </div>
+
+        {/* Column 3: savings, proof, phone, then pay */}
+        <div className="space-y-3">
+          <div >{ladderUI}</div>
+          <div className="space-y-3">
+            {tee && proofUI}
             {phoneUI}
             {notesUI}
-            {!tee && checkoutUI}
-            {/* Description */}
-            {!tee && product.descriptionHtml && (
-              <ExpandableDescription
-                html={product.descriptionHtml}
-                className="prose-sm rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-sm leading-relaxed text-foreground-muted [&_a]:text-accent [&_a]:underline"
-              />
-            )}
-
-
-
-            </div>
           </div>
+          <div className="space-y-3">{checkoutUI}</div>
+        </div>
 
-          {/* How-to video: below the product on phones */}
+        {/* Bottom: all the words live here */}
+        <div className="mt-2 grid gap-5 border-t border-border-soft pt-5 lg:col-span-3 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
           {howToOrderVideoId && (
-            <div className={tee ? "mt-6 max-lg:order-6 lg:col-span-3" : "lg:hidden"}>
-              <h2 className="font-display text-xl font-black uppercase tracking-tight text-[#d9f000]">
-                How to Order
-              </h2>
-              <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
+            <div>
+              <h2 className="font-display text-sm font-black uppercase tracking-tight text-[#d9f000]">How to order</h2>
+              <div className="mt-2 aspect-video w-full overflow-hidden rounded-xl border border-border-soft">
                 <iframe
                   loading="lazy"
                   src={`https://www.youtube-nocookie.com/embed/${howToOrderVideoId}`}
@@ -1910,10 +1729,55 @@ export default function TShirtConfigurator({
               </div>
             </div>
           )}
+          <div className="space-y-3 text-sm text-foreground-muted">
+            <TeeTrust />
+            <ul className="space-y-1 text-xs">
+              {tee && <li>✔ Proof is free. Nothing prints until you say OK.</li>}
+              <li>✔ 12+ shirts ready in 5–12 business days. Rush? Email info@printlaserstitch.com.</li>
+              {tee && <li>✔ Your design is saved on this device for 30 days.</li>}
+              <li>✔ You&apos;ll finish checkout on Shopify.</li>
+            </ul>
+            {product.descriptionHtml && (
+              <ExpandableDescription
+                html={product.descriptionHtml}
+                className="prose-sm rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-sm leading-relaxed text-foreground-muted [&_a]:text-accent [&_a]:underline"
+              />
+            )}
+          </div>
         </div>
       </div>
-      )}
+    </div>
+  );
 
+  return (
+    <section className="relative">
+      {/* Breadcrumb */}
+      <div className="border-b border-border-soft bg-background-soft/60">
+        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 text-xs sm:px-6 lg:px-8">
+          <Link
+            href="/"
+            className="flex items-center gap-1 text-foreground-muted hover:text-foreground"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            All Products
+          </Link>
+          <span className="text-foreground-muted/40">/</span>
+          <span className="font-medium">{product.title}</span>
+        </div>
+      </div>
+
+      {wideLayout}
       {authMode && (
         <TeeAuthModal
           initial={authMode}

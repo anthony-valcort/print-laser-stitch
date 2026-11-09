@@ -856,6 +856,181 @@ export default function TShirtConfigurator({
     else setTimeout(openCartDrawer, 650);
   }
 
+  const checkoutUI = (
+    <>
+            {oneMode && (
+              <div className="overflow-hidden rounded-2xl total-gradient p-5">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-sm font-medium text-white/90">1 shirt{rush ? " · rush" : ""}</span>
+                  <span className="text-3xl font-bold text-white">${onePrice.toFixed(2)}</span>
+                </div>
+                <div className="mt-1 text-right text-xs font-medium text-white/80">
+                  {rush ? "Ready in 2 business days" : "Ready in 3–5 business days"}
+                </div>
+              </div>
+            )}
+            {!oneMode && (
+              <>
+            {/* Order summary + Total */}
+            <div className="overflow-hidden rounded-2xl total-gradient p-5">
+              {totalQuantity > 0 && (
+                <div className="mb-3 space-y-1 border-b border-white/15 pb-3 text-xs font-medium text-white/85">
+                  {multiColor
+                    ? colorLines.map((l) => (
+                        <div
+                          key={`${l.color}-${l.size}`}
+                          className="flex items-baseline justify-between gap-2"
+                        >
+                          <span>
+                            {l.qty} × {l.color} {l.size}
+                          </span>
+                          <span className="font-semibold">
+                            ${(l.price * l.qty).toFixed(2)}
+                          </span>
+                        </div>
+                      ))
+                    : Object.entries(sizeQuantities)
+                        .filter(([, q]) => q > 0)
+                        .map(([size, qty]) => {
+                          const v = variantForSize(size);
+                          const lineTotal = v ? Number(v.price) * qty : 0;
+                          return (
+                            <div
+                              key={size}
+                              className="flex items-baseline justify-between gap-2"
+                            >
+                              <span>
+                                {qty} × {size}
+                              </span>
+                              <span className="font-semibold">
+                                ${lineTotal.toFixed(2)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                </div>
+              )}
+              {volumePct > 0 && (
+                <div className="mb-2 flex items-baseline justify-between gap-2 text-sm font-semibold text-white">
+                  <span>Volume discount ({volumePct}% off)</span>
+                  <span>−${volumeSavings.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-sm font-medium text-white/90">
+                  {totalQuantity} {totalQuantity === 1 ? "shirt" : "shirts"}
+                </span>
+                <span className="text-3xl font-bold text-white">
+                  {volumePct > 0 && (
+                    <span className="mr-2 text-base font-medium text-white/60 line-through">
+                      ${totalPrice.toFixed(2)}
+                    </span>
+                  )}
+                  ${finalPrice.toFixed(2)}
+                </span>
+              </div>
+              {volumePct > 0 && (
+                <div className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-black/25 px-3 py-2 text-sm font-bold text-white">
+                  <span aria-hidden>🎉</span>
+                  You save ${volumeSavings.toFixed(2)} with bulk pricing
+                </div>
+              )}
+              {upcomingTier && totalQuantity > 0 && (
+                <div className="mt-2 text-center text-xs font-medium text-white/90">
+                  Add {upcomingTier.qtyNeeded} more to get {upcomingTier.percent}% off
+                </div>
+              )}
+              <div className="mt-1 text-right text-xs font-medium text-white/80">
+                5-12 business days, for rush orders please contact
+                info@printlaserstitch.com
+              </div>
+            </div>
+
+              </>
+            )}
+
+            <button
+              id="buy-button"
+              type="button"
+              onClick={() => void handleAddToCart(false)}
+              disabled={!canCheckout}
+              className={`group flex w-full items-center justify-center gap-2 rounded-md px-6 py-4 font-headline text-sm font-bold uppercase tracking-wider transition ${
+                canCheckout
+                  ? "accent-gradient text-black shadow-lg shadow-[#d9f000]/30 hover:brightness-110"
+                  : "cursor-not-allowed border border-border-soft bg-white/4 text-foreground-muted"
+              }`}
+            >
+              {isCheckingOut ? (
+                <>
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Creating order…
+                </>
+              ) : anyUploading ? (
+                <>
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Uploading file…
+                </>
+              ) : !qtyOk ? (
+                totalQuantity === 0
+                  ? "Pick sizes & quantities to continue"
+                  : (mixGate.reason ??
+                    `Add ${minQuantity - totalQuantity} more to reach min ${minQuantity}`)
+              ) : !frontReady || !backReady ? (
+                <>
+                  <span>⬆</span>
+                  Upload {needsFront && needsBack ? "both designs" : "design"} to continue
+                </>
+              ) : (
+                <>
+                  <span>🛒</span>
+                  Add to Cart · ${finalPrice.toFixed(2)}
+                </>
+              )}
+            </button>
+            {tee && (
+              <button
+                type="button"
+                onClick={() => void handleAddToCart(true)}
+                disabled={!canCheckout}
+                className={`flex w-full items-center justify-center gap-2 rounded-md px-6 py-4 font-headline text-sm font-bold uppercase tracking-wider transition ${
+                  canCheckout
+                    ? "bg-[#18d3e8] text-black hover:brightness-110"
+                    : "cursor-not-allowed border border-border-soft bg-white/4 text-foreground-muted"
+                }`}
+              >
+                Buy now
+              </button>
+            )}
+            {teeErr && <p className="text-center text-sm text-[#ff9aa2]">{teeErr}</p>}
+            {tee && guest && (
+              <div className="rounded-2xl border border-[#18d3e8]/40 bg-[#18d3e8]/8 p-3 text-center">
+                <div className="text-sm font-bold">New here? Make a free account 👋</div>
+                <p className="mt-0.5 text-xs text-foreground-muted">
+                  It saves your design and logo, so you never start over.
+                </p>
+                <Link
+                  href="/signup?redirect=/products/cotton-t-shirts"
+                  className="mt-2 inline-block rounded-full bg-[#18d3e8] px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-black"
+                >
+                  Create account
+                </Link>
+              </div>
+            )}
+            {tee && !guest && (
+              <p className="text-center text-[11px] text-foreground-muted">
+                Your design is saved on this device for 30 days.{" "}
+                <Link href="/signup?redirect=/products/tshirts" className="underline">
+                  Create an account
+                </Link>{" "}
+                to keep it everywhere.
+              </p>
+            )}
+            <p className="text-center text-[11px] text-foreground-muted">
+              You&apos;ll be redirected to Shopify checkout.
+            </p>
+    </>
+  );
+
   return (
     <section className="relative">
       {/* Breadcrumb */}
@@ -887,7 +1062,7 @@ export default function TShirtConfigurator({
       <div className={`mx-auto px-4 py-6 sm:px-6 lg:px-8 ${tee ? "max-w-[1500px]" : "max-w-7xl"}`}>
         <div className={tee ? "flex flex-col gap-6 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8" : "grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)] lg:gap-12"}>
           {/* LEFT: Sticky gallery */}
-          <div ref={galleryRef} className={tee ? "max-lg:contents lg:sticky lg:top-20 lg:self-start" : "lg:sticky lg:top-20 lg:self-start"}>
+          <div ref={galleryRef} className={tee ? "max-lg:contents lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:self-start lg:overflow-y-auto lg:pr-1" : "lg:sticky lg:top-20 lg:self-start"}>
             {/* Phones: say what this is first, with a clear next step */}
             <div className="mb-4 lg:hidden">
               <h1 className="font-display text-2xl font-black uppercase leading-tight tracking-tight">
@@ -920,7 +1095,7 @@ export default function TShirtConfigurator({
               </div>
             )}
             {tee && displayImages.some((m) => m.type === "video") && (
-              <div className="mt-4 max-lg:order-3">
+              <div className="mt-4 max-lg:order-4">
                 <h2 className="mb-2 font-display text-sm font-black uppercase tracking-tight text-[#d9f000]">
                   See how we make it 🎬
                 </h2>
@@ -991,6 +1166,9 @@ export default function TShirtConfigurator({
                   />
                 </div>
               </div>
+            )}
+            {tee && (
+              <div className="mt-3 space-y-3 max-lg:order-3">{checkoutUI}</div>
             )}
           </div>
 
@@ -1570,191 +1748,31 @@ export default function TShirtConfigurator({
               />
             </Section>
 
-            {oneMode && (
-              <div className="overflow-hidden rounded-2xl total-gradient p-5">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-sm font-medium text-white/90">1 shirt{rush ? " · rush" : ""}</span>
-                  <span className="text-3xl font-bold text-white">${onePrice.toFixed(2)}</span>
-                </div>
-                <div className="mt-1 text-right text-xs font-medium text-white/80">
-                  {rush ? "Ready in 2 business days" : "Ready in 3–5 business days"}
-                </div>
-              </div>
-            )}
-            {!oneMode && (
-              <>
-            {/* Order summary + Total */}
-            <div className="overflow-hidden rounded-2xl total-gradient p-5">
-              {totalQuantity > 0 && (
-                <div className="mb-3 space-y-1 border-b border-white/15 pb-3 text-xs font-medium text-white/85">
-                  {multiColor
-                    ? colorLines.map((l) => (
-                        <div
-                          key={`${l.color}-${l.size}`}
-                          className="flex items-baseline justify-between gap-2"
-                        >
-                          <span>
-                            {l.qty} × {l.color} {l.size}
-                          </span>
-                          <span className="font-semibold">
-                            ${(l.price * l.qty).toFixed(2)}
-                          </span>
-                        </div>
-                      ))
-                    : Object.entries(sizeQuantities)
-                        .filter(([, q]) => q > 0)
-                        .map(([size, qty]) => {
-                          const v = variantForSize(size);
-                          const lineTotal = v ? Number(v.price) * qty : 0;
-                          return (
-                            <div
-                              key={size}
-                              className="flex items-baseline justify-between gap-2"
-                            >
-                              <span>
-                                {qty} × {size}
-                              </span>
-                              <span className="font-semibold">
-                                ${lineTotal.toFixed(2)}
-                              </span>
-                            </div>
-                          );
-                        })}
-                </div>
-              )}
-              {volumePct > 0 && (
-                <div className="mb-2 flex items-baseline justify-between gap-2 text-sm font-semibold text-white">
-                  <span>Volume discount ({volumePct}% off)</span>
-                  <span>−${volumeSavings.toFixed(2)}</span>
-                </div>
-              )}
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="text-sm font-medium text-white/90">
-                  {totalQuantity} {totalQuantity === 1 ? "shirt" : "shirts"}
-                </span>
-                <span className="text-3xl font-bold text-white">
-                  {volumePct > 0 && (
-                    <span className="mr-2 text-base font-medium text-white/60 line-through">
-                      ${totalPrice.toFixed(2)}
-                    </span>
-                  )}
-                  ${finalPrice.toFixed(2)}
-                </span>
-              </div>
-              {volumePct > 0 && (
-                <div className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-black/25 px-3 py-2 text-sm font-bold text-white">
-                  <span aria-hidden>🎉</span>
-                  You save ${volumeSavings.toFixed(2)} with bulk pricing
-                </div>
-              )}
-              {upcomingTier && totalQuantity > 0 && (
-                <div className="mt-2 text-center text-xs font-medium text-white/90">
-                  Add {upcomingTier.qtyNeeded} more to get {upcomingTier.percent}% off
-                </div>
-              )}
-              <div className="mt-1 text-right text-xs font-medium text-white/80">
-                5-12 business days, for rush orders please contact
-                info@printlaserstitch.com
-              </div>
-            </div>
-
-              </>
-            )}
-
-            <button
-              id="buy-button"
-              type="button"
-              onClick={() => void handleAddToCart(false)}
-              disabled={!canCheckout}
-              className={`group flex w-full items-center justify-center gap-2 rounded-md px-6 py-4 font-headline text-sm font-bold uppercase tracking-wider transition ${
-                canCheckout
-                  ? "accent-gradient text-black shadow-lg shadow-[#d9f000]/30 hover:brightness-110"
-                  : "cursor-not-allowed border border-border-soft bg-white/4 text-foreground-muted"
-              }`}
-            >
-              {isCheckingOut ? (
-                <>
-                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Creating order…
-                </>
-              ) : anyUploading ? (
-                <>
-                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Uploading file…
-                </>
-              ) : !qtyOk ? (
-                totalQuantity === 0
-                  ? "Pick sizes & quantities to continue"
-                  : (mixGate.reason ??
-                    `Add ${minQuantity - totalQuantity} more to reach min ${minQuantity}`)
-              ) : !frontReady || !backReady ? (
-                <>
-                  <span>⬆</span>
-                  Upload {needsFront && needsBack ? "both designs" : "design"} to continue
-                </>
-              ) : (
-                <>
-                  <span>🛒</span>
-                  Add to Cart · ${finalPrice.toFixed(2)}
-                </>
-              )}
-            </button>
-            {tee && (
-              <button
-                type="button"
-                onClick={() => void handleAddToCart(true)}
-                disabled={!canCheckout}
-                className={`flex w-full items-center justify-center gap-2 rounded-md px-6 py-4 font-headline text-sm font-bold uppercase tracking-wider transition ${
-                  canCheckout
-                    ? "bg-[#18d3e8] text-black hover:brightness-110"
-                    : "cursor-not-allowed border border-border-soft bg-white/4 text-foreground-muted"
-                }`}
-              >
-                Buy now
-              </button>
-            )}
-            {teeErr && <p className="text-center text-sm text-[#ff9aa2]">{teeErr}</p>}
-            {tee && guest && (
-              <div className="rounded-2xl border border-[#18d3e8]/40 bg-[#18d3e8]/8 p-3 text-center">
-                <div className="text-sm font-bold">New here? Make a free account 👋</div>
-                <p className="mt-0.5 text-xs text-foreground-muted">
-                  It saves your design and logo, so you never start over.
-                </p>
-                <Link
-                  href="/signup?redirect=/products/cotton-t-shirts"
-                  className="mt-2 inline-block rounded-full bg-[#18d3e8] px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-black"
-                >
-                  Create account
-                </Link>
-              </div>
-            )}
-            {tee && !guest && (
-              <p className="text-center text-[11px] text-foreground-muted">
-                Your design is saved on this device for 30 days.{" "}
-                <Link href="/signup?redirect=/products/tshirts" className="underline">
-                  Create an account
-                </Link>{" "}
-                to keep it everywhere.
-              </p>
-            )}
-            <p className="text-center text-[11px] text-foreground-muted">
-              You&apos;ll be redirected to Shopify checkout.
-            </p>
-
+            {!tee && checkoutUI}
             {/* Description */}
-            {product.descriptionHtml && (
+            {!tee && product.descriptionHtml && (
               <ExpandableDescription
                 html={product.descriptionHtml}
                 className="prose-sm rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-sm leading-relaxed text-foreground-muted [&_a]:text-accent [&_a]:underline"
               />
             )}
 
+
+
             </div>
           </div>
 
+          {tee && product.descriptionHtml && (
+            <div className="max-lg:order-5 lg:col-span-3 lg:mx-auto lg:max-w-3xl">
+              <ExpandableDescription
+                html={product.descriptionHtml}
+                className="prose-sm rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-sm leading-relaxed text-foreground-muted [&_a]:text-accent [&_a]:underline"
+              />
+            </div>
+          )}
           {/* How-to video: below the product on phones */}
           {howToOrderVideoId && (
-            <div className={tee ? "mt-6 max-lg:order-4 lg:col-span-3" : "lg:hidden"}>
+            <div className={tee ? "mt-6 max-lg:order-6 lg:col-span-3" : "lg:hidden"}>
               <h2 className="font-display text-xl font-black uppercase tracking-tight text-[#d9f000]">
                 How to Order
               </h2>

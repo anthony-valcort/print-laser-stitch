@@ -514,7 +514,7 @@ export default function ProductConfigurator() {
             </div>
             <div className="order-2 lg:order-none">
             {/* Material */}
-            <Section step={2} title="Material">
+            <Section step={2} title="Material & finishes">
               <div className="grid grid-cols-4 gap-2">
                 {MATERIAL_OPTIONS.map((m) => (
                   <OptionTile
@@ -536,76 +536,44 @@ export default function ProductConfigurator() {
             <div className="order-3 lg:order-none">
             {/* Size */}
             <Section step={3} title="Size">
-              <div className="grid grid-cols-4 gap-2">
-                {SIZE_OPTIONS.map((s) => (
+              <div className="grid grid-cols-3 gap-2">
+                {SIZE_OPTIONS.map((sz) => (
                   <SizeTile
-                    key={s.key}
-                    size={s.key}
-                    label={s.label}
-                    active={size === s.key}
-                    onClick={() => setSize(s.key)}
+                    key={sz.key}
+                    size={sz.key}
+                    label={sz.label}
+                    active={size === sz.key}
+                    onClick={() => setSize(sz.key)}
                   />
                 ))}
+                <button
+                  type="button"
+                  onClick={() => setSize("custom")}
+                  className={`relative col-span-2 flex items-center justify-center gap-3 rounded-2xl border px-3 py-3 transition ${
+                    size === "custom" ? TILE_ON : TILE_OFF
+                  }`}
+                >
+                  <Image src={CUSTOM_SIZE_ICON} alt="" width={40} height={40} className="shrink-0" />
+                  <span className="text-xs font-medium">Custom size</span>
+                  {size === "custom" && (
+                    <span className="absolute right-2 top-2">
+                      <CheckBadge />
+                    </span>
+                  )}
+                </button>
               </div>
-              <div
-                className={`mt-4 rounded-2xl border-2 p-4 transition ${
-                  size === "custom"
-                    ? "border-[#d9f000] bg-[#d9f000]/10"
-                    : "border-dashed border-border-strong bg-white/3"
-                }`}
-              >
-                <div className="mb-3 flex items-center gap-3">
-                  <Image
-                    src={CUSTOM_SIZE_ICON}
-                    alt=""
-                    width={40}
-                    height={40}
-                    className="shrink-0"
-                  />
-                  <div className="font-headline text-sm font-bold uppercase tracking-wide">
-                    Your own size
-                  </div>
-                  {size === "custom" && <CheckBadge />}
+              {size === "custom" && (
+                <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-end gap-2">
+                  <NumberField label="Width (in)" value={customWidth} onChange={setCustomWidth} />
+                  <span className="pb-2.5 text-lg font-bold text-foreground-muted">×</span>
+                  <NumberField label="Height (in)" value={customHeight} onChange={setCustomHeight} />
                 </div>
-                <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
-                  <NumberField
-                    label="Width (in)"
-                    value={customWidth}
-                    onChange={(v) => {
-                      setSize("custom");
-                      setCustomWidth(v);
-                    }}
-                  />
-                  <span className="pb-2.5 text-lg font-bold text-foreground-muted">
-                    ×
-                  </span>
-                  <NumberField
-                    label="Height (in)"
-                    value={customHeight}
-                    onChange={(v) => {
-                      setSize("custom");
-                      setCustomHeight(v);
-                    }}
-                  />
-                </div>
-                <div className="mt-3 grid h-16 place-items-center">
-                  <div
-                    className="rounded-md border-2 border-[#d9f000]/70 bg-[#d9f000]/10"
-                    style={{
-                      width: `${Math.max(14, (56 * customWidth) / Math.max(customWidth, customHeight, 0.5))}px`,
-                      height: `${Math.max(14, (56 * customHeight) / Math.max(customWidth, customHeight, 0.5))}px`,
-                    }}
-                  />
-                </div>
-              </div>
+              )}
             </Section>
             </div>
             <div className="order-4 lg:order-none">
-            <Section step={4} title="How many?">
-              <p className="mb-3 -mt-1 text-xs font-medium text-emerald-300">
-                More stickers = bigger discount
-              </p>
-              <div className="space-y-1.5">
+            <Section step={4} title="Quantity">
+              <div className="space-y-1">
                 <button
                   type="button"
                   onClick={() => setQuantity("custom")}
@@ -639,7 +607,7 @@ export default function ProductConfigurator() {
                       key={qty}
                       type="button"
                       onClick={() => setQuantity(qty)}
-                      className={`w-full rounded-xl border px-3 pb-2 pt-2.5 text-left transition ${
+                      className={`w-full rounded-xl border px-3 py-1.5 text-left transition ${
                         active ? TILE_ON : TILE_OFF
                       }`}
                     >
@@ -659,17 +627,93 @@ export default function ProductConfigurator() {
                           )}
                         </span>
                       </div>
-                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/8">
-                        <div
-                          className="h-full rounded-full bg-linear-to-r from-emerald-400 to-[#d9f000]"
-                          style={{ width: `${savingsPercent}%` }}
-                        />
-                      </div>
                     </button>
                   );
                 })}
               </div>
             </Section>
+            </div>
+          </div>
+
+          {/* COL 3 */}
+          <div className="contents lg:block lg:space-y-5">
+            <div className="order-5 lg:order-none">
+            {/* Upload */}
+            <Section step={5} title="Upload your design">
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept={ACCEPT}
+                onChange={(e) => handleFile(e.target.files?.[0])}
+              />
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragActive(true);
+                }}
+                onDragLeave={() => setDragActive(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragActive(false);
+                  handleFile(e.dataTransfer.files?.[0]);
+                }}
+                onClick={() => fileInputRef.current?.click()}
+                className={`relative flex min-w-0 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed text-center transition ${file ? "p-2" : "min-h-40 p-6"} ${
+                  dragActive
+                    ? "border-[#d9f000] bg-[#d9f000]/10"
+                    : "border-border-strong bg-white/2 hover:bg-white/5"
+                }`}
+              >
+                {file ? (
+                  <div className="flex w-full items-center gap-2">
+                    {filePreview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={filePreview} alt="" className="h-8 w-8 shrink-0 rounded bg-white/5 object-contain" />
+                    ) : (
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded bg-white/5 text-sm">📄</span>
+                    )}
+                    <span className="min-w-0 flex-1 truncate text-left text-xs font-medium">
+                      {file.name}
+                    </span>
+                    {isUploading && (
+                      <span className="inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-[#18d3e8] border-t-transparent" />
+                    )}
+                    {!isUploading && fileUrl && (
+                      <span className="shrink-0 text-xs font-bold text-emerald-300">✓</span>
+                    )}
+                    {!isUploading && !fileUrl && uploadError && (
+                      <span className="shrink-0 text-xs text-amber-300" title={uploadError}>⚠</span>
+                    )}
+                    <button
+                      type="button"
+                      aria-label="Remove file"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFile(null);
+                        setFileUrl(null);
+                        setUploadError(null);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }}
+                      className="shrink-0 rounded-full border border-border-soft bg-white/5 px-2 py-0.5 text-xs hover:bg-white/10"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <UploadArt />
+                    <div className="mt-3 font-headline text-base font-bold uppercase tracking-wide">
+                      Upload your design
+                    </div>
+                    <div className="mt-1 text-xs text-foreground-muted">
+                      PNG · JPG · PDF · SVG · AI
+                    </div>
+                  </>
+                )}
+              </div>
+            </Section>
+
             </div>
             <div className="order-6 lg:order-none">
             {file && file.type.startsWith("image/") && (
@@ -699,125 +743,7 @@ export default function ProductConfigurator() {
               </div>
             )}
             </div>
-          </div>
-
-          {/* COL 3 */}
-          <div className="contents lg:sticky lg:top-20 lg:block lg:space-y-5">
-            <div className="order-5 lg:order-none">
-            {/* Upload */}
-            <Section step={5} title="Upload your design">
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                accept={ACCEPT}
-                onChange={(e) => handleFile(e.target.files?.[0])}
-              />
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragActive(true);
-                }}
-                onDragLeave={() => setDragActive(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setDragActive(false);
-                  handleFile(e.dataTransfer.files?.[0]);
-                }}
-                onClick={() => fileInputRef.current?.click()}
-                className={`relative flex min-h-40 min-w-0 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition ${
-                  dragActive
-                    ? "border-[#d9f000] bg-[#d9f000]/10"
-                    : "border-border-strong bg-white/2 hover:bg-white/5"
-                }`}
-              >
-                {file ? (
-                  <div className="flex w-full items-center gap-4 sm:gap-5">
-                    <div className="relative h-24 w-24 shrink-0 sm:h-36 sm:w-36">
-                      {filePreview ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={filePreview}
-                          alt="Upload preview"
-                          className="h-24 w-24 rounded-xl bg-white/5 object-contain ring-1 ring-border-strong sm:h-36 sm:w-36"
-                        />
-                      ) : (
-                        <div className="grid h-24 w-24 place-items-center rounded-xl bg-white/5 text-4xl sm:h-36 sm:w-36 sm:text-5xl">
-                          📄
-                        </div>
-                      )}
-                      {isUploading && (
-                        <div className="absolute inset-0 grid place-items-center rounded-xl bg-black/50 backdrop-blur-sm">
-                          <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1 text-left">
-                      <div className="font-medium wrap-break-word text-foreground">
-                        {file.name}
-                      </div>
-                      <div className="text-xs text-foreground-muted">
-                        {(file.size / 1024).toFixed(1)} KB
-                      </div>
-                      {isUploading && (
-                        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#18d3e8]/15 px-2 py-0.5 text-[11px] font-semibold text-[#18d3e8]">
-                          Uploading…
-                        </div>
-                      )}
-                      {!isUploading && fileUrl && (
-                        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
-                          ✓ Uploaded
-                        </div>
-                      )}
-                      {!isUploading && !fileUrl && uploadError && (
-                        <div className="mt-2 max-w-md wrap-break-word rounded-md bg-amber-500/10 px-2 py-1 text-[11px] text-amber-300">
-                          ⚠ Upload failed: {uploadError}
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFile(null);
-                        setFileUrl(null);
-                        setUploadError(null);
-                        if (fileInputRef.current)
-                          fileInputRef.current.value = "";
-                      }}
-                      className="shrink-0 rounded-full border border-border-soft bg-white/5 px-3 py-1 text-xs hover:bg-white/10"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <UploadArt />
-                    <div className="mt-3 font-headline text-base font-bold uppercase tracking-wide">
-                      Upload your design
-                    </div>
-                    <div className="mt-1 text-xs text-foreground-muted">
-                      PNG · JPG · PDF · SVG · AI
-                    </div>
-                  </>
-                )}
-              </div>
-            </Section>
-
-            </div>
             <div className="order-7 lg:order-none">
-            {/* Instructions */}
-            <Section step={6} title="Notes" optional>
-              <textarea
-                value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
-                rows={3}
-                placeholder="Anything we should know?"
-                className="w-full resize-none rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/60 outline-none ring-[#d9f000]/30 focus:ring-2"
-              />
-            </Section>
-            </div>
-            <div className="order-8 lg:order-none">
             <div className="space-y-3 rounded-2xl border border-border-soft bg-surface/70 p-4 backdrop-blur">
               {/* Total */}
               <div className="overflow-hidden rounded-2xl total-gradient p-4">
@@ -832,11 +758,6 @@ export default function ProductConfigurator() {
                 <div className="mt-1 text-right text-xs font-medium text-white/80">
                   ${price.perUnit.toFixed(2)} / sticker
                 </div>
-              </div>
-
-              <div className="flex items-center gap-2 rounded-xl border border-border-soft bg-white/3 px-3 py-2 text-[12px] text-foreground-muted">
-                <span>🕒</span>
-                <span>Printed &amp; shipped next business day</span>
               </div>
 
               {/* CTA */}
@@ -876,6 +797,22 @@ export default function ProductConfigurator() {
                 Check your proof, then Buy now.
               </p>
             </div>
+            </div>
+            <div className="order-8 lg:order-none">
+              <details className="group rounded-2xl border border-border-soft bg-surface/70 px-4 py-2.5 backdrop-blur">
+                <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium text-foreground-muted">
+                  <span>＋ Add a note <span className="text-xs">(optional)</span></span>
+                </summary>
+                <div className="pt-2">
+                  <textarea
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                rows={2}
+                placeholder="Anything we should know?"
+                className="w-full resize-none rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/60 outline-none ring-[#d9f000]/30 focus:ring-2"
+              />
+                </div>
+              </details>
             </div>
           </div>
         </div>

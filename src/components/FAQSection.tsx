@@ -1,3 +1,6 @@
+import JsonLd from "@/components/JsonLd";
+import { faqJsonLd } from "@/lib/seo";
+
 const FAQS: { q: string; a: string }[] = [
   {
     q: "Which file types work best?",
@@ -20,6 +23,7 @@ const FAQS: { q: string; a: string }[] = [
 export default function FAQSection() {
   return (
     <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+      <JsonLd data={faqJsonLd(FAQS)} />
       <div className="mb-10">
         <span className="inline-flex items-center gap-2 rounded-full border border-[#d9f000]/30 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
           <span className="h-1.5 w-1.5 rounded-full bg-[#d9f000]" />

@@ -10,6 +10,7 @@ import CartWelcomeBack from "@/components/CartWelcomeBack";
 import CookieNotice from "@/components/CookieNotice";
 import { AnthonyBuddy } from "@/components/TalkingAnthony";
 import { AnnBuddy } from "@/components/TalkingAnn";
+import BuddyPeek from "@/components/BuddyPeek";
 import JsonLd from "@/components/JsonLd";
 import { localBusinessJsonLd, websiteJsonLd } from "@/lib/seo";
 
@@ -87,6 +88,7 @@ export default function RootLayout({
         <MobileQuoteBar />
         <AnthonyBuddy />
         <AnnBuddy />
+        <BuddyPeek />
         <CookieNotice />
       </body>
     </html>

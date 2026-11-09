@@ -128,7 +128,7 @@ export function BulkPricingLadder({
                 </span>
               </div>
               <div
-                className={`mt-1 font-display text-sm font-black tabular-nums sm:text-base ${
+                className={`mt-1 font-display text-[15px] font-black tabular-nums sm:text-[1.1rem] ${
                   active ? "text-[#d9f000]" : "text-foreground"
                 }`}
               >

@@ -3,6 +3,7 @@ import { SITE_URL, productPath } from "@/lib/seo";
 import { getAllActiveProducts } from "@/lib/shopify-products";
 import { getAllCollections } from "@/lib/shopify-collections";
 import { getBlogArticles } from "@/lib/shopify-blog";
+import { getBuiltTogether, storyPath } from "@/lib/built-together";
 
 export const revalidate = 3600;
 
@@ -19,6 +20,7 @@ const STATIC_PAGES: { path: string; priority: number }[] = [
   { path: "/products/engraved-wallets", priority: 0.8 },
   { path: "/products/engraved-bottle-openers", priority: 0.8 },
   { path: "/signage-quotes", priority: 0.8 },
+  { path: "/decal-quote", priority: 0.7 },
   { path: "/vehicle-stickers", priority: 0.7 },
   { path: "/wrap-designer", priority: 0.8 },
   { path: "/one-shirt", priority: 0.8 },
@@ -27,6 +29,7 @@ const STATIC_PAGES: { path: string; priority: number }[] = [
   { path: "/about", priority: 0.6 },
   { path: "/contact", priority: 0.7 },
   { path: "/blog", priority: 0.6 },
+  { path: "/built-together", priority: 0.7 },
   { path: "/privacy", priority: 0.2 },
 ];
 
@@ -46,6 +49,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const product of await getAllActiveProducts()) {
       add(productPath(product.handle), 0.7);
     }
+  } catch {}
+
+  try {
+    const bt = await getBuiltTogether(false);
+    for (const y of bt.years) add(`/built-together/${y.year}`, 0.5);
+    for (const m of bt.milestones) add(storyPath(m), 0.6, new Date(m.date));
   } catch {}
 
   try {

@@ -53,6 +53,7 @@ import {
   type UploadSlot,
 } from "@/components/configurator/UploadBox";
 import { SizeQtyStepper } from "@/components/configurator/QuantityStepper";
+import TeeAuthModal from "@/components/configurator/TeeAuthModal";
 import { ExpandableDescription } from "@/components/configurator/ExpandableDescription";
 import { HOW_TO_ORDER_VIDEO_IDS } from "@/lib/how-to-order-videos";
 import { DraftNote, useDraft } from "@/components/configurator/useDraft";
@@ -235,6 +236,7 @@ export default function TShirtConfigurator({
   // Is the visitor a guest? (page is cached, so ask the server from the browser)
   const [guest, setGuest] = useState(false);
   const [vidIdx, setVidIdx] = useState(0);
+  const [authMode, setAuthMode] = useState<null | "login" | "signup">(null);
   useEffect(() => {
     if (!singleProduct) return;
     let live = true;
@@ -1006,12 +1008,12 @@ export default function TShirtConfigurator({
               <div className="rounded-2xl border border-white/10 bg-white/4 p-3 text-center">
                 <div className="text-sm font-bold">Already a customer? 👋</div>
                 <div className="mt-2 grid grid-cols-2 gap-2">
-                  <Link href="/login" className="rounded-full border border-white/25 px-3 py-2 text-xs font-bold uppercase tracking-wide text-white">
+                  <button type="button" onClick={() => setAuthMode("login")} className="rounded-full border border-white/25 px-3 py-2 text-xs font-bold uppercase tracking-wide text-white">
                     Log in
-                  </Link>
-                  <Link href="/signup?redirect=/products/cotton-t-shirts" className="rounded-full bg-[#18d3e8] px-3 py-2 text-xs font-bold uppercase tracking-wide text-black">
+                  </button>
+                  <button type="button" onClick={() => setAuthMode("signup")} className="rounded-full bg-[#18d3e8] px-3 py-2 text-xs font-bold uppercase tracking-wide text-black">
                     New? Sign up
-                  </Link>
+                  </button>
                 </div>
                 <p className="mt-2 text-[11px] text-foreground-muted">Save your design · track orders · reorder fast</p>
               </div>
@@ -1119,7 +1121,7 @@ export default function TShirtConfigurator({
                             aria-pressed={v === value}
                             onClick={() => setOption(opt.name, v)}
                             className={`overflow-hidden rounded-2xl border text-center transition ${
-                              v === value ? "border-highlight ring-2 ring-[#18d3e8]/50" : "border-border-soft bg-white/3 hover:bg-white/6"
+                              v === value ? "border-highlight ring-2 ring-[#18d3e8]/50" : "border-border-soft bg-white/3 opacity-60 hover:bg-white/6 hover:opacity-100"
                             }`}
                           >
                             <div className="bg-white p-1 sm:p-1.5">
@@ -1132,10 +1134,9 @@ export default function TShirtConfigurator({
                               />
                             </div>
                             <div className="px-1.5 py-2">
-                              <div className="text-[11px] font-bold leading-tight sm:text-xs">{label}</div>
-                              <div className="text-[11px] text-foreground-muted">{sub}</div>
+                              <div className="text-[11px] font-bold leading-tight sm:text-xs">{label} {sub.toLowerCase()}</div>
                               {from != null && (
-                                <div className="mt-0.5 text-xs font-black text-[#d9f000] sm:text-sm">
+                                <div className="mt-0.5 text-sm font-black text-[#d9f000] sm:text-base">
                                   {oneMode ? "" : "from "}${from.toFixed(from % 1 ? 2 : 0)}
                                 </div>
                               )}
@@ -1591,7 +1592,7 @@ export default function TShirtConfigurator({
           <div className="flex items-baseline gap-2">
             <AnimatedPrice
               value={oneMode ? onePrice : perShirtPrice * (1 - volumePct / 100)}
-              className="text-2xl font-bold accent-gradient-text"
+              className="text-[1.65rem] font-bold accent-gradient-text"
             />
             {!oneMode && volumePct > 0 && (
               <span className="text-sm font-medium text-foreground-muted line-through">${perShirtPrice.toFixed(2)}</span>
@@ -1601,16 +1602,16 @@ export default function TShirtConfigurator({
         </div>
 
         {/* Column 1: quantity, shirt, colors */}
-        <div id="order-options" className="scroll-mt-32 max-lg:contents lg:space-y-3">
-          <div className="max-lg:order-2">{toggleUI}</div>
-          <div className="max-lg:order-3">{optionsUI}</div>
-          <div className="space-y-3 max-lg:order-4">{matricesUI}</div>
-          <div className="max-lg:order-6">{mixUI}</div>
+        <div id="order-options" className="scroll-mt-32 space-y-3">
+          <div >{toggleUI}</div>
+          <div >{optionsUI}</div>
+          <div className="space-y-3">{matricesUI}</div>
+          <div >{mixUI}</div>
         </div>
 
         {/* Column 2: the shirt + design */}
-        <div ref={galleryRef} className="max-lg:contents lg:space-y-3">
-          <div className="sticky top-[58px] z-30 -mx-4 bg-background/95 px-4 py-2 backdrop-blur max-lg:order-1 max-lg:[&_svg]:mx-auto max-lg:[&_svg]:h-[20vh] max-lg:[&_svg]:w-auto lg:static lg:mx-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+        <div ref={galleryRef} className="space-y-3">
+          <div>
             <TeeShowcase
               photoKey={teePhoto}
               colorHex={teeColorHex}
@@ -1619,9 +1620,9 @@ export default function TShirtConfigurator({
               label={`${teeColorName} · ${STYLE_NAME}`}
             />
           </div>
-          <div className="max-lg:order-7">{designUI}</div>
+          <div >{designUI}</div>
           {teeVideos.length > 0 && (
-            <div className="max-lg:order-10">
+            <div >
               <h2 className="mb-2 font-display text-sm font-black uppercase tracking-tight text-[#d9f000]">See how we make it 🎬</h2>
               <ProductGallery images={teeVideos} idx={vidIdx} setIdx={setVidIdx} title={product.title} />
             </div>
@@ -1629,18 +1630,18 @@ export default function TShirtConfigurator({
         </div>
 
         {/* Column 3: savings, proof, phone, then pay */}
-        <div className="max-lg:contents lg:space-y-3">
-          <div className="max-lg:order-5">{ladderUI}</div>
-          <div className="space-y-3 max-lg:order-8">
+        <div className="space-y-3">
+          <div >{ladderUI}</div>
+          <div className="space-y-3">
             {proofUI}
             {phoneUI}
             {notesUI}
           </div>
-          <div className="space-y-3 max-lg:order-9">{checkoutUI}</div>
+          <div className="space-y-3">{checkoutUI}</div>
         </div>
 
         {/* Bottom: all the words live here */}
-        <div className="mt-2 grid gap-5 border-t border-border-soft pt-5 max-lg:order-[11] lg:col-span-3 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
+        <div className="mt-2 grid gap-5 border-t border-border-soft pt-5 lg:col-span-3 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
           {howToOrderVideoId && (
             <div>
               <h2 className="font-display text-sm font-black uppercase tracking-tight text-[#d9f000]">How to order</h2>
@@ -1913,6 +1914,19 @@ export default function TShirtConfigurator({
       </div>
       )}
 
+      {authMode && (
+        <TeeAuthModal
+          initial={authMode}
+          onClose={() => setAuthMode(null)}
+          onDone={() => {
+            setAuthMode(null);
+            setGuest(false);
+            router.refresh();
+            setToast("You're in! 🎉");
+            setTimeout(() => setToast(null), 2500);
+          }}
+        />
+      )}
       <MobileBuyBar
         total={finalPrice}
         targetId="buy-button"

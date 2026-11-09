@@ -76,10 +76,10 @@ export const categories: Category[] = [
   },
   {
     slug: "engraved-cups",
-    name: "Engraved Cups",
+    name: "Custom Tumblers",
     tagline: "Laser-etched drinkware",
     description:
-      "Ship us your tumblers — we'll laser-engrave your design and send them back.",
+      "Custom 20oz tumblers, laser engraved or full-color UV. Preview your logo on the cup.",
     emoji: "🥤",
     href: "/products/engraved-cups",
   },

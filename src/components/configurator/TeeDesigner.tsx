@@ -397,7 +397,7 @@ export default function TeeDesigner({
           );
         })}
       </div>
-      <p className="mt-3 text-center text-xs text-white/55">Drag to move. Slide to resize. One side is fine.</p>
+      <p className="mt-3 text-center text-xs text-white/55">Drag to move · slide to resize</p>
       {msg && <p className="mt-2 text-center text-sm text-[#ff9aa2]">{msg}</p>}
     </div>
   );

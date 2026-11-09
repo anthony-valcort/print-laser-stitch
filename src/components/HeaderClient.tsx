@@ -43,12 +43,12 @@ const CATEGORY_STRIP: {
 ];
 
 const UTILITY_LINKS: { label: string; href: string; external?: boolean }[] = [
-  { label: "Sign & Decal Builder", href: "/signage-quotes" },
   { label: "One Shirt", href: "/one-shirt" },
   { label: "Design Your Wrap", href: "/wrap-designer" },
   { label: "About", href: "/about" },
   { label: "Gallery", href: "/gallery" },
   { label: "Blog", href: "/blog" },
+  { label: "Built Together", href: "/built-together" },
   { label: "Contact", href: "/contact" },
   { label: "University", href: "https://printlaserstitchuniversity.com/", external: true },
   { label: "Portal", href: "https://printlaserstitch.app/", external: true },
@@ -453,9 +453,11 @@ export default function HeaderClient({
                 { label: "Home", href: "/" },
                 { label: "One Shirt, No Minimum", href: "/one-shirt" },
                 { label: "Design Your Wrap", href: "/wrap-designer" },
-                { label: "Sign & Decal Builder", href: "/signage-quotes" },
+            { label: "Signage Quote", href: "/decal-quote" },
+                { label: "Decal Calculator", href: "/signage-quotes" },
                 { label: "Gallery", href: "/gallery" },
                 { label: "Blog", href: "/blog" },
+                { label: "Built Together", href: "/built-together" },
                 { label: "About Us", href: "/about" },
                 { label: "Contact Us", href: "/contact" },
               ].map((l) => (

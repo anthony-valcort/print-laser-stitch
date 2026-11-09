@@ -1121,7 +1121,7 @@ export default function TShirtConfigurator({
                             aria-pressed={v === value}
                             onClick={() => setOption(opt.name, v)}
                             className={`overflow-hidden rounded-2xl border text-center transition ${
-                              v === value ? "border-highlight ring-2 ring-[#18d3e8]/50" : "border-border-soft bg-white/3 opacity-60 hover:bg-white/6 hover:opacity-100"
+                              v === value ? "border-highlight ring-2 ring-[#18d3e8]/50" : "border-border-soft bg-white/3 opacity-75 hover:bg-white/6 hover:opacity-100"
                             }`}
                           >
                             <div className="bg-white p-1 sm:p-1.5">
@@ -1134,7 +1134,7 @@ export default function TShirtConfigurator({
                               />
                             </div>
                             <div className="px-1.5 py-2">
-                              <div className="text-[11px] font-bold leading-tight sm:text-xs">{label} {sub.toLowerCase()}</div>
+                              <div className="flex min-h-[2.4em] items-center justify-center text-[11px] font-bold leading-tight sm:text-xs">{label} {sub.toLowerCase()}</div>
                               {from != null && (
                                 <div className="mt-0.5 text-sm font-black text-[#d9f000] sm:text-base">
                                   {oneMode ? "" : "from "}${from.toFixed(from % 1 ? 2 : 0)}

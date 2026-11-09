@@ -884,10 +884,10 @@ export default function TShirtConfigurator({
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)] lg:gap-12">
+      <div className={`mx-auto px-4 py-6 sm:px-6 lg:px-8 ${tee ? "max-w-[1500px]" : "max-w-7xl"}`}>
+        <div className={tee ? "flex flex-col gap-6 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8" : "grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)] lg:gap-12"}>
           {/* LEFT: Sticky gallery */}
-          <div ref={galleryRef} className="lg:sticky lg:top-20 lg:self-start">
+          <div ref={galleryRef} className={tee ? "max-lg:contents lg:sticky lg:top-20 lg:self-start" : "lg:sticky lg:top-20 lg:self-start"}>
             {/* Phones: say what this is first, with a clear next step */}
             <div className="mb-4 lg:hidden">
               <h1 className="font-display text-2xl font-black uppercase leading-tight tracking-tight">
@@ -909,7 +909,7 @@ export default function TShirtConfigurator({
               </a>
             </div>
             {tee && (
-              <div className="mb-3">
+              <div className="sticky top-[58px] z-30 -mx-4 mb-1 bg-background/95 px-4 py-2 backdrop-blur max-lg:[&_svg]:mx-auto max-lg:[&_svg]:h-[20vh] max-lg:[&_svg]:w-auto lg:static lg:mx-0 lg:mb-3 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
                 <TeeShowcase
                   photoKey={teePhoto}
                   colorHex={teeColorHex}
@@ -920,7 +920,7 @@ export default function TShirtConfigurator({
               </div>
             )}
             {tee && displayImages.some((m) => m.type === "video") && (
-              <div className="mt-4">
+              <div className="mt-4 max-lg:order-3">
                 <h2 className="mb-2 font-display text-sm font-black uppercase tracking-tight text-[#d9f000]">
                   See how we make it 🎬
                 </h2>
@@ -995,7 +995,8 @@ export default function TShirtConfigurator({
           </div>
 
           {/* RIGHT: Configurator */}
-          <div id="order-options" className="scroll-mt-32 space-y-6">
+          <div id="order-options" className={tee ? "scroll-mt-32 space-y-6 max-lg:order-2 lg:col-span-2 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8 lg:space-y-0" : "scroll-mt-32 space-y-6"}>
+            <div className="space-y-6">
             {draft.restored && <DraftNote onStartOver={draft.startOver} />}
             <div>
               <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-border-soft bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-foreground-muted">
@@ -1436,6 +1437,8 @@ export default function TShirtConfigurator({
             />
             )}
 
+            </div>
+            <div className="space-y-6">
             {tee ? (
               <>
                 <Section title="Design your shirt">
@@ -1746,11 +1749,12 @@ export default function TShirtConfigurator({
               />
             )}
 
+            </div>
           </div>
 
           {/* How-to video: below the product on phones */}
           {howToOrderVideoId && (
-            <div className={tee ? "mt-8" : "lg:hidden"}>
+            <div className={tee ? "mt-6 max-lg:order-4 lg:col-span-3" : "lg:hidden"}>
               <h2 className="font-display text-xl font-black uppercase tracking-tight text-[#d9f000]">
                 How to Order
               </h2>

@@ -95,6 +95,7 @@ export default function ProductConfigurator() {
   const [toast, setToast] = useState<string | null>(null);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [showProof, setShowProof] = useState(false);
+  const approveRef = useRef<(() => Promise<ProofApprovalData | null>) | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -390,7 +391,18 @@ export default function ProductConfigurator() {
   function handleCheckoutClick() {
     if (!file || isCheckingOut || isUploading) return;
     if (file.type.startsWith("image/")) {
-      setShowProof(true);
+      const fn = approveRef.current;
+      if (!fn) return;
+      setIsCheckingOut(true);
+      fn()
+        .then((d) => {
+          if (d) return finalizeWithProof(d);
+          setIsCheckingOut(false);
+        })
+        .catch(() => {
+          setIsCheckingOut(false);
+          setToast("Could not prepare your proof. Try again.");
+        });
     } else {
       addToCartNoProof();
     }
@@ -423,7 +435,7 @@ export default function ProductConfigurator() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1500px] px-4 py-4 sm:px-6 lg:px-8">
         {/* HERO */}
         <div className="relative overflow-hidden rounded-3xl border border-[#d9f000]/25 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#d94cb3]/10 p-7 sm:p-10">
           <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[#d9f000]/15 blur-3xl" />
@@ -486,7 +498,7 @@ export default function ProductConfigurator() {
         </div>
 
         {/* CONFIGURATOR — left options / right sticky summary */}
-        <div id="order-options" className="mt-8 grid scroll-mt-32 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div id="order-options" className="mt-4 grid scroll-mt-24 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,0.9fr)]">
           {/* LEFT */}
           <div className="min-w-0 space-y-6">
             {/* Shape */}
@@ -646,6 +658,20 @@ export default function ProductConfigurator() {
               )}
             </Section>
 
+            {/* Instructions */}
+            <Section step={5} title="Additional instructions" optional>
+              <textarea
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                rows={4}
+                placeholder="Enter any special requests or notes here…"
+                className="w-full resize-none rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/60 outline-none ring-[#d9f000]/30 focus:ring-2"
+              />
+            </Section>
+          </div>
+
+          {/* MIDDLE — upload + live proof, right on the page */}
+          <div className="min-w-0 space-y-4 lg:sticky lg:top-20 lg:self-start">
             {/* Upload */}
             <Section step={4} title="Upload your artwork">
               <input
@@ -748,16 +774,32 @@ export default function ProductConfigurator() {
               </div>
             </Section>
 
-            {/* Instructions */}
-            <Section step={5} title="Additional instructions" optional>
-              <textarea
-                value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
-                rows={4}
-                placeholder="Enter any special requests or notes here…"
-                className="w-full resize-none rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/60 outline-none ring-[#d9f000]/30 focus:ring-2"
-              />
-            </Section>
+            {file && file.type.startsWith("image/") && (
+              <div className="rounded-2xl border border-border-soft bg-white/3 p-3">
+                <ProofModal
+                  inline
+                  open
+                  file={file}
+                  initialShape={shape as ProofShape}
+                  initialBorder="thin"
+                  initialRounded={
+                    (shape === "square" || shape === "rectangle") && roundedCorners
+                      ? "soft"
+                      : ("none" as RoundedCorners)
+                  }
+                  widthIn={sizeInches().w}
+                  heightIn={sizeInches().h}
+                  registerApprove={(fn) => {
+                    approveRef.current = fn;
+                  }}
+                  onClose={() => {}}
+                  onApprove={(d) => void finalizeWithProof(d)}
+                  onRequestChanges={(noteText, d) =>
+                    void finalizeWithProof(d, noteText)
+                  }
+                />
+              </div>
+            )}
           </div>
 
           {/* RIGHT — sticky summary */}
@@ -868,8 +910,7 @@ export default function ProductConfigurator() {
                   </>
                 ) : file ? (
                   <>
-                    <span>👁</span>
-                    View Proof · ${(price.perUnit * orderQty).toFixed(2)}
+                    Buy now · ${(price.perUnit * orderQty).toFixed(2)}
                   </>
                 ) : (
                   <>
@@ -879,7 +920,7 @@ export default function ProductConfigurator() {
                 )}
               </button>
               <p className="text-center text-xs text-foreground-muted">
-                Review your proof, then we&apos;ll take you to secure checkout.
+                Check your proof above, then tap Buy now.
               </p>
             </div>
           </div>
@@ -910,26 +951,6 @@ export default function ProductConfigurator() {
         </div>
       )}
 
-      {showProof && file && (
-        <ProofModal
-          open={showProof}
-          file={file}
-          initialShape={shape as ProofShape}
-          initialBorder="thin"
-          initialRounded={
-            (shape === "square" || shape === "rectangle") && roundedCorners
-              ? "soft"
-              : ("none" as RoundedCorners)
-          }
-          widthIn={sizeInches().w}
-          heightIn={sizeInches().h}
-          onClose={() => setShowProof(false)}
-          onApprove={(d) => void finalizeWithProof(d)}
-          onRequestChanges={(noteText, d) =>
-            void finalizeWithProof(d, noteText)
-          }
-        />
-      )}
     </section>
   );
 }

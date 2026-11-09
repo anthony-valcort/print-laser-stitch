@@ -39,10 +39,10 @@ export const QUANTITY_OPTIONS: QuantityKey[] = [
 
 // Per-unit price at qty=50 for each standard size (USD)
 const BASE_UNIT_AT_50: Record<SizeKey, number> = {
-  "2x2": 1.17,
-  "3x3": 1.35,
-  "4x4": 1.62,
-  "5x5": 1.91,
+  "2x2": 1.4,
+  "3x3": 1.62,
+  "4x4": 1.94,
+  "5x5": 2.29,
 };
 
 // Quantity discount factor — multiplied against the qty=50 per-unit price.
@@ -52,16 +52,16 @@ const QTY_DISCOUNT: Record<QuantityKey, number> = {
   100: 0.6,
   200: 0.38,
   300: 0.3,
-  500: 0.24,
-  1000: 0.19,
-  2500: 0.12,
+  500: 0.27,
+  1000: 0.22,
+  2500: 0.15,
 };
 
 // Linear fit to BASE_UNIT_AT_50 by area (sq in):
 //   perUnit_qty50 ≈ CUSTOM_BASE + CUSTOM_PER_SQ_IN × (W × H)
 // Used for custom sizes only.
-const CUSTOM_BASE_PRICE = 1.04;
-const CUSTOM_PRICE_PER_SQ_IN = 0.035;
+const CUSTOM_BASE_PRICE = 1.25;
+const CUSTOM_PRICE_PER_SQ_IN = 0.042;
 const CUSTOM_MIN_AREA_SQ_IN = 1; // 1"×1" minimum
 
 const MATERIAL_MULTIPLIER: Record<MaterialKey, number> = {

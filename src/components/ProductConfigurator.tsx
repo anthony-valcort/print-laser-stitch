@@ -442,7 +442,7 @@ export default function ProductConfigurator() {
                 type="button"
                 onClick={() => setShape("custom")}
                 className={`mb-3 flex w-full items-center gap-4 rounded-2xl border p-3 text-left transition ${
-                  shape === "custom" ? TILE_ON : `${TILE_OFF} opacity-45 saturate-50 hover:opacity-90 hover:saturate-100`
+                  shape === "custom" ? TILE_ON : `${TILE_OFF} opacity-60 saturate-60 hover:opacity-90 hover:saturate-100`
                 }`}
               >
                 <DieCutArt />
@@ -466,7 +466,7 @@ export default function ProductConfigurator() {
                     className={`relative flex flex-col items-center gap-1 rounded-2xl border px-2 pb-3 pt-3 transition ${
                       shape === k
                         ? TILE_ON
-                        : `${TILE_OFF} opacity-45 saturate-50 hover:opacity-90 hover:saturate-100`
+                        : `${TILE_OFF} opacity-60 saturate-60 hover:opacity-90 hover:saturate-100`
                     }`}
                   >
                     <ShapeArt kind={k} />
@@ -592,9 +592,8 @@ export default function ProductConfigurator() {
                   <div
                     className="rounded-md border-2 border-[#d9f000]/70 bg-[#d9f000]/10"
                     style={{
-                      aspectRatio: `${Math.max(customWidth, 0.5)} / ${Math.max(customHeight, 0.5)}`,
-                      maxHeight: "100%",
-                      maxWidth: "70%",
+                      width: `${Math.max(14, (56 * customWidth) / Math.max(customWidth, customHeight, 0.5))}px`,
+                      height: `${Math.max(14, (56 * customHeight) / Math.max(customWidth, customHeight, 0.5))}px`,
                     }}
                   />
                 </div>

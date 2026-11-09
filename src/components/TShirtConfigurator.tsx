@@ -1003,14 +1003,17 @@ export default function TShirtConfigurator({
             )}
             {teeErr && <p className="text-center text-sm text-[#ff9aa2]">{teeErr}</p>}
             {tee && guest && (
-              <div className="rounded-2xl border border-[#18d3e8]/40 bg-[#18d3e8]/8 p-3 text-center">
-                <div className="text-sm font-bold">New here? Free account saves your design 👋</div>
-                <Link
-                  href="/signup?redirect=/products/cotton-t-shirts"
-                  className="mt-2 inline-block rounded-full bg-[#18d3e8] px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-black"
-                >
-                  Create account
-                </Link>
+              <div className="rounded-2xl border border-white/10 bg-white/4 p-3 text-center">
+                <div className="text-sm font-bold">Already a customer? 👋</div>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <Link href="/login" className="rounded-full border border-white/25 px-3 py-2 text-xs font-bold uppercase tracking-wide text-white">
+                    Log in
+                  </Link>
+                  <Link href="/signup?redirect=/products/cotton-t-shirts" className="rounded-full bg-[#18d3e8] px-3 py-2 text-xs font-bold uppercase tracking-wide text-black">
+                    New? Sign up
+                  </Link>
+                </div>
+                <p className="mt-2 text-[11px] text-foreground-muted">Save your design · track orders · reorder fast</p>
               </div>
             )}
             {!tee && <p className="text-center text-[11px] text-foreground-muted">
@@ -1465,6 +1468,7 @@ export default function TShirtConfigurator({
                 minQuantity={minQuantity}
                 unitPrice={perShirtPrice}
                 totalQuantity={totalQuantity}
+                compact={tee}
               />
             )}
 
@@ -1492,7 +1496,7 @@ export default function TShirtConfigurator({
 
   const designUI = (
     <>
-                <Section title="Design your shirt">
+                <div>
                   <TeeDesigner
                     photoKey={teePhoto}
                     colorHex={teeColorHex}
@@ -1501,7 +1505,7 @@ export default function TShirtConfigurator({
                     logos={logos}
                     setLogos={(fn) => setLogos(fn)}
                   />
-                </Section>
+                </div>
 
     </>
   );
@@ -1604,8 +1608,8 @@ export default function TShirtConfigurator({
           <div className="max-lg:order-6">{mixUI}</div>
         </div>
 
-        {/* Column 2: the shirt, savings, checkout */}
-        <div ref={galleryRef} className="max-lg:contents lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:space-y-3 lg:self-start lg:overflow-y-auto lg:pr-1">
+        {/* Column 2: the shirt + design */}
+        <div ref={galleryRef} className="max-lg:contents lg:space-y-3">
           <div className="sticky top-[58px] z-30 -mx-4 bg-background/95 px-4 py-2 backdrop-blur max-lg:order-1 max-lg:[&_svg]:mx-auto max-lg:[&_svg]:h-[20vh] max-lg:[&_svg]:w-auto lg:static lg:mx-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
             <TeeShowcase
               photoKey={teePhoto}
@@ -1615,8 +1619,7 @@ export default function TShirtConfigurator({
               label={`${teeColorName} · ${STYLE_NAME}`}
             />
           </div>
-          <div className="max-lg:order-5">{ladderUI}</div>
-          <div className="space-y-3 max-lg:order-9">{checkoutUI}</div>
+          <div className="max-lg:order-7">{designUI}</div>
           {teeVideos.length > 0 && (
             <div className="max-lg:order-10">
               <h2 className="mb-2 font-display text-sm font-black uppercase tracking-tight text-[#d9f000]">See how we make it 🎬</h2>
@@ -1625,14 +1628,15 @@ export default function TShirtConfigurator({
           )}
         </div>
 
-        {/* Column 3: design */}
+        {/* Column 3: savings, proof, phone, then pay */}
         <div className="max-lg:contents lg:space-y-3">
-          <div className="max-lg:order-7">{designUI}</div>
+          <div className="max-lg:order-5">{ladderUI}</div>
           <div className="space-y-3 max-lg:order-8">
             {proofUI}
             {phoneUI}
             {notesUI}
           </div>
+          <div className="space-y-3 max-lg:order-9">{checkoutUI}</div>
         </div>
 
         {/* Bottom: all the words live here */}

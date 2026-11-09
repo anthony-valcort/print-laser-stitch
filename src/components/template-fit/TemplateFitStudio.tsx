@@ -86,6 +86,8 @@ export default function TemplateFitStudio({
   error = null,
   onFinalize,
   bleedIn = BLEED_IN,
+  embedded = false,
+  registerFinalize,
 }: {
   widthIn: number;
   heightIn: number;
@@ -97,6 +99,12 @@ export default function TemplateFitStudio({
    * products with no bleed step (e.g. Banners) — the bleed/trim guide
    * lines are hidden and only the finished-size edge + safe line show. */
   bleedIn?: number;
+  /** Inline on the product page: hides the confirm/continue buttons. The
+   * page's own Buy button asks for the flattened files via registerFinalize. */
+  embedded?: boolean;
+  registerFinalize?: (
+    fn: (() => Promise<Partial<Record<Side, Blob>>>) | null,
+  ) => void;
 }) {
   const bleedWIn = widthIn + 2 * bleedIn;
   const bleedHIn = heightIn + 2 * bleedIn;
@@ -407,32 +415,42 @@ export default function TemplateFitStudio({
 
   const allConfirmed = availableSides.every((s) => stateBySide[s].confirmed);
 
+  async function buildBlobs() {
+    const blobs: Partial<Record<Side, Blob>> = {};
+    for (const side of availableSides) {
+      const input = sides[side];
+      const st = stateBySide[side];
+      if (!input) continue;
+      const stEff = effectiveNaturalSize(st.naturalWidth, st.naturalHeight, st.rotation);
+      const drawW =
+        baseFitWidthIn(stEff.width, stEff.height, bleedWIn, bleedHIn, st.fitMode) *
+        st.zoom;
+      blobs[side] = await flattenToCanvas(input.fileUrl, bleedWIn, bleedHIn, {
+        widthIn: drawW,
+        offsetXIn: st.offsetXIn,
+        offsetYIn: st.offsetYIn,
+        rotation: st.rotation,
+        flipX: st.flipX,
+        flipY: st.flipY,
+      });
+    }
+    return blobs;
+  }
+
   async function handleContinueToCart() {
     setFinalizing(true);
     try {
-      const blobs: Partial<Record<Side, Blob>> = {};
-      for (const side of availableSides) {
-        const input = sides[side];
-        const st = stateBySide[side];
-        if (!input) continue;
-        const stEff = effectiveNaturalSize(st.naturalWidth, st.naturalHeight, st.rotation);
-        const drawW =
-          baseFitWidthIn(stEff.width, stEff.height, bleedWIn, bleedHIn, st.fitMode) *
-          st.zoom;
-        blobs[side] = await flattenToCanvas(input.fileUrl, bleedWIn, bleedHIn, {
-          widthIn: drawW,
-          offsetXIn: st.offsetXIn,
-          offsetYIn: st.offsetYIn,
-          rotation: st.rotation,
-          flipX: st.flipX,
-          flipY: st.flipY,
-        });
-      }
-      onFinalize(blobs);
+      onFinalize(await buildBlobs());
     } finally {
       setFinalizing(false);
     }
   }
+
+  useEffect(() => {
+    if (!registerFinalize) return;
+    registerFinalize(buildBlobs);
+    return () => registerFinalize(null);
+  });
 
   // Guide overlay insets, as % of container width/height.
   const trimLeftPct = (bleedIn / bleedWIn) * 100;
@@ -737,7 +755,7 @@ export default function TemplateFitStudio({
         </div>
       )}
 
-      <div className="mx-auto mt-6 max-w-md space-y-2 pb-4">
+      <div className={embedded ? "hidden" : "mx-auto mt-6 max-w-md space-y-2 pb-4"}>
         {!current.confirmed && (
           <button
             type="button"

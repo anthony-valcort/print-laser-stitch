@@ -23,7 +23,10 @@ import { uploadFlattenedDesign } from "@/lib/template-fit/upload-flattened";
  * hosted image), it is drawn as the cup body instead of the built-in
  * illustration. Leave null to use the illustration.
  */
-const CUP_PHOTO_URL: string | null = null;
+const CUP_PHOTO_URL: string | null = "/cup-20oz.jpg";
+const HAS_PHOTO = !!CUP_PHOTO_URL;
+const CV_W = HAS_PHOTO ? 480 : 320;
+const CV_H = HAS_PHOTO ? 480 : 560;
 
 const FINISH_OPT = "Finish";
 const QTY_OPT = "Qty - Price";
@@ -196,8 +199,8 @@ export default function CupConfigurator({ product }: Props) {
     const cv = canvasRef.current;
     if (!cv) return;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const CW = 320;
-    const CH = 560;
+    const CW = CV_W;
+    const CH = CV_H;
     if (cv.width !== CW * dpr) {
       cv.width = CW * dpr;
       cv.height = CH * dpr;
@@ -220,9 +223,52 @@ export default function CupConfigurator({ product }: Props) {
     g.fillStyle = sh;
     g.fillRect(0, botY - 20, CW, 60);
 
-    if (photo) {
-      const s = Math.min(CW / photo.width, CH / photo.height);
-      g.drawImage(photo, (CW - photo.width * s) / 2, (CH - photo.height * s) / 2, photo.width * s, photo.height * s);
+    if (HAS_PHOTO) {
+      g.clearRect(0, 0, CW, CH);
+      if (!photo) return;
+      g.fillStyle = "#fff";
+      g.fillRect(0, 0, CW, CH);
+      g.drawImage(photo, 0, 0, CW, CH);
+      if (wrapArt) {
+        // Coordinates below are in the 1920px photo space.
+        const k = CW / 1920;
+        const pcx = 965;
+        const r = 405;
+        const y0 = 560;
+        const h = 963;
+        const span = (WRAP_W_IN / CIRC_IN) * Math.PI * 2;
+        const N = 200;
+        g.save();
+        g.beginPath();
+        g.moveTo((pcx - 428) * k, 395 * k);
+        g.lineTo((pcx + 428) * k, 395 * k);
+        g.lineTo((pcx + 372) * k, 1640 * k);
+        g.lineTo((pcx - 372) * k, 1640 * k);
+        g.closePath();
+        g.clip();
+        for (let i = 0; i < N; i++) {
+          const th0 = -Math.PI / 2 + (i / N) * Math.PI;
+          const th1 = -Math.PI / 2 + ((i + 1) / N) * Math.PI;
+          const mid = (th0 + th1) / 2;
+          const u = (mid + rotRef.current) / span + 0.5;
+          if (u < 0 || u > 1) continue;
+          const sx = u * wrapArt.width;
+          const sw = Math.max(1, (wrapArt.width * (th1 - th0)) / span);
+          const x0 = (pcx + r * Math.sin(th0)) * k;
+          const x1 = (pcx + r * Math.sin(th1)) * k;
+          g.drawImage(wrapArt, sx, 0, sw, wrapArt.height, x0, y0 * k, x1 - x0 + 0.6, h * k);
+        }
+        // Soft edge shading so the art sits on the curve.
+        const lg = g.createLinearGradient((pcx - 428) * k, 0, (pcx + 428) * k, 0);
+        lg.addColorStop(0, "rgba(0,0,0,0.55)");
+        lg.addColorStop(0.2, "rgba(0,0,0,0)");
+        lg.addColorStop(0.8, "rgba(0,0,0,0)");
+        lg.addColorStop(1, "rgba(0,0,0,0.55)");
+        g.fillStyle = lg;
+        g.fillRect((pcx - 428) * k, 395 * k, 856 * k, 1245 * k);
+        g.restore();
+      }
+      return;
     }
 
     const bodyPath = () => {
@@ -597,8 +643,8 @@ export default function CupConfigurator({ product }: Props) {
               onPointerMove={onMove}
               onPointerUp={onUp}
               onPointerCancel={onUp}
-              className="mx-auto block h-auto w-full max-w-[300px] cursor-grab touch-pan-y select-none active:cursor-grabbing"
-              style={{ aspectRatio: "320 / 560" }}
+              className="mx-auto block h-auto w-full max-w-[380px] cursor-grab touch-pan-y select-none active:cursor-grabbing"
+              style={{ aspectRatio: `${CV_W} / ${CV_H}` }}
               aria-label="Tumbler preview. Drag to turn."
             />
             <div className="mt-2 grid grid-cols-4 gap-1.5">

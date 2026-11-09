@@ -56,12 +56,14 @@ export function BulkPricingLadder({
   unitPrice,
   totalQuantity,
   unitLabel = "shirt",
+  compact = false,
 }: {
   tiers: VolumeTier[];
   minQuantity: number;
   unitPrice: number;
   totalQuantity: number;
   unitLabel?: string;
+  compact?: boolean;
 }) {
   if (!(unitPrice > 0) || tiers.length === 0) return null;
   const ladder = buildTiers(tiers, minQuantity);
@@ -73,14 +75,16 @@ export function BulkPricingLadder({
 
   return (
     <div className="overflow-hidden rounded-2xl border border-[#d9f000]/30 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#18d3e8]/10">
-      <div className="flex items-center justify-between gap-3 px-4 pt-4">
+      <div className={`flex items-center justify-between gap-3 px-4 ${compact ? "pt-3" : "pt-4"}`}>
         <div>
           <div className="font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
             Buy more, save more
           </div>
-          <div className="mt-0.5 text-sm font-semibold">
-            Bulk pricing is applied automatically
-          </div>
+          {!compact && (
+            <div className="mt-0.5 text-sm font-semibold">
+              Bulk pricing is applied automatically
+            </div>
+          )}
         </div>
         {best && best.percent > 0 && (
           <span className="shrink-0 rounded-full accent-gradient px-2.5 py-1 font-headline text-[10px] font-bold uppercase tracking-wider text-black">
@@ -89,7 +93,7 @@ export function BulkPricingLadder({
         )}
       </div>
 
-      <div className="grid grid-cols-4 gap-1.5 p-3 sm:gap-2 sm:p-4">
+      <div className={`grid grid-cols-4 gap-1.5 sm:gap-2 ${compact ? "p-2.5 pt-3.5 sm:p-3 sm:pt-4" : "p-3 sm:p-4"}`}>
         {ladder.map((t, i) => {
           const active = i === activeIdx;
           const reached = i <= activeIdx;

@@ -42,6 +42,12 @@ type Props = {
   onClose: () => void;
   onApprove: (data: ProofApprovalData) => void;
   onRequestChanges: (note: string, data: ProofApprovalData) => void;
+  /** Render inside the page instead of as a full-screen overlay. The page's
+   * own Buy button pulls the approved proof through registerApprove. */
+  inline?: boolean;
+  registerApprove?: (
+    fn: (() => Promise<ProofApprovalData | null>) | null,
+  ) => void;
 };
 
 const SHAPES: { key: ProofShape; label: string; icon: string }[] = [
@@ -71,6 +77,8 @@ export default function ProofModal({
   onClose,
   onApprove,
   onRequestChanges,
+  inline = false,
+  registerApprove,
 }: Props) {
   const [shape, setShape] = useState<ProofShape>(initialShape);
   const [border, setBorder] = useState<BorderThickness>(initialBorder);
@@ -94,7 +102,7 @@ export default function ProofModal({
   const runToken = useRef(0);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || inline) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
@@ -198,6 +206,8 @@ export default function ProofModal({
     };
   }
 
+  if (registerApprove) registerApprove(buildApprovalData);
+
   async function handleApprove() {
     setBusy(true);
     try {
@@ -226,9 +236,9 @@ export default function ProofModal({
   const isSquareish = shape === "square" || shape === "rectangle";
 
   return (
-    <div className="fixed inset-0 z-100 flex flex-col overflow-y-auto overflow-x-hidden overscroll-contain bg-background">
+    <div className={inline ? "flex flex-col" : "fixed inset-0 z-100 flex flex-col overflow-y-auto overflow-x-hidden overscroll-contain bg-background"}>
       {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-border-soft bg-background/95 px-4 py-3 backdrop-blur">
+      <div className={inline ? "hidden" : "sticky top-0 z-10 border-b border-border-soft bg-background/95 px-4 py-3 backdrop-blur"}>
         <div className="mx-auto flex max-w-4xl items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-lg">✨</span>
@@ -253,7 +263,7 @@ export default function ProofModal({
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-4xl flex-1 px-4 py-5">
+      <div className={inline ? "w-full flex-1" : "mx-auto w-full max-w-4xl flex-1 px-4 py-5"}>
         {view === "proof" ? (
           <>
             {/* Shape switcher row */}
@@ -426,7 +436,7 @@ export default function ProofModal({
             )}
 
             {/* Actions */}
-            <div className="mx-auto mt-6 max-w-md space-y-2 pb-8">
+            <div className={inline ? "hidden" : "mx-auto mt-6 max-w-md space-y-2 pb-8"}>
               <button
                 type="button"
                 disabled={busy || !result}

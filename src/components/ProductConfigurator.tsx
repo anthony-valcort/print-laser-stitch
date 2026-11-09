@@ -441,7 +441,7 @@ export default function ProductConfigurator() {
                 type="button"
                 onClick={() => setShape("custom")}
                 className={`mb-3 flex w-full items-center gap-4 rounded-2xl border p-3 text-left transition ${
-                  shape === "custom" ? TILE_ON : TILE_OFF
+                  shape === "custom" ? TILE_ON : `${TILE_OFF} opacity-45 saturate-50 hover:opacity-90 hover:saturate-100`
                 }`}
               >
                 <DieCutArt />
@@ -457,14 +457,27 @@ export default function ProductConfigurator() {
               </button>
 
               <div className="grid grid-cols-2 gap-3">
-                {SHAPE_OPTIONS.filter((s) => s.key !== "custom").map((s) => (
-                  <OptionTile
-                    key={s.key}
-                    icon={SHAPE_ICON[s.key as ShapeKey]}
-                    label={s.label}
-                    active={shape === s.key}
-                    onClick={() => setShape(s.key as ShapeKey)}
-                  />
+                {(["circle", "oval", "square", "rectangle"] as const).map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setShape(k)}
+                    className={`relative flex flex-col items-center gap-1 rounded-2xl border px-2 pb-3 pt-3 transition ${
+                      shape === k
+                        ? TILE_ON
+                        : `${TILE_OFF} opacity-45 saturate-50 hover:opacity-90 hover:saturate-100`
+                    }`}
+                  >
+                    <ShapeArt kind={k} />
+                    <span className="font-headline text-xs font-bold uppercase tracking-wide">
+                      {k}
+                    </span>
+                    {shape === k && (
+                      <span className="absolute right-2 top-2">
+                        <CheckBadge />
+                      </span>
+                    )}
+                  </button>
                 ))}
               </div>
 
@@ -501,7 +514,7 @@ export default function ProductConfigurator() {
             <div className="order-2 lg:order-none">
             {/* Material */}
             <Section step={2} title="Material">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-4 gap-2">
                 {MATERIAL_OPTIONS.map((m) => (
                   <OptionTile
                     key={m.key}
@@ -515,10 +528,14 @@ export default function ProductConfigurator() {
             </Section>
 
             </div>
+          </div>
+
+          {/* COL 2 */}
+          <div className="contents lg:block lg:space-y-5">
             <div className="order-3 lg:order-none">
             {/* Size */}
             <Section step={3} title="Size">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-4 gap-2">
                 {SIZE_OPTIONS.map((s) => (
                   <SizeTile
                     key={s.key}
@@ -583,13 +600,38 @@ export default function ProductConfigurator() {
               </div>
             </Section>
             </div>
-          </div>
-
-          {/* COL 2 */}
-          <div className="contents lg:block lg:space-y-5">
             <div className="order-4 lg:order-none">
             <Section step={4} title="How many?">
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+              <p className="mb-3 -mt-1 text-xs font-medium text-emerald-300">
+                More stickers = bigger discount
+              </p>
+              <div className="space-y-1.5">
+                <button
+                  type="button"
+                  onClick={() => setQuantity("custom")}
+                  className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-sm transition ${
+                    quantity === "custom" ? TILE_ON : TILE_OFF
+                  }`}
+                >
+                  <span className="font-medium">Custom</span>
+                  {quantity === "custom" && (
+                    <span className="text-xs font-semibold text-foreground-muted tabular-nums">
+                      {orderQty.toLocaleString()} pcs · ${(price.perUnit * orderQty).toFixed(2)}
+                    </span>
+                  )}
+                </button>
+                {quantity === "custom" && (
+                  <div className="px-1 pt-1">
+                    <NumberField
+                      label={`Custom quantity (min ${MIN_CUSTOM_QTY})`}
+                      value={customQty}
+                      onChange={setCustomQty}
+                      min={MIN_CUSTOM_QTY}
+                      step={1}
+                      integer
+                    />
+                  </div>
+                )}
                 {tierPrices.map(({ qty, total, savingsPercent }) => {
                   const active = quantity === qty;
                   return (
@@ -597,52 +639,36 @@ export default function ProductConfigurator() {
                       key={qty}
                       type="button"
                       onClick={() => setQuantity(qty)}
-                      className={`relative rounded-xl border px-3 py-3 text-center transition ${
+                      className={`w-full rounded-xl border px-3 pb-2 pt-2.5 text-left transition ${
                         active ? TILE_ON : TILE_OFF
                       }`}
                     >
-                      {savingsPercent > 0 && (
-                        <span className="absolute -top-2 right-2 rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300">
-                          -{savingsPercent}%
+                      <div className="flex items-center justify-between gap-2 text-sm">
+                        <span className="font-semibold tabular-nums">
+                          {qty.toLocaleString()}
+                          <span className="ml-2 text-xs font-normal text-foreground-muted">
+                            ${(total / qty).toFixed(2)} each
+                          </span>
                         </span>
-                      )}
-                      <div className="font-display text-xl font-black tabular-nums">
-                        {qty.toLocaleString()}
+                        <span className="flex items-center gap-2">
+                          <span className="font-bold tabular-nums">${total.toFixed(2)}</span>
+                          {savingsPercent > 0 && (
+                            <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] font-bold text-emerald-300">
+                              Save {savingsPercent}%
+                            </span>
+                          )}
+                        </span>
                       </div>
-                      <div className="text-sm font-semibold">${total.toFixed(2)}</div>
-                      <div className="text-[11px] text-foreground-muted">
-                        ${(total / qty).toFixed(2)} each
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/8">
+                        <div
+                          className="h-full rounded-full bg-linear-to-r from-emerald-400 to-[#d9f000]"
+                          style={{ width: `${savingsPercent}%` }}
+                        />
                       </div>
                     </button>
                   );
                 })}
-                <button
-                  type="button"
-                  onClick={() => setQuantity("custom")}
-                  className={`rounded-xl border px-3 py-3 text-center transition ${
-                    quantity === "custom" ? TILE_ON : "border-dashed border-border-strong bg-white/3 hover:bg-white/6"
-                  }`}
-                >
-                  <div className="font-display text-xl font-black">Other</div>
-                  <div className="text-[11px] text-foreground-muted">
-                    {quantity === "custom"
-                      ? `$${(price.perUnit * orderQty).toFixed(2)}`
-                      : `min ${MIN_CUSTOM_QTY}`}
-                  </div>
-                </button>
               </div>
-              {quantity === "custom" && (
-                <div className="pt-3">
-                  <NumberField
-                    label={`How many? (min ${MIN_CUSTOM_QTY})`}
-                    value={customQty}
-                    onChange={setCustomQty}
-                    min={MIN_CUSTOM_QTY}
-                    step={1}
-                    integer
-                  />
-                </div>
-              )}
             </Section>
             </div>
             <div className="order-6 lg:order-none">
@@ -1120,7 +1146,7 @@ function DieCutArt() {
     return `${(32 + r * Math.cos(a)).toFixed(1)},${(32 + r * Math.sin(a)).toFixed(1)}`;
   }).join(" ");
   return (
-    <svg width="72" height="72" viewBox="0 0 64 64" fill="none" aria-hidden className="shrink-0">
+    <svg width="72" height="72" viewBox="0 0 64 64" fill="none" aria-hidden className="shrink-0 drop-shadow-[0_3px_6px_rgba(0,0,0,0.5)]">
       <defs>
         <linearGradient id="dc" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#d9f000" />
@@ -1128,15 +1154,64 @@ function DieCutArt() {
           <stop offset="1" stopColor="#d94cb3" />
         </linearGradient>
       </defs>
-      {/* dashed cut line, hugging the shape */}
-      <g transform="translate(32 32) scale(1.32) translate(-32 -32)">
-        <polygon points={pts} stroke="#ff5a7a" strokeWidth="1.1" strokeDasharray="2.4 2" strokeLinejoin="round" fill="none" />
-      </g>
       {/* white sticker border */}
       <polygon points={pts} fill="#fff" stroke="#fff" strokeWidth="9" strokeLinejoin="round" />
       {/* artwork */}
       <polygon points={pts} fill="url(#dc)" stroke="url(#dc)" strokeWidth="2" strokeLinejoin="round" />
       <circle cx="32" cy="33" r="4" fill="#fff" fillOpacity=".85" />
+    </svg>
+  );
+}
+
+function ShapeArt({ kind }: { kind: "circle" | "oval" | "square" | "rectangle" }) {
+  const id = `sa-${kind}`;
+  const stops: Record<string, [string, string]> = {
+    circle: ["#18d3e8", "#d9f000"],
+    oval: ["#d94cb3", "#18d3e8"],
+    square: ["#d9f000", "#d94cb3"],
+    rectangle: ["#18d3e8", "#d94cb3"],
+  };
+  const [c1, c2] = stops[kind];
+  const spark = (cx: number, cy: number, r: number) =>
+    `M${cx} ${cy - r}L${cx + r * 0.3} ${cy - r * 0.3}L${cx + r} ${cy}L${cx + r * 0.3} ${cy + r * 0.3}L${cx} ${cy + r}L${cx - r * 0.3} ${cy + r * 0.3}L${cx - r} ${cy}L${cx - r * 0.3} ${cy - r * 0.3}Z`;
+  return (
+    <svg width="104" height="76" viewBox="0 0 104 76" fill="none" aria-hidden className="drop-shadow-[0_3px_6px_rgba(0,0,0,0.5)]">
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor={c1} />
+          <stop offset="1" stopColor={c2} />
+        </linearGradient>
+      </defs>
+      {kind === "circle" && (
+        <>
+          <circle cx="52" cy="38" r="34" fill="#fff" />
+          <circle cx="52" cy="38" r="29" fill={`url(#${id})`} />
+          <path d={spark(52, 38, 16)} fill="#fff" fillOpacity=".92" />
+        </>
+      )}
+      {kind === "oval" && (
+        <>
+          <ellipse cx="52" cy="38" rx="46" ry="30" fill="#fff" />
+          <ellipse cx="52" cy="38" rx="41" ry="25" fill={`url(#${id})`} />
+          <path d="M18 42c9-12 17 10 26 0s17 10 26 0 12-6 16-2" stroke="#fff" strokeOpacity=".9" strokeWidth="4" strokeLinecap="round" />
+        </>
+      )}
+      {kind === "square" && (
+        <>
+          <rect x="16" y="4" width="68" height="68" rx="12" fill="#fff" />
+          <rect x="21" y="9" width="58" height="58" rx="8" fill={`url(#${id})`} />
+          <circle cx="50" cy="38" r="16" stroke="#fff" strokeOpacity=".92" strokeWidth="4" />
+          <circle cx="50" cy="38" r="5" fill="#fff" fillOpacity=".92" />
+        </>
+      )}
+      {kind === "rectangle" && (
+        <>
+          <rect x="4" y="12" width="96" height="52" rx="10" fill="#fff" />
+          <rect x="9" y="17" width="86" height="42" rx="6" fill={`url(#${id})`} />
+          <path d="M9 30h86M9 46h86" stroke="#fff" strokeOpacity=".5" strokeWidth="3" />
+          <path d={spark(52, 38, 11)} fill="#fff" fillOpacity=".95" />
+        </>
+      )}
     </svg>
   );
 }

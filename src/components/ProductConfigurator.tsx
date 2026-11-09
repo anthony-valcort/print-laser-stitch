@@ -67,12 +67,6 @@ const SIZE_HOVER_TEXT: Record<SizeKey, string> = {
   "5x5": "About the size of a dollar bill",
 };
 
-const POPULAR_SIZES: { label: string; w: number; h: number }[] = [
-  { label: '5.5"', w: 5.5, h: 5.5 },
-  { label: '11" × 3"', w: 11, h: 3 },
-  { label: '3" × 2"', w: 3, h: 2 },
-  { label: '4" × 3"', w: 4, h: 3 },
-];
 
 export default function ProductConfigurator() {
   const router = useRouter();
@@ -408,11 +402,6 @@ export default function ProductConfigurator() {
     }
   }
 
-  function applyPopularSize(w: number, h: number) {
-    setSize("custom");
-    setCustomWidth(w);
-    setCustomHeight(h);
-  }
 
   const ctaDisabled = !file || isCheckingOut || isUploading;
 
@@ -436,99 +425,38 @@ export default function ProductConfigurator() {
       </div>
 
       <div className="mx-auto max-w-[1500px] px-4 py-4 sm:px-6 lg:px-8">
-        {/* HERO */}
-        <div className="relative overflow-hidden rounded-3xl border border-[#d9f000]/25 bg-linear-to-br from-[#d9f000]/10 via-surface to-[#d94cb3]/10 p-7 sm:p-10">
-          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-[#d9f000]/15 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-[#18d3e8]/15 blur-3xl" />
-          <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_460px] lg:items-center xl:grid-cols-[minmax(0,1fr)_540px]">
-            <div>
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#d9f000]/40 bg-[#d9f000]/10 px-3 py-1 font-headline text-[11px] font-semibold uppercase tracking-[0.2em] text-[#d9f000]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#d9f000]" />
-                Design it yourself
-              </span>
-              <h1 className="mt-4 font-display text-3xl font-black uppercase leading-[1.05] tracking-tight sm:text-5xl">
-                Custom{" "}
-                <span className="accent-gradient-text">Vinyl Stickers</span>
-              </h1>
-              <p className="mt-3 max-w-xl text-sm text-foreground-muted sm:text-base">
-                Turn your artwork into tough, weatherproof stickers — cut to the
-                exact shape of your design and built to survive sun, rain and
-                everyday wear. Upload your file, preview the proof on screen,
-                then order in minutes.
-              </p>
-              <a
-                href="#order-options"
-                className="mt-5 inline-flex items-center gap-2 rounded-full accent-gradient px-6 py-3 font-headline text-sm font-bold uppercase tracking-wide text-black shadow-lg shadow-[#d9f000]/25 transition hover:brightness-110 active:scale-95"
-              >
-                Start your order
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <path d="M12 5v14" />
-                  <path d="m19 12-7 7-7-7" />
-                </svg>
-              </a>
-              <div className="mt-5 flex flex-wrap gap-2">
-                {[
-                  "💦 Holds up outdoors",
-                  "☀️ UV & fade resistant",
-                  "✂️ Precision die-cut",
-                  "🖥️ Live on-screen proof",
-                ].map((t) => (
-                  <span
-                    key={t}
-                    className="rounded-full border border-border-soft bg-white/5 px-3 py-1 text-xs font-medium text-foreground/80"
-                  >
-                    {t}
-                  </span>
-                ))}
-              </div>
-            </div>
+        {/* Title */}
+        <h1 className="font-display text-2xl font-black uppercase leading-tight tracking-tight sm:text-3xl">
+          Custom <span className="accent-gradient-text">Vinyl Stickers</span>
+        </h1>
 
-            {/* How to order — video */}
-            <div className="hidden aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30 lg:block">
-              <iframe
-                loading="lazy"
-                src={`https://www.youtube-nocookie.com/embed/${HOW_TO_ORDER_VIDEO_ID}`}
-                title="How to order — Print Laser Stitch"
-                className="h-full w-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* CONFIGURATOR — left options / right sticky summary */}
-        <div id="order-options" className="mt-4 grid scroll-mt-24 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,0.9fr)]">
-          {/* LEFT */}
-          <div className="min-w-0 space-y-6">
+        {/* CONFIGURATOR — shape/material/size · quantity + proof · upload + buy */}
+        <div id="order-options" className="mt-3 flex scroll-mt-24 flex-col gap-5 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start">
+          {/* COL 1 */}
+          <div className="contents lg:block lg:space-y-5">
+            <div className="order-1 lg:order-none">
             {/* Shape */}
-            <Section step={1} title="Choose a shape">
+            <Section step={1} title="Shape">
               <button
                 type="button"
                 onClick={() => setShape("custom")}
-                className={`mb-3 flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition ${
+                className={`mb-3 flex w-full items-center gap-4 rounded-2xl border p-3 text-left transition ${
                   shape === "custom" ? TILE_ON : TILE_OFF
                 }`}
               >
-                <Image
-                  src={SHAPE_ICON.custom}
-                  alt="Custom Shape"
-                  width={56}
-                  height={56}
-                  className="h-14 w-14 shrink-0 object-contain"
-                />
+                <DieCutArt />
                 <div className="min-w-0">
                   <div className="font-headline text-sm font-bold uppercase tracking-wide">
-                    Custom Shape
+                    Die-cut
                   </div>
                   <div className="text-xs text-foreground-muted">
-                    Die-cut to follow your artwork
+                    Cut right around your design
                   </div>
                 </div>
                 {shape === "custom" && <CheckBadge />}
               </button>
 
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3">
                 {SHAPE_OPTIONS.filter((s) => s.key !== "custom").map((s) => (
                   <OptionTile
                     key={s.key}
@@ -569,9 +497,11 @@ export default function ProductConfigurator() {
               )}
             </Section>
 
+            </div>
+            <div className="order-2 lg:order-none">
             {/* Material */}
-            <Section step={2} title="Pick a material">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Section step={2} title="Material">
+              <div className="grid grid-cols-2 gap-3">
                 {MATERIAL_OPTIONS.map((m) => (
                   <OptionTile
                     key={m.key}
@@ -584,9 +514,11 @@ export default function ProductConfigurator() {
               </div>
             </Section>
 
+            </div>
+            <div className="order-3 lg:order-none">
             {/* Size */}
-            <Section step={3} title="Select a size">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Section step={3} title="Size">
+              <div className="grid grid-cols-2 gap-3">
                 {SIZE_OPTIONS.map((s) => (
                   <SizeTile
                     key={s.key}
@@ -597,83 +529,157 @@ export default function ProductConfigurator() {
                   />
                 ))}
               </div>
-              <button
-                type="button"
-                onClick={() => setSize("custom")}
-                className={`mt-3 flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition ${
+              <div
+                className={`mt-4 rounded-2xl border-2 p-4 transition ${
                   size === "custom"
-                    ? TILE_ON
-                    : "border-dashed border-border-strong bg-white/2 hover:bg-white/5"
+                    ? "border-[#d9f000] bg-[#d9f000]/10"
+                    : "border-dashed border-border-strong bg-white/3"
                 }`}
               >
-                <Image
-                  src={CUSTOM_SIZE_ICON}
-                  alt=""
-                  width={28}
-                  height={28}
-                  className="shrink-0"
-                />
-                <span className="font-semibold">Custom size</span>
-              </button>
-              {size === "custom" && (
-                <div className="mt-3 space-y-3 rounded-2xl border border-border-soft bg-white/2 p-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <NumberField
-                      label="Width (in)"
-                      value={customWidth}
-                      onChange={setCustomWidth}
-                    />
-                    <NumberField
-                      label="Height (in)"
-                      value={customHeight}
-                      onChange={setCustomHeight}
-                    />
+                <div className="mb-3 flex items-center gap-3">
+                  <Image
+                    src={CUSTOM_SIZE_ICON}
+                    alt=""
+                    width={40}
+                    height={40}
+                    className="shrink-0"
+                  />
+                  <div className="font-headline text-sm font-bold uppercase tracking-wide">
+                    Your own size
                   </div>
-                  <div>
-                    <div className="mb-2 font-headline text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
-                      Popular sizes
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      {POPULAR_SIZES.map((p) => {
-                        const active =
-                          size === "custom" &&
-                          customWidth === p.w &&
-                          customHeight === p.h;
-                        return (
-                          <button
-                            key={p.label}
-                            type="button"
-                            onClick={() => applyPopularSize(p.w, p.h)}
-                            className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${
-                              active ? TILE_ON : TILE_OFF
-                            }`}
-                          >
-                            {p.label}
-                          </button>
-                        );
-                      })}
-                    </div>
+                  {size === "custom" && <CheckBadge />}
+                </div>
+                <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
+                  <NumberField
+                    label="Width (in)"
+                    value={customWidth}
+                    onChange={(v) => {
+                      setSize("custom");
+                      setCustomWidth(v);
+                    }}
+                  />
+                  <span className="pb-2.5 text-lg font-bold text-foreground-muted">
+                    ×
+                  </span>
+                  <NumberField
+                    label="Height (in)"
+                    value={customHeight}
+                    onChange={(v) => {
+                      setSize("custom");
+                      setCustomHeight(v);
+                    }}
+                  />
+                </div>
+                <div className="mt-3 grid h-16 place-items-center">
+                  <div
+                    className="rounded-md border-2 border-[#d9f000]/70 bg-[#d9f000]/10"
+                    style={{
+                      aspectRatio: `${Math.max(customWidth, 0.5)} / ${Math.max(customHeight, 0.5)}`,
+                      maxHeight: "100%",
+                      maxWidth: "70%",
+                    }}
+                  />
+                </div>
+              </div>
+            </Section>
+            </div>
+          </div>
+
+          {/* COL 2 */}
+          <div className="contents lg:block lg:space-y-5">
+            <div className="order-4 lg:order-none">
+            <Section step={4} title="How many?">
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+                {tierPrices.map(({ qty, total, savingsPercent }) => {
+                  const active = quantity === qty;
+                  return (
+                    <button
+                      key={qty}
+                      type="button"
+                      onClick={() => setQuantity(qty)}
+                      className={`relative rounded-xl border px-3 py-3 text-center transition ${
+                        active ? TILE_ON : TILE_OFF
+                      }`}
+                    >
+                      {savingsPercent > 0 && (
+                        <span className="absolute -top-2 right-2 rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold text-emerald-300">
+                          -{savingsPercent}%
+                        </span>
+                      )}
+                      <div className="font-display text-xl font-black tabular-nums">
+                        {qty.toLocaleString()}
+                      </div>
+                      <div className="text-sm font-semibold">${total.toFixed(2)}</div>
+                      <div className="text-[11px] text-foreground-muted">
+                        ${(total / qty).toFixed(2)} each
+                      </div>
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => setQuantity("custom")}
+                  className={`rounded-xl border px-3 py-3 text-center transition ${
+                    quantity === "custom" ? TILE_ON : "border-dashed border-border-strong bg-white/3 hover:bg-white/6"
+                  }`}
+                >
+                  <div className="font-display text-xl font-black">Other</div>
+                  <div className="text-[11px] text-foreground-muted">
+                    {quantity === "custom"
+                      ? `$${(price.perUnit * orderQty).toFixed(2)}`
+                      : `min ${MIN_CUSTOM_QTY}`}
                   </div>
+                </button>
+              </div>
+              {quantity === "custom" && (
+                <div className="pt-3">
+                  <NumberField
+                    label={`How many? (min ${MIN_CUSTOM_QTY})`}
+                    value={customQty}
+                    onChange={setCustomQty}
+                    min={MIN_CUSTOM_QTY}
+                    step={1}
+                    integer
+                  />
                 </div>
               )}
             </Section>
-
-            {/* Instructions */}
-            <Section step={5} title="Additional instructions" optional>
-              <textarea
-                value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
-                rows={4}
-                placeholder="Enter any special requests or notes here…"
-                className="w-full resize-none rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/60 outline-none ring-[#d9f000]/30 focus:ring-2"
-              />
-            </Section>
+            </div>
+            <div className="order-6 lg:order-none">
+            {file && file.type.startsWith("image/") && (
+              <div className="rounded-2xl border border-border-soft bg-white/3 p-3">
+                <ProofModal
+                  inline
+                  open
+                  file={file}
+                  initialShape={shape as ProofShape}
+                  initialBorder="thin"
+                  initialRounded={
+                    (shape === "square" || shape === "rectangle") && roundedCorners
+                      ? "soft"
+                      : ("none" as RoundedCorners)
+                  }
+                  widthIn={sizeInches().w}
+                  heightIn={sizeInches().h}
+                  registerApprove={(fn) => {
+                    approveRef.current = fn;
+                  }}
+                  onClose={() => {}}
+                  onApprove={(d) => void finalizeWithProof(d)}
+                  onRequestChanges={(noteText, d) =>
+                    void finalizeWithProof(d, noteText)
+                  }
+                />
+              </div>
+            )}
+            </div>
           </div>
 
-          {/* MIDDLE — upload + live proof, right on the page */}
-          <div className="min-w-0 space-y-4 lg:sticky lg:top-20 lg:self-start">
+          {/* COL 3 */}
+          <div className="contents lg:sticky lg:top-20 lg:block lg:space-y-5">
+            <div className="order-5 lg:order-none">
             {/* Upload */}
-            <Section step={4} title="Upload your artwork">
+            <Section step={5} title="Upload your design">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -693,7 +699,7 @@ export default function ProductConfigurator() {
                   handleFile(e.dataTransfer.files?.[0]);
                 }}
                 onClick={() => fileInputRef.current?.click()}
-                className={`relative flex min-h-44 min-w-0 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition ${
+                className={`relative flex min-h-40 min-w-0 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-6 text-center transition ${
                   dragActive
                     ? "border-[#d9f000] bg-[#d9f000]/10"
                     : "border-border-strong bg-white/2 hover:bg-white/5"
@@ -760,112 +766,33 @@ export default function ProductConfigurator() {
                   </div>
                 ) : (
                   <>
-                    <div className="grid h-12 w-12 place-items-center rounded-full accent-gradient text-2xl text-black">
-                      ⬆
-                    </div>
-                    <div className="mt-3 text-base font-semibold">
-                      Drag or click to upload your file
+                    <UploadArt />
+                    <div className="mt-3 font-headline text-base font-bold uppercase tracking-wide">
+                      Upload your design
                     </div>
                     <div className="mt-1 text-xs text-foreground-muted">
-                      PNG · JPG · PDF · SVG · AI · 1 file per order
+                      PNG · JPG · PDF · SVG · AI
                     </div>
                   </>
                 )}
               </div>
             </Section>
 
-            {file && file.type.startsWith("image/") && (
-              <div className="rounded-2xl border border-border-soft bg-white/3 p-3">
-                <ProofModal
-                  inline
-                  open
-                  file={file}
-                  initialShape={shape as ProofShape}
-                  initialBorder="thin"
-                  initialRounded={
-                    (shape === "square" || shape === "rectangle") && roundedCorners
-                      ? "soft"
-                      : ("none" as RoundedCorners)
-                  }
-                  widthIn={sizeInches().w}
-                  heightIn={sizeInches().h}
-                  registerApprove={(fn) => {
-                    approveRef.current = fn;
-                  }}
-                  onClose={() => {}}
-                  onApprove={(d) => void finalizeWithProof(d)}
-                  onRequestChanges={(noteText, d) =>
-                    void finalizeWithProof(d, noteText)
-                  }
-                />
-              </div>
-            )}
-          </div>
-
-          {/* RIGHT — sticky summary */}
-          <div className="lg:sticky lg:top-20 lg:self-start">
-            <div className="space-y-4 rounded-2xl border border-border-soft bg-surface/70 p-5 backdrop-blur">
-              <div className="font-headline text-sm font-bold uppercase tracking-wider">
-                Quantity
-              </div>
-              <div className="space-y-1.5">
-                <button
-                  type="button"
-                  onClick={() => setQuantity("custom")}
-                  className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-sm transition ${
-                    quantity === "custom" ? TILE_ON : TILE_OFF
-                  }`}
-                >
-                  <span className="font-medium">Custom</span>
-                  {quantity === "custom" && (
-                    <span className="text-xs font-semibold text-foreground-muted tabular-nums">
-                      {orderQty.toLocaleString()} pcs · $
-                      {(price.perUnit * orderQty).toFixed(2)}
-                    </span>
-                  )}
-                </button>
-                {quantity === "custom" && (
-                  <div className="px-1 pt-1">
-                    <NumberField
-                      label={`Custom quantity (min ${MIN_CUSTOM_QTY})`}
-                      value={customQty}
-                      onChange={setCustomQty}
-                      min={MIN_CUSTOM_QTY}
-                      step={1}
-                      integer
-                    />
-                  </div>
-                )}
-
-                {tierPrices.map(({ qty, total, savingsPercent }) => {
-                  const active = quantity === qty;
-                  return (
-                    <button
-                      key={qty}
-                      type="button"
-                      onClick={() => setQuantity(qty)}
-                      className={`flex w-full items-center justify-between rounded-xl border px-3 py-2.5 text-sm transition ${
-                        active ? TILE_ON : TILE_OFF
-                      }`}
-                    >
-                      <span className="font-medium">
-                        {qty.toLocaleString()}
-                      </span>
-                      <span className="flex items-center gap-2">
-                        <span className="font-semibold">
-                          ${total.toFixed(2)}
-                        </span>
-                        {savingsPercent > 0 && (
-                          <span className="rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-300">
-                            Save {savingsPercent}%
-                          </span>
-                        )}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
+            </div>
+            <div className="order-7 lg:order-none">
+            {/* Instructions */}
+            <Section step={6} title="Notes" optional>
+              <textarea
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+                rows={3}
+                placeholder="Anything we should know?"
+                className="w-full resize-none rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-sm text-foreground placeholder:text-foreground-muted/60 outline-none ring-[#d9f000]/30 focus:ring-2"
+              />
+            </Section>
+            </div>
+            <div className="order-8 lg:order-none">
+            <div className="space-y-3 rounded-2xl border border-border-soft bg-surface/70 p-4 backdrop-blur">
               {/* Total */}
               <div className="overflow-hidden rounded-2xl total-gradient p-4">
                 <div className="flex items-baseline justify-between gap-2">
@@ -920,18 +847,31 @@ export default function ProductConfigurator() {
                 )}
               </button>
               <p className="text-center text-xs text-foreground-muted">
-                Check your proof above, then tap Buy now.
+                Check your proof, then Buy now.
               </p>
+            </div>
             </div>
           </div>
         </div>
 
-        {/* How to order — below the product on phones */}
-        <div className="mt-10 lg:hidden">
-          <h2 className="font-display text-xl font-black uppercase tracking-tight text-[#d9f000]">
-            Need help ordering?
-          </h2>
-          <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
+        {/* About + how to order — bottom, out of the way */}
+        <div className="mt-10 grid gap-6 border-t border-border-soft pt-8 lg:grid-cols-2 lg:items-center">
+          <div>
+            <h2 className="font-display text-2xl font-black uppercase tracking-tight">
+              Tough <span className="accent-gradient-text">vinyl stickers</span>
+            </h2>
+            <p className="mt-2 max-w-xl text-sm text-foreground-muted">
+              Weatherproof, cut to your design, ready in days. Upload, check your proof, order.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {["💦 Waterproof", "☀️ UV resistant", "✂️ Precision cut", "🖥️ Live proof"].map((t) => (
+                <span key={t} className="rounded-full border border-border-soft bg-white/5 px-3 py-1 text-xs font-medium text-foreground/80">
+                  {t}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
             <iframe
               loading="lazy"
               src={`https://www.youtube-nocookie.com/embed/${HOW_TO_ORDER_VIDEO_ID}`}
@@ -1152,5 +1092,51 @@ function NumberField({
         className="w-full rounded-lg border border-border-soft bg-white/4 px-3 py-2 text-sm text-foreground outline-none ring-[#d9f000]/30 focus:ring-2"
       />
     </label>
+  );
+}
+
+function UploadArt() {
+  return (
+    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden>
+      <defs>
+        <linearGradient id="ua" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#d9f000" />
+          <stop offset="1" stopColor="#18d3e8" />
+        </linearGradient>
+      </defs>
+      <rect x="6" y="10" width="44" height="44" rx="10" fill="url(#ua)" />
+      <path d="M50 28c0 12-10 22-22 22" stroke="#0b0b0b" strokeOpacity=".25" strokeWidth="2" strokeLinecap="round" />
+      <path d="M28 42V24m0 0-8 8m8-8 8 8" stroke="#0b0b0b" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="50" cy="48" r="10" fill="#d94cb3" />
+      <path d="M50 53v-9m0 0-4 4m4-4 4 4" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function DieCutArt() {
+  const pts = Array.from({ length: 10 }, (_, i) => {
+    const r = i % 2 === 0 ? 20 : 10;
+    const a = (-90 + i * 36) * (Math.PI / 180);
+    return `${(32 + r * Math.cos(a)).toFixed(1)},${(32 + r * Math.sin(a)).toFixed(1)}`;
+  }).join(" ");
+  return (
+    <svg width="72" height="72" viewBox="0 0 64 64" fill="none" aria-hidden className="shrink-0">
+      <defs>
+        <linearGradient id="dc" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#d9f000" />
+          <stop offset=".55" stopColor="#18d3e8" />
+          <stop offset="1" stopColor="#d94cb3" />
+        </linearGradient>
+      </defs>
+      {/* dashed cut line, hugging the shape */}
+      <g transform="translate(32 32) scale(1.32) translate(-32 -32)">
+        <polygon points={pts} stroke="#ff5a7a" strokeWidth="1.1" strokeDasharray="2.4 2" strokeLinejoin="round" fill="none" />
+      </g>
+      {/* white sticker border */}
+      <polygon points={pts} fill="#fff" stroke="#fff" strokeWidth="9" strokeLinejoin="round" />
+      {/* artwork */}
+      <polygon points={pts} fill="url(#dc)" stroke="url(#dc)" strokeWidth="2" strokeLinejoin="round" />
+      <circle cx="32" cy="33" r="4" fill="#fff" fillOpacity=".85" />
+    </svg>
   );
 }

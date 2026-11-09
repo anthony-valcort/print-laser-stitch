@@ -8,7 +8,7 @@ import CupConfigurator from "@/components/CupConfigurator";
 import { getProductByHandle } from "@/lib/shopify-products";
 
 export const metadata: Metadata = {
-  title: "Custom Engraved & UV Color Tumblers in Stuart, FL | Print Laser Stitch",
+  title: "Custom Engraved & UV Tumblers, Stuart FL | Print Laser Stitch",
   description:
     "Custom 20oz insulated tumblers with your logo. Laser engraved or full-color UV. Live preview, from $28. Made in Stuart, Florida.",
   alternates: { canonical: "/products/engraved-cups" },

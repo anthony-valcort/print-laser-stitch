@@ -426,7 +426,7 @@ export function AnthonyBuddy() {
         setHidden(true);
       }}
       className={
-        "fixed z-30 sm:bottom-0 sm:w-56 lg:w-64 " +
+        "buddy-peek fixed z-30 sm:bottom-0 sm:w-56 lg:w-64 " +
         (compact ? "w-16 " : "w-40 ") +
         (bar ? (compact ? "bottom-[5rem] " : "bottom-[4.2rem] ") : compact ? "bottom-4 " : "bottom-0 ") +
         (compact

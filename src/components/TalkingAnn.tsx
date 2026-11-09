@@ -338,7 +338,7 @@ export function AnnBuddy() {
       introKey={pathname}
       delay={11000}
       align={side === "left" ? "left" : "right"}
-      className={`fixed z-30 w-16 sm:bottom-0 sm:w-52 lg:w-60 ${bottom} ${sideCls}`}
+      className={`buddy-peek fixed z-30 w-16 sm:bottom-0 sm:w-52 lg:w-60 ${bottom} ${sideCls}`}
       onHide={() => {
         try {
           sessionStorage.setItem("ann-hide", "1");

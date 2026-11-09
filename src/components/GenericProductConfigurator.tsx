@@ -39,8 +39,9 @@ import {
 } from "@/lib/parse-size";
 import { BLEED_IN } from "@/lib/template-fit/constants";
 import { saveTemplateFitPayload } from "@/lib/template-fit/session";
+import TemplateFitStudio, { type Side } from "@/components/template-fit/TemplateFitStudio";
+import { uploadFlattenedDesign } from "@/lib/template-fit/upload-flattened";
 import BlankTemplateDownload from "@/components/configurator/BlankTemplateDownload";
-import BlankTemplateDownloadMobile from "@/components/configurator/BlankTemplateDownloadMobile";
 import {
   QuantityTierCards,
   SidesPicker,
@@ -362,7 +363,19 @@ export default function GenericProductConfigurator({
     !anyUploading &&
     !isCheckingOut;
 
-  function handleAddToCart() {
+  const finalizeRef = useRef<
+    (() => Promise<Partial<Record<Side, Blob>>>) | null
+  >(null);
+  const studioSides = useMemo(() => {
+    const out: Partial<Record<Side, { fileUrl: string; fileName: string | null }>> = {};
+    if (needsFront && frontUpload.fileUrl)
+      out.front = { fileUrl: frontUpload.fileUrl, fileName: frontUpload.file?.name ?? null };
+    if (needsBack && backUpload.fileUrl)
+      out.back = { fileUrl: backUpload.fileUrl, fileName: backUpload.file?.name ?? null };
+    return out;
+  }, [needsFront, needsBack, frontUpload.fileUrl, frontUpload.file, backUpload.fileUrl, backUpload.file]);
+
+  async function handleAddToCart(goCart = false) {
     if (!canCheckout || !currentVariant) return;
     setIsCheckingOut(true);
     setToast(null);
@@ -394,6 +407,30 @@ export default function GenericProductConfigurator({
     if (phone.trim()) extraProperties["Phone Number"] = phone.trim();
     if (instructions.trim()) extraProperties["Instructions"] = instructions.trim();
 
+    // Design placed on the inline print template: send the fitted artwork.
+    if (willUseTemplateFit && finalizeRef.current) {
+      try {
+        const blobs = await finalizeRef.current();
+        if (effectiveUploadMode === "front-back") {
+          if (blobs.front) {
+            extraProperties["Front Design"] = await uploadFlattenedDesign(
+              blobs.front, frontUpload.file?.name ?? "front-design.png");
+          }
+          if (blobs.back) {
+            extraProperties["Back Design"] = await uploadFlattenedDesign(
+              blobs.back, backUpload.file?.name ?? "back-design.png");
+          }
+        } else if (blobs.front) {
+          extraProperties[`${uploadLabel} File`] = await uploadFlattenedDesign(
+            blobs.front, frontUpload.file?.name ?? "design.png");
+        }
+      } catch (err) {
+        setToast(err instanceof Error ? err.message : "Could not prepare your design. Try again.");
+        setIsCheckingOut(false);
+        return;
+      }
+    }
+
     const optsSummary = Object.entries(selectedOptions)
       .map(([, v]) => v)
       .join(" · ");
@@ -421,6 +458,10 @@ export default function GenericProductConfigurator({
     draft.clear(); // It's in the cart now — nothing left to remember.
     successFeedback();
     flyToCart(galleryRef.current?.querySelector("img") ?? null);
+    if (goCart) {
+      router.push("/cart");
+      return;
+    }
     // Keep them on the product page — the cart comes to them instead.
     setIsCheckingOut(false);
     setTimeout(openCartDrawer, 650);
@@ -509,138 +550,8 @@ export default function GenericProductConfigurator({
     router.push(`/products/${product.handle}/template-fit`);
   }
 
-  return (
-    <section className="relative">
-      {/* Breadcrumb */}
-      <div className="border-b border-border-soft bg-background-soft/60">
-        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 text-xs sm:px-6 lg:px-8">
-          <Link
-            href="/"
-            className="flex items-center gap-1 text-foreground-muted hover:text-foreground"
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            All Products
-          </Link>
-          <span className="text-foreground-muted/40">/</span>
-          <span className="font-medium">{product.title}</span>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,4fr)] lg:gap-12">
-          {/* LEFT: Sticky gallery */}
-          <div ref={galleryRef} className="lg:sticky lg:top-20 lg:self-start">
-            {/* Phones: say what this is first, with a clear next step */}
-            <div className="mb-4 lg:hidden">
-              <h1 className="font-display text-2xl font-black uppercase leading-tight tracking-tight">
-                {product.title.replace(/\s*\([^)]*\)\s*$/, "")}
-              </h1>
-              <p className="mt-1.5 text-sm text-foreground-muted">
-                {product.title.match(/\(([^)]*)\)\s*$/)?.[1]}
-                {product.title.match(/\(([^)]*)\)\s*$/) ? ". " : ""}
-                Choose your options below and order online in minutes.
-              </p>
-              <a
-                href="#order-options"
-                className="mt-3 inline-flex items-center gap-2 rounded-full accent-gradient px-5 py-2.5 font-headline text-sm font-bold uppercase tracking-wide text-black shadow-lg shadow-[#d9f000]/25 transition active:scale-95"
-              >
-                Choose your options
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <path d="M12 5v14" />
-                  <path d="m19 12-7 7-7-7" />
-                </svg>
-              </a>
-            </div>
-            <ProductGallery
-              images={galleryImages}
-              idx={galleryIdx}
-              setIdx={setGalleryIdx}
-              title={product.title}
-              fallbackEmoji={fallbackEmoji}
-            />
-
-            {templateFitEnabled && (
-              <div className="hidden lg:block">
-                <BlankTemplateDownload
-                  options={product.options}
-                  productTitle={product.title}
-                  fixedSizeInches={fixedSizeInches}
-                  sizeUnit={sizeUnit}
-                  bleedIn={showBleedTrim ? BLEED_IN : 0}
-                />
-              </div>
-            )}
-
-            {howToOrderVideoId && (
-              <div className="mt-6 hidden lg:block">
-                <h2 className="font-display text-xl font-black uppercase tracking-tight text-[#d9f000]">
-                  How to Order
-                </h2>
-                <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
-                  <iframe
-                    loading="lazy"
-                    src={`https://www.youtube-nocookie.com/embed/${howToOrderVideoId}`}
-                    title="How to order — Print Laser Stitch"
-                    className="h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* RIGHT: Configurator */}
-          <div id="order-options" className="scroll-mt-32 space-y-6">
-            {draft.restored && <DraftNote onStartOver={draft.startOver} />}
-            <div>
-              {badge && (
-                <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-border-soft bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-foreground-muted">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />
-                  {badge}
-                </div>
-              )}
-              <h1 className="hidden text-3xl font-bold tracking-tight sm:text-4xl lg:block">
-                {product.title}
-              </h1>
-              <div className="mt-3 flex items-baseline gap-3">
-                <AnimatedPrice
-                  value={variantPrice}
-                  className="text-3xl font-bold accent-gradient-text"
-                />
-                <span className="text-sm font-medium text-foreground-muted">
-                  {tierCount
-                    ? `for ${tierCount}${tierEach ? ` · ${tierEach}` : ""}`
-                    : "per unit"}
-                </span>
-              </div>
-            </div>
-
-            {notice && (
-              <div className="rounded-xl border border-[#18d3e8]/30 bg-[#18d3e8]/5 px-4 py-3 text-sm text-[#18d3e8]">
-                {notice}
-              </div>
-            )}
-
-            {/* Description */}
-            {product.descriptionHtml && (
-              <ExpandableDescription
-                html={product.descriptionHtml}
-                className="prose-sm rounded-xl border border-border-soft bg-white/3 px-4 py-3 text-sm leading-relaxed text-foreground-muted [&_a]:text-accent [&_a]:underline"
-              />
-            )}
-
+  const optionsUI = (
+    <>
             {/* All product options — auto-rendered by type */}
             {product.options.map((opt) => {
               const value = selectedOptions[opt.name];
@@ -776,6 +687,11 @@ export default function GenericProductConfigurator({
               </Section>
             )}
 
+            
+    </>
+  );
+  const uploadUI = (
+    <>
             {/* Design upload(s) — count depends on effective upload mode */}
             {effectiveUploadMode !== "none" && (
               <Section title="Upload your design">
@@ -838,6 +754,11 @@ export default function GenericProductConfigurator({
               </Section>
             )}
 
+            
+    </>
+  );
+  const phoneUI = (
+    <>
             {/* Phone (optional) */}
             <Section title="Phone number (optional)">
               <input
@@ -862,6 +783,11 @@ export default function GenericProductConfigurator({
               />
             </Section>
 
+            
+    </>
+  );
+  const totalUI = (
+    <>
             {/* Total */}
             <div className="overflow-hidden rounded-2xl total-gradient p-5">
               <div className="flex items-baseline justify-between gap-2">
@@ -885,12 +811,124 @@ export default function GenericProductConfigurator({
               </div>
             </div>
 
+            
+    </>
+  );
+  const inlineDesign = willUseTemplateFit && !!sizeInches && !!studioSides.front;
+  const baseTitle = product.title.replace(/\s*\([^)]*\)\s*$/, "");
+
+  return (
+    <section className="relative">
+      {/* Breadcrumb */}
+      <div className="border-b border-border-soft bg-background-soft/60">
+        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 text-xs sm:px-6 lg:px-8">
+          <Link
+            href="/"
+            className="flex items-center gap-1 text-foreground-muted hover:text-foreground"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+            All Products
+          </Link>
+          <span className="text-foreground-muted/40">/</span>
+          <span className="font-medium">{product.title}</span>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-[1500px] px-4 py-3 sm:px-6 lg:px-8">
+        {draft.restored && <DraftNote onStartOver={draft.startOver} />}
+        <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)_minmax(0,1fr)] lg:gap-6">
+          {/* Title bar */}
+          <div className="lg:col-span-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <div>
+              {badge && (
+                <div className="mb-1 inline-flex items-center gap-2 rounded-full border border-border-soft bg-white/5 px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-foreground-muted">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />
+                  {badge}
+                </div>
+              )}
+              <h1 className="font-display text-2xl font-black uppercase leading-tight tracking-tight sm:text-3xl">
+                {baseTitle}
+              </h1>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <AnimatedPrice
+                value={variantPrice}
+                className="text-2xl font-bold accent-gradient-text sm:text-3xl"
+              />
+              <span className="text-xs font-medium text-foreground-muted">
+                {tierCount
+                  ? `for ${tierCount}${tierEach ? ` · ${tierEach}` : ""}`
+                  : "per unit"}
+              </span>
+            </div>
+          </div>
+
+          {/* COL 1: options */}
+          <div id="order-options" className="scroll-mt-24 space-y-4">
+            {notice && (
+              <div className="rounded-xl border border-[#18d3e8]/30 bg-[#18d3e8]/5 px-4 py-3 text-sm text-[#18d3e8]">
+                {notice}
+              </div>
+            )}
+            {optionsUI}
+          </div>
+
+          {/* COL 2: design right here */}
+          <div ref={galleryRef} className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+            {inlineDesign && sizeInches ? (
+              <div className="rounded-2xl border border-border-soft bg-white/3 p-3">
+                <TemplateFitStudio
+                  widthIn={sizeInches.width}
+                  heightIn={sizeInches.height}
+                  sides={studioSides}
+                  embedded
+                  registerFinalize={(fn) => {
+                    finalizeRef.current = fn;
+                  }}
+                  onFinalize={() => {}}
+                  bleedIn={showBleedTrim ? BLEED_IN : 0}
+                />
+              </div>
+            ) : (
+              <ProductGallery
+                images={galleryImages}
+                idx={galleryIdx}
+                setIdx={setGalleryIdx}
+                title={product.title}
+                fallbackEmoji={fallbackEmoji}
+              />
+            )}
+            {uploadUI}
+            {templateFitEnabled && (
+              <BlankTemplateDownload
+                options={product.options}
+                productTitle={product.title}
+                fixedSizeInches={fixedSizeInches}
+                sizeUnit={sizeUnit}
+                bleedIn={showBleedTrim ? BLEED_IN : 0}
+              />
+            )}
+          </div>
+
+          {/* COL 3: order */}
+          <div className="space-y-4">
+            {phoneUI}
+            {totalUI}
             <button
               id="buy-button"
               type="button"
-              onClick={
-                willUseTemplateFit ? handleContinueToTemplateFit : handleAddToCart
-              }
+              onClick={() => handleAddToCart(true)}
               disabled={!canCheckout}
               className={`group flex w-full items-center justify-center gap-2 rounded-md px-6 py-4 font-headline text-sm font-bold uppercase tracking-wider transition ${
                 canCheckout
@@ -901,7 +939,7 @@ export default function GenericProductConfigurator({
               {isCheckingOut ? (
                 <>
                   <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Creating order…
+                  Preparing your design…
                 </>
               ) : anyUploading ? (
                 <>
@@ -915,44 +953,20 @@ export default function GenericProductConfigurator({
                   <span>⬆</span>
                   Upload {needsFront && needsBack ? "both designs" : "design"} to continue
                 </>
-              ) : willUseTemplateFit ? (
-                <>
-                  Continue
-                  <span>→</span>
-                </>
               ) : (
-                <>
-                  <span>🛒</span>
-                  Add to Cart · ${total.toFixed(2)}
-                </>
+                <>Buy now · ${total.toFixed(2)}</>
               )}
             </button>
-            <p className="text-center text-[11px] text-foreground-muted">
-              {willUseTemplateFit
-                ? "Next, you'll fit your design onto the print template."
-                : "You'll be redirected to Shopify checkout."}
-            </p>
-          </div>
-
-          {templateFitEnabled && (
-            <div className="lg:hidden">
-              <BlankTemplateDownloadMobile
-                options={product.options}
-                productTitle={product.title}
-                fixedSizeInches={fixedSizeInches}
-                sizeUnit={sizeUnit}
-                bleedIn={showBleedTrim ? BLEED_IN : 0}
-              />
-            </div>
-          )}
-
-          {/* How-to video: below the product on phones */}
-          {howToOrderVideoId && (
-            <div className="lg:hidden">
-              <h2 className="font-display text-xl font-black uppercase tracking-tight text-[#d9f000]">
-                How to Order
-              </h2>
-              <div className="mt-3 aspect-video w-full overflow-hidden rounded-2xl border border-border-soft shadow-lg shadow-black/30">
+            <button
+              type="button"
+              onClick={() => handleAddToCart(false)}
+              disabled={!canCheckout}
+              className="w-full rounded-md border border-border-soft bg-white/4 px-6 py-3 text-xs font-bold uppercase tracking-wider text-foreground transition hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              🛒 Add to cart
+            </button>
+            {howToOrderVideoId && (
+              <div className="aspect-video w-full overflow-hidden rounded-2xl border border-border-soft">
                 <iframe
                   loading="lazy"
                   src={`https://www.youtube-nocookie.com/embed/${howToOrderVideoId}`}
@@ -962,6 +976,16 @@ export default function GenericProductConfigurator({
                   allowFullScreen
                 />
               </div>
+            )}
+          </div>
+
+          {/* Bottom: description */}
+          {product.descriptionHtml && (
+            <div className="lg:col-span-3 border-t border-border-soft pt-4">
+              <ExpandableDescription
+                html={product.descriptionHtml}
+                className="prose-sm text-sm leading-relaxed text-foreground-muted [&_a]:text-accent [&_a]:underline"
+              />
             </div>
           )}
         </div>

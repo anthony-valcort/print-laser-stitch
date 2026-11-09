@@ -27,6 +27,7 @@ import type { ProofShape, RoundedCorners } from "@/lib/proof/types";
 
 type SizeChoice = SizeKey | "custom";
 
+// Sticker order page: shape / material / size / quantity / upload / proof.
 const HOW_TO_ORDER_VIDEO_ID = "Op0VOMmloQ4";
 
 const ACCEPT =

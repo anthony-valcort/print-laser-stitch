@@ -134,6 +134,78 @@ function mooreTrace(mask: Uint8Array, w: number, h: number): Point[] {
   return contour;
 }
 
+/** Grow the mask by `r` pixels (square structuring element, separable). */
+function dilate(mask: Uint8Array, w: number, h: number, r: number): Uint8Array {
+  const tmp = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++) {
+    const row = y * w;
+    let last = -1e9;
+    // forward: distance since last foreground
+    const fwd = new Int32Array(w);
+    for (let x = 0; x < w; x++) {
+      if (mask[row + x]) last = x;
+      fwd[x] = x - last;
+    }
+    last = 1e9;
+    for (let x = w - 1; x >= 0; x--) {
+      if (mask[row + x]) last = x;
+      if (fwd[x] <= r || last - x <= r) tmp[row + x] = 1;
+    }
+  }
+  const out = new Uint8Array(w * h);
+  for (let x = 0; x < w; x++) {
+    let last = -1e9;
+    const fwd = new Int32Array(h);
+    for (let y = 0; y < h; y++) {
+      if (tmp[y * w + x]) last = y;
+      fwd[y] = y - last;
+    }
+    last = 1e9;
+    for (let y = h - 1; y >= 0; y--) {
+      if (tmp[y * w + x]) last = y;
+      if (fwd[y] <= r || last - y <= r) out[y * w + x] = 1;
+    }
+  }
+  return out;
+}
+
+/** Convex hull of every foreground pixel — last resort so a sticker made of
+ * separate pieces still gets one cut line around the whole thing. */
+function convexHull(mask: Uint8Array, w: number, h: number): Point[] {
+  const pts: Point[] = [];
+  for (let y = 0; y < h; y++) {
+    let l = -1;
+    let rr = -1;
+    for (let x = 0; x < w; x++) {
+      if (mask[y * w + x]) {
+        if (l < 0) l = x;
+        rr = x;
+      }
+    }
+    if (l >= 0) {
+      pts.push({ x: l, y });
+      if (rr !== l) pts.push({ x: rr, y });
+    }
+  }
+  pts.sort((a, b) => a.x - b.x || a.y - b.y);
+  const cross = (o: Point, a: Point, b: Point) =>
+    (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+  const lower: Point[] = [];
+  for (const p of pts) {
+    while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+    lower.push(p);
+  }
+  const upper: Point[] = [];
+  for (let i = pts.length - 1; i >= 0; i--) {
+    const p = pts[i];
+    while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+    upper.push(p);
+  }
+  lower.pop();
+  upper.pop();
+  return lower.concat(upper);
+}
+
 /**
  * Returns the artwork's outer outline as a polygon in the ORIGINAL image
  * pixel coordinate space, or null if nothing opaque was found.
@@ -160,9 +232,33 @@ export function traceAlphaContour(img: ImageData): Polygon | null {
     }
   }
 
-  const blob = largestComponent(mask, w, h);
-  if (!blob) return null;
-  const traced = mooreTrace(blob, w, h);
+  let any = false;
+  for (let i = 0; i < mask.length; i++) {
+    if (mask[i]) {
+      any = true;
+      break;
+    }
+  }
+  if (!any) return null;
+
+  // One piece? Trace it. Several pieces (e.g. a logo with separate letters)?
+  // Bridge small gaps by growing the mask a little, then trace; if the
+  // pieces are far apart, wrap them all in a convex outline instead.
+  let blob = largestComponent(mask, w, h);
+  if (!blob) {
+    const dim = Math.max(w, h);
+    for (const frac of [0.02, 0.04, 0.07]) {
+      const grown = dilate(mask, w, h, Math.max(2, Math.round(dim * frac)));
+      blob = largestComponent(grown, w, h);
+      if (blob) break;
+    }
+  }
+  let traced: Point[];
+  if (blob) {
+    traced = mooreTrace(blob, w, h);
+  } else {
+    traced = convexHull(mask, w, h);
+  }
   if (traced.length < 3) return null;
 
   // Back to original coordinates.

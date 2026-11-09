@@ -1353,7 +1353,7 @@ export default function TShirtConfigurator({
                               Remove
                             </button>
                           </div>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 px-4 py-3 sm:grid-cols-3">
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 px-4 py-3 sm:grid-cols-3 lg:grid-cols-2">
                             {sizeOption.values.map((sz) => {
                               const v = findVariant(color, sz);
                               const soldOut = v && !v.availableForSale;
@@ -1669,6 +1669,7 @@ export default function TShirtConfigurator({
           <div >{toggleUI}</div>
           <div >{optionsUI}</div>
           <div className="space-y-3">{matricesUI}</div>
+          {!tee && <div>{ladderUI}</div>}
           <div >{mixUI}</div>
         </div>
 
@@ -1703,7 +1704,7 @@ export default function TShirtConfigurator({
 
         {/* Column 3: savings, proof, phone, then pay */}
         <div className="space-y-3">
-          <div >{ladderUI}</div>
+          {tee && <div>{ladderUI}</div>}
           <div className="space-y-3">
             {tee && proofUI}
             {phoneUI}

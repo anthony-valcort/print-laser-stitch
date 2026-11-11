@@ -66,7 +66,7 @@ export default async function Home() {
                 width={800}
                 height={527}
                 priority
-                className="mb-3 h-14 w-auto animate-fade-up drop-shadow-[0_4px_18px_rgba(0,0,0,0.5)] sm:mb-4 sm:h-20 lg:h-[104px]"
+                className="mb-3 h-[4.2rem] w-auto animate-fade-up drop-shadow-[0_4px_18px_rgba(0,0,0,0.5)] sm:mb-4 sm:h-20 lg:h-[104px]"
               />
               {/* The page's main heading (what Google reads first): services +
                   location, styled as the small eyebrow pill. */}
@@ -154,7 +154,7 @@ export default async function Home() {
             </div>
 
             {/* Hero image */}
-            <div className="relative mb-10 sm:mb-0">
+            <div className="relative mb-16 sm:mb-0">
               <div className="pointer-events-none absolute -inset-4 -z-10 rounded-4xl bg-linear-to-br from-[#d9f000]/25 via-[#18d3e8]/20 to-[#d94cb3]/25 opacity-70 blur-2xl" />
               <div className="lg:animate-float">
                 <HeroVideo />
@@ -164,8 +164,8 @@ export default async function Home() {
                 pose="welcome"
                 intro
                 align="right"
-                sizes="(min-width: 1024px) 276px, (min-width: 640px) 148px, 74px"
-                className="absolute -bottom-10 -right-2 z-10 w-[4.6rem] sm:-bottom-16 sm:w-[9.2rem] lg:-bottom-12 lg:-right-8 lg:w-[17.25rem]"
+                sizes="(min-width: 1024px) 276px, (min-width: 640px) 148px, 110px"
+                className="absolute -bottom-[4.5rem] -right-3 z-10 w-[6.9rem] sm:-bottom-16 sm:w-[9.2rem] lg:-bottom-12 lg:-right-8 lg:w-[17.25rem]"
               />
             </div>
           </div>

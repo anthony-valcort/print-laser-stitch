@@ -13,6 +13,7 @@ import { AnnBuddy } from "@/components/TalkingAnn";
 import BuddyPeek from "@/components/BuddyPeek";
 import JsonLd from "@/components/JsonLd";
 import { localBusinessJsonLd, websiteJsonLd } from "@/lib/seo";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -90,6 +91,7 @@ export default function RootLayout({
         <AnnBuddy />
         <BuddyPeek />
         <CookieNotice />
+        <SpeedInsights />
       </body>
     </html>
   );

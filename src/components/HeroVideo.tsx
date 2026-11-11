@@ -43,7 +43,7 @@ export default function HeroVideo() {
           aria-hidden="true"
           allow="autoplay; encrypted-media"
           referrerPolicy="strict-origin-when-cross-origin"
-          onLoad={() => setTimeout(() => setReady(true), 1800)}
+          onLoad={() => setTimeout(() => setReady(true), 4200)}
           className={`pointer-events-none absolute left-1/2 top-0 h-full -translate-x-1/2 scale-[1.03] border-0 transition-opacity duration-700 ${ready ? "opacity-100" : "opacity-0"}`}
           style={{ aspectRatio: "16 / 9", width: "auto" }}
         />

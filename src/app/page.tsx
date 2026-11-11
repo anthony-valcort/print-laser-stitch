@@ -49,6 +49,14 @@ export default async function Home() {
       <main className="flex-1">
         {/* HERO — image first on phones (people buy with their eyes), split on desktop */}
         <section className="relative isolate overflow-x-clip">
+          <Image
+            src="/Hero.jpeg"
+            alt=""
+            aria-hidden
+            fill
+            sizes="100vw"
+            className="pointer-events-none -z-10 object-cover opacity-[0.07] [mask-image:linear-gradient(to_bottom,black_55%,transparent)]"
+          />
           <div className="relative mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_34vw] items-center gap-3 px-4 pb-14 pt-6 sm:grid-cols-[minmax(0,1fr)_240px] sm:gap-8 sm:px-6 sm:pt-12 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:pb-20 lg:pt-24">
             {/* Copy */}
             <div className="text-left">
@@ -58,18 +66,11 @@ export default async function Home() {
                 width={800}
                 height={527}
                 priority
-                className="mb-3 h-11 w-auto animate-fade-up drop-shadow-[0_4px_18px_rgba(0,0,0,0.5)] sm:mb-4 sm:h-16 lg:h-20"
+                className="mb-3 h-14 w-auto animate-fade-up drop-shadow-[0_4px_18px_rgba(0,0,0,0.5)] sm:mb-4 sm:h-20 lg:h-[104px]"
               />
               {/* The page's main heading (what Google reads first): services +
                   location, styled as the small eyebrow pill. */}
-              <h1
-                className="inline-flex animate-fade-up items-center gap-2 rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[8px] font-semibold uppercase tracking-[0.12em] text-[#18d3e8] sm:text-[11px] sm:tracking-[0.2em]"
-                style={{ animationDelay: "60ms" }}
-              >
-                <span className="relative flex h-1.5 w-1.5 shrink-0">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#18d3e8] opacity-60 motion-reduce:animate-none" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#18d3e8]" />
-                </span>
+              <h1 className="sr-only">
                 Custom printing, embroidery &amp; engraving · Stuart, FL
               </h1>
 
@@ -163,8 +164,8 @@ export default async function Home() {
                 pose="welcome"
                 intro
                 align="right"
-                sizes="(min-width: 1024px) 240px, (min-width: 640px) 128px, 64px"
-                className="absolute -bottom-9 -right-2 z-10 w-16 sm:-bottom-14 sm:w-32 lg:-bottom-10 lg:-right-6 lg:w-60"
+                sizes="(min-width: 1024px) 276px, (min-width: 640px) 148px, 74px"
+                className="absolute -bottom-10 -right-2 z-10 w-[4.6rem] sm:-bottom-16 sm:w-[9.2rem] lg:-bottom-12 lg:-right-8 lg:w-[17.25rem]"
               />
             </div>
           </div>

@@ -49,13 +49,21 @@ export default async function Home() {
       <main className="flex-1">
         {/* HERO — image first on phones (people buy with their eyes), split on desktop */}
         <section className="relative isolate overflow-x-clip">
-          <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-4 pb-12 pt-6 sm:px-6 sm:pt-12 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:pb-20 lg:pt-24">
+          <div className="relative mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_34vw] items-center gap-3 px-4 pb-14 pt-6 sm:grid-cols-[minmax(0,1fr)_240px] sm:gap-8 sm:px-6 sm:pt-12 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:pb-20 lg:pt-24">
             {/* Copy */}
-            <div className="order-2 text-center lg:order-1 lg:text-left">
+            <div className="text-left">
+              <Image
+                src="/logo-hero.png"
+                alt="Print Laser Stitch"
+                width={800}
+                height={527}
+                priority
+                className="mb-3 h-11 w-auto animate-fade-up drop-shadow-[0_4px_18px_rgba(0,0,0,0.5)] sm:mb-4 sm:h-16 lg:h-20"
+              />
               {/* The page's main heading (what Google reads first): services +
                   location, styled as the small eyebrow pill. */}
               <h1
-                className="inline-flex animate-fade-up items-center gap-2 rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[10px] font-semibold uppercase tracking-[0.18em] text-[#18d3e8] sm:text-[11px] sm:tracking-[0.2em]"
+                className="inline-flex animate-fade-up items-center gap-2 rounded-full border border-[#18d3e8]/30 bg-[#18d3e8]/10 px-3 py-1 font-headline text-[8px] font-semibold uppercase tracking-[0.12em] text-[#18d3e8] sm:text-[11px] sm:tracking-[0.2em]"
                 style={{ animationDelay: "60ms" }}
               >
                 <span className="relative flex h-1.5 w-1.5 shrink-0">
@@ -66,14 +74,14 @@ export default async function Home() {
               </h1>
 
               <div className="animate-fade-up" style={{ animationDelay: "160ms" }}>
-                <p className="glitch-text mx-auto mt-5 max-w-2xl font-display text-[2.6rem] font-black uppercase leading-[1.02] tracking-tight sm:text-5xl lg:mx-0 lg:text-6xl">
+                <p className="glitch-text mt-4 max-w-2xl font-display text-[1.7rem] font-black uppercase leading-[1.05] tracking-tight sm:mt-5 sm:text-5xl lg:text-6xl">
                   Bringing your <span className="sheen-text">vision</span>
-                  <br className="hidden sm:inline" /> to life.
+                  <br /> to life.
                 </p>
               </div>
 
               <p
-                className="mx-auto mt-5 max-w-xl animate-fade-up text-[15px] leading-relaxed text-foreground-muted sm:text-lg lg:mx-0"
+                className="mt-3 max-w-xl animate-fade-up text-[12px] leading-snug text-foreground-muted sm:mt-5 sm:text-lg sm:leading-relaxed"
                 style={{ animationDelay: "260ms" }}
               >
                 Premium custom printing, laser engraving and embroidery from
@@ -84,12 +92,12 @@ export default async function Home() {
               </p>
 
               <div
-                className="mt-7 grid animate-fade-up grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center sm:justify-center lg:justify-start"
+                className="mt-5 flex animate-fade-up flex-wrap items-center gap-2 sm:mt-7 sm:gap-3"
                 style={{ animationDelay: "360ms" }}
               >
                 <Link
                   href="/decal-quote"
-                  className="group inline-flex animate-glow items-center justify-center gap-2 rounded-xl accent-gradient px-5 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black transition hover:brightness-110 active:scale-[0.98] sm:rounded-md sm:px-6 sm:py-3"
+                  className="group inline-flex animate-glow items-center justify-center gap-2 rounded-xl accent-gradient px-3.5 py-2.5 font-headline text-xs font-bold uppercase tracking-wider text-black transition hover:brightness-110 active:scale-[0.98] sm:rounded-md sm:px-6 sm:py-3"
                 >
                   Get a Quote
                   <span className="transition-transform duration-300 group-hover:translate-x-1">
@@ -98,7 +106,7 @@ export default async function Home() {
                 </Link>
                 <Link
                   href="#categories"
-                  className="group inline-flex items-center justify-center gap-2 rounded-xl cyan-gradient px-5 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-black shadow-lg shadow-[#18d3e8]/30 transition hover:brightness-110 active:scale-[0.98] sm:rounded-md sm:px-6 sm:py-3"
+                  className="group inline-flex items-center justify-center gap-2 rounded-xl cyan-gradient px-3.5 py-2.5 font-headline text-xs font-bold uppercase tracking-wider text-black shadow-lg shadow-[#18d3e8]/30 transition hover:brightness-110 active:scale-[0.98] sm:rounded-md sm:px-6 sm:py-3"
                 >
                   <span className="sm:hidden">Shop</span>
                   <span className="hidden sm:inline">Browse Products</span>
@@ -108,7 +116,7 @@ export default async function Home() {
                 </Link>
                 <Link
                   href="/gallery"
-                  className="group col-span-2 inline-flex items-center justify-center gap-2 rounded-xl border border-border-strong bg-white/5 px-5 py-3.5 font-headline text-sm font-bold uppercase tracking-wider text-foreground transition hover:bg-white/10 active:scale-[0.98] sm:col-span-1 sm:rounded-md sm:px-6 sm:py-3"
+                  className="group inline-flex items-center justify-center gap-2 rounded-xl border border-border-strong bg-white/5 px-3.5 py-2.5 font-headline text-xs font-bold uppercase tracking-wider text-foreground transition hover:bg-white/10 active:scale-[0.98] sm:rounded-md sm:px-6 sm:py-3"
                 >
                   View Our Gallery
                   <span className="transition-transform duration-300 group-hover:translate-x-1">
@@ -119,7 +127,7 @@ export default async function Home() {
 
               {/* Trust row */}
               <ul
-                className="mt-7 flex animate-fade-up flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-foreground-muted sm:text-sm lg:justify-start"
+                className="mt-5 flex animate-fade-up flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-foreground-muted sm:mt-7 sm:gap-x-5 sm:text-sm"
                 style={{ animationDelay: "460ms" }}
               >
                 <li>
@@ -145,7 +153,7 @@ export default async function Home() {
             </div>
 
             {/* Hero image */}
-            <div className="relative order-1 mb-16 sm:mb-20 lg:order-2 lg:mb-0">
+            <div className="relative mb-10 sm:mb-0">
               <div className="pointer-events-none absolute -inset-4 -z-10 rounded-4xl bg-linear-to-br from-[#d9f000]/25 via-[#18d3e8]/20 to-[#d94cb3]/25 opacity-70 blur-2xl" />
               <div className="lg:animate-float">
                 <HeroVideo />
@@ -155,8 +163,8 @@ export default async function Home() {
                 pose="welcome"
                 intro
                 align="right"
-                sizes="(min-width: 1024px) 240px, (min-width: 640px) 176px, 128px"
-                className="absolute -bottom-16 right-0 z-10 w-32 sm:-bottom-20 sm:w-44 lg:-bottom-10 lg:-right-6 lg:w-60"
+                sizes="(min-width: 1024px) 240px, (min-width: 640px) 128px, 64px"
+                className="absolute -bottom-9 -right-2 z-10 w-16 sm:-bottom-14 sm:w-32 lg:-bottom-10 lg:-right-6 lg:w-60"
               />
             </div>
           </div>

@@ -57,7 +57,7 @@ export default async function Home() {
             sizes="100vw"
             className="pointer-events-none -z-10 object-cover opacity-[0.07] [mask-image:linear-gradient(to_bottom,black_55%,transparent)]"
           />
-          <div className="relative mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_34vw] items-center gap-3 px-4 pb-14 pt-6 sm:grid-cols-[minmax(0,1fr)_240px] sm:gap-8 sm:px-6 sm:pt-12 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:pb-20 lg:pt-24">
+          <div className="relative mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_34vw] items-center gap-3 px-4 pb-[7.5rem] pt-6 sm:pb-14 sm:grid-cols-[minmax(0,1fr)_240px] sm:gap-8 sm:px-6 sm:pt-12 lg:grid-cols-2 lg:gap-14 lg:px-8 lg:pb-20 lg:pt-24">
             {/* Copy */}
             <div className="text-left">
               <Image
@@ -164,8 +164,8 @@ export default async function Home() {
                 pose="welcome"
                 intro
                 align="right"
-                sizes="(min-width: 1024px) 276px, (min-width: 640px) 148px, 144px"
-                className="absolute -bottom-[5.5rem] -right-3 z-10 w-[9rem] sm:-bottom-16 sm:w-[9.2rem] lg:-bottom-12 lg:-right-8 lg:w-[17.25rem]"
+                sizes="(min-width: 1024px) 276px, (min-width: 640px) 148px, 188px"
+                className="absolute -bottom-[11.75rem] -right-3 z-10 w-[11.7rem] sm:-bottom-16 sm:w-[9.2rem] lg:-bottom-12 lg:-right-8 lg:w-[17.25rem]"
               />
             </div>
           </div>

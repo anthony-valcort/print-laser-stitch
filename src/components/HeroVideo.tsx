@@ -26,7 +26,7 @@ export default function HeroVideo() {
   }, []);
 
   return (
-    <div className="group relative mx-auto aspect-[9/16] w-[min(78vw,330px)] overflow-hidden rounded-2xl border border-[#d9f000]/30 bg-black shadow-2xl shadow-[#d9f000]/20 lg:w-[340px]">
+    <div className="group relative mx-auto aspect-[9/16] w-full max-w-[340px] overflow-hidden rounded-2xl border border-[#d9f000]/30 bg-black shadow-2xl shadow-[#d9f000]/20">
       <Image
         src="/Hero.jpeg"
         alt="Print Laser Stitch — printing, embroidery, vehicle wraps, apparel and engraving samples"

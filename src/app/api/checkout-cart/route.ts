@@ -11,9 +11,7 @@
  *   - vinyl-sticker → 1 custom-title line
  *   - tshirt        → N variant-id lines (one per size, custom override price)
  *   - product       → 1 variant-id line
- *   - signage       → 1 custom-title line  (legacy carts only)
- *   - decal         → 1 custom-title line  (legacy carts only)
- *   - sign-job      → graphics line + optional removal + travel lines
+ *   - signage       → 1 custom-title line  (quote-only signage doesn't go through cart)
  */
 
 import { type NextRequest, NextResponse } from "next/server";
@@ -40,30 +38,11 @@ import {
 } from "@/lib/signage-pricing";
 import {
   DECAL_MATERIALS,
-  PANEL_TYPES,
-  calcDecalPrice,
+  calcJob,
+  sizeError,
   type MaterialKey as DecalMaterialKey,
-  type PanelType,
 } from "@/lib/decal-pricing";
-import {
-  MAX_PIECES as MAX_SIGN_PIECES,
-  REMOVAL_MIN as SIGN_REMOVAL_MIN,
-  REMOVAL_TYPES as SIGN_REMOVAL_TYPES,
-  SHAPES as SIGN_SHAPES,
-  INSTALL_MIN_JOB as SIGN_INSTALL_MIN,
-  TRAVEL_MIN as SIGN_TRAVEL_MIN,
-  TRAVEL_RATE_PER_MILE as SIGN_TRAVEL_RATE,
-  calcSignJob,
-  fmtFtIn,
-  getMaterial as getSignMaterial,
-  getService as getSignService,
-  getSurface as getSignSurface,
-  getTravelArea as getSignTravelArea,
-  type MaterialKey as SignMaterialKey,
-  type RemovalKey as SignRemovalKey,
-  type ShapeKey as SignShapeKey,
-  type SurfaceKey as SignSurfaceKey,
-} from "@/lib/sign-decal-pricing";
+import { isAdminAuthorized } from "@/lib/vehicle-shopify";
 import type { CartItem } from "@/lib/cart-types";
 
 const SHAPES = new Set<StickerShape>(["custom", "circle", "oval", "square", "rectangle"]);
@@ -129,6 +108,9 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
+
+  // Shop-admin only: lets a signed-in admin use custom per-item rates.
+  const isAdmin = await isAdminAuthorized(req.headers.get("authorization"));
 
   // Login is optional — guests can check out by providing an email in the body.
   const customer = await getCurrentCustomer();
@@ -596,92 +578,121 @@ export async function POST(req: NextRequest) {
         `${item.year} ${item.make} ${item.model} — ${item.partLabel}`,
       );
     } else if (item.kind === "decal") {
-      // Quick Quote — multi-panel + material, 7% Martin County tax on top.
-      const mat = DECAL_MATERIALS.find(
-        (m) => m.key === (item.material as DecalMaterialKey),
-      );
-      if (!mat) {
-        return NextResponse.json(
-          { error: "Invalid decal material" },
-          { status: 400 },
-        );
-      }
-      if (mat.quoteOnly) {
-        return NextResponse.json(
-          {
-            error:
-              "Special Vinyl requires a custom quote — please call (772) 985-2854.",
-          },
-          { status: 400 },
-        );
-      }
+      // Signage Quote — several items, each with its own size, quantity and
+      // material; 7% Martin County tax on top. Everything is priced here from
+      // our own table. Only a signed-in shop admin may use a custom rate.
       if (!Array.isArray(item.panels) || item.panels.length === 0) {
         return NextResponse.json(
-          { error: "Signage Quote needs at least one panel" },
+          { error: "Signage Quote needs at least one item" },
           { status: 400 },
         );
       }
+      if (item.panels.length > 50) {
+        return NextResponse.json(
+          { error: "Too many items in one quote" },
+          { status: 400 },
+        );
+      }
+      const resolved: {
+        panel: (typeof item.panels)[number];
+        matKey: DecalMaterialKey;
+        label: string;
+        w: number;
+        h: number;
+        qty: number;
+        custom: number;
+      }[] = [];
       for (const panel of item.panels) {
-        const w = Number(panel.width);
-        const h = Number(panel.height);
-        if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
+        const matKey = (panel.material ?? item.material) as DecalMaterialKey;
+        const mat = DECAL_MATERIALS.find((m) => m.key === matKey);
+        if (!mat) {
           return NextResponse.json(
-            { error: "Each panel needs valid width and height" },
+            { error: "Invalid decal material" },
             { status: 400 },
           );
         }
+        const w = Number(panel.width);
+        const h = Number(panel.height);
+        const problem = sizeError(mat.key, w, h);
+        if (!Number.isFinite(w) || !Number.isFinite(h) || problem) {
+          return NextResponse.json(
+            { error: problem ?? "Each item needs a valid width and height" },
+            { status: 400 },
+          );
+        }
+        const qty = Math.min(
+          999,
+          Math.max(1, Math.floor(Number(panel.quantity) || 1)),
+        );
+        const custom = isAdmin
+          ? Math.max(0, Number(panel.customPricePerSqFt) || 0)
+          : 0;
+        if (mat.quoteOnly && custom <= 0) {
+          return NextResponse.json(
+            {
+              error:
+                "Special Vinyl requires a custom quote — please call (772) 985-2854.",
+            },
+            { status: 400 },
+          );
+        }
+        resolved.push({ panel, matKey: mat.key, label: mat.label, w, h, qty, custom });
       }
 
-      const recomputed = calcDecalPrice({
-        panels: item.panels.map((p) => ({
-          type: (PANEL_TYPES.find((t) => t.key === p.type)?.key ??
-            "other") as PanelType,
-          width: Number(p.width),
-          height: Number(p.height),
-          description: p.description,
+      const job = calcJob(
+        resolved.map((r) => ({
+          material: r.matKey,
+          width: r.w,
+          height: r.h,
+          quantity: r.qty,
+          customPricePerSqFt: r.custom,
         })),
-        material: mat.key,
-        // Never trust a discount sent by the browser (security fix).
-        discountPercent: 0,
-      });
+        { allowCustom: isAdmin },
+      );
 
-      const panelLines = item.panels.map((p) => {
-        const sqft = (Number(p.width) * Number(p.height)) / 144;
-        return `${p.typeLabel} ${p.width}″×${p.height}″ (${sqft.toFixed(2)} sqft)${
-          p.description ? ` — ${p.description}` : ""
-        }${p.note?.trim() ? ` (Note: ${p.note.trim()})` : ""}`;
+      const itemLines = resolved.map((r, i) => {
+        const ln = job.lines[i];
+        const name = r.panel.typeLabel?.trim() || `Item ${i + 1}`;
+        return `${name}: ${r.w}″×${r.h}″ × ${r.qty} — ${r.label} @ $${ln.rate.toFixed(2)}/sq ft = $${ln.amount.toFixed(2)}${
+          r.panel.description ? ` — ${r.panel.description}` : ""
+        }${r.panel.note?.trim() ? ` (Note: ${r.panel.note.trim().slice(0, 500)})` : ""}`;
       });
+      const labels = Array.from(new Set(resolved.map((r) => r.label)));
+      const matSummary = labels.length === 1 ? labels[0] : "Mixed materials";
 
       const properties: { name: string; value: string }[] = [
-        { name: "Material", value: mat.label },
+        { name: "Material", value: labels.join(", ") },
         {
           name: "Total Area",
-          value: `${recomputed.totalAreaSqFt.toFixed(2)} sq ft`,
+          value: `${job.totalAreaSqFt.toFixed(2)} sq ft`,
         },
-        {
-          name: "Rate",
-          value: `$${recomputed.pricePerSqFt.toFixed(2)} / sq ft`,
-        },
-        { name: "Panels", value: panelLines.join("\n") },
+        { name: "Items", value: itemLines.join("\n") },
       ];
-      item.panels.forEach((p, i) => {
-        if (typeof p.imageUrl === "string" && p.imageUrl.trim()) {
-          properties.push({
-            name: `Panel ${i + 1} Image`,
-            value: p.imageUrl.trim(),
-          });
+      resolved.forEach((r, i) => {
+        const u = r.panel.imageUrl;
+        if (typeof u === "string" && u.trim()) {
+          properties.push({ name: `Item ${i + 1} Image`, value: u.trim() });
         }
       });
-      if (recomputed.discountAmount > 0) {
-        properties.push({
-          name: "Discount",
-          value: `${item.discountPercent}% (−$${recomputed.discountAmount.toFixed(2)})`,
-        });
-      }
       properties.push({
         name: "Tax (7% Martin County)",
-        value: `$${recomputed.taxAmount.toFixed(2)}`,
+        value: `$${job.taxAmount.toFixed(2)}`,
       });
+      if (typeof item.jobName === "string" && item.jobName.trim()) {
+        properties.push({
+          name: "Job Name",
+          value: item.jobName.trim().slice(0, 120),
+        });
+      }
+      if (
+        typeof item.installDate === "string" &&
+        /^\d{4}-\d{2}-\d{2}$/.test(item.installDate)
+      ) {
+        properties.push({
+          name: "Preferred Install Date",
+          value: `${item.installDate} (a request only — weather and our install schedule may change it)`,
+        });
+      }
       if (item.notes?.trim()) {
         properties.push({
           name: "Project Notes",
@@ -690,154 +701,15 @@ export async function POST(req: NextRequest) {
       }
 
       lineItems.push({
-        title: `Signage Quote · ${mat.label} · ${recomputed.totalAreaSqFt.toFixed(2)} sq ft`,
-        price: recomputed.total.toFixed(2),
+        title: `Signage Quote · ${matSummary} · ${job.totalAreaSqFt.toFixed(2)} sq ft`,
+        price: job.total.toFixed(2),
         quantity: 1,
         requires_shipping: true,
         taxable: false, // tax already baked into our price
         properties,
       });
       noteParts.push(
-        `Signage Quote ${mat.label} ${recomputed.totalAreaSqFt.toFixed(2)} sqft`,
-      );
-    } else if (item.kind === "sign-job") {
-      // Sign & Decal Builder — every number below is recomputed from
-      // sign-decal-pricing.ts; only the configuration comes from the browser.
-      if (!Array.isArray(item.pieces) || item.pieces.length === 0) {
-        return NextResponse.json(
-          { error: "Your sign job needs at least one piece" },
-          { status: 400 },
-        );
-      }
-      if (item.pieces.length > MAX_SIGN_PIECES) {
-        return NextResponse.json(
-          { error: "Too many pieces in one job — please call us" },
-          { status: 400 },
-        );
-      }
-      const service = getSignService(String(item.service));
-      if (!service) {
-        return NextResponse.json({ error: "Invalid service" }, { status: 400 });
-      }
-      const pieces = item.pieces.map((p) => ({
-        surface: (getSignSurface(String(p.surface))?.key ?? "sign") as SignSurfaceKey,
-        shape: (SIGN_SHAPES.find((s) => s.key === p.shape)?.key ?? "rect") as SignShapeKey,
-        material: String(p.material) as SignMaterialKey,
-        widthIn: Number(p.widthIn),
-        heightIn: Number(p.heightIn),
-        qty: Number(p.qty),
-      }));
-      const job = calcSignJob({
-        pieces,
-        service: service.key,
-        removal: {
-          type: (String(item.removal?.type ?? "none") as SignRemovalKey),
-          sameAsNew: Boolean(item.removal?.sameAsNew),
-          widthFt: Number(item.removal?.widthFt) || 0,
-          heightFt: Number(item.removal?.heightFt) || 0,
-        },
-        travelArea: String(item.travelArea ?? ""),
-      });
-      if (job.blockers.length > 0) {
-        return NextResponse.json(
-          { error: `${job.blockers[0]}. Questions? Call (772) 985-2854.` },
-          { status: 400 },
-        );
-      }
-
-      const pieceLines = item.pieces.map((p, i) => {
-        const mat = getSignMaterial(String(p.material));
-        const surf = getSignSurface(String(p.surface));
-        const shape = SIGN_SHAPES.find((s) => s.key === p.shape);
-        const r = job.pieces[i];
-        const label = typeof p.label === "string" && p.label.trim() ? ` "${p.label.trim().slice(0, 80)}"` : "";
-        const note = typeof p.note === "string" && p.note.trim() ? ` (Note: ${p.note.trim().slice(0, 300)})` : "";
-        return `${i + 1}.${label} ${surf?.label ?? "Surface"} · ${shape?.label ?? "Shape"} · ${mat?.label ?? "Material"} · ${fmtFtIn(Number(p.widthIn))} W × ${fmtFtIn(Number(p.heightIn))} H × ${pieces[i].qty} = ${r.areaSqFt.toFixed(2)} sq ft @ $${(r.rate ?? 0).toFixed(2)} → $${r.price.toFixed(2)}${note}`;
-      });
-
-      const properties: { name: string; value: string }[] = [
-        { name: "Service", value: service.label },
-        { name: "Pieces", value: pieceLines.join("\n").slice(0, 4000) },
-        { name: "Total Area", value: `${job.totalAreaSqFt.toFixed(2)} sq ft` },
-        { name: "Graphics", value: `$${job.graphics.toFixed(2)}` },
-        { name: "Tax (7% Martin County)", value: `$${job.tax.toFixed(2)}` },
-      ];
-      item.pieces.forEach((p, i) => {
-        if (typeof p.imageUrl === "string" && p.imageUrl.trim()) {
-          properties.push({ name: `Piece ${i + 1} Artwork Image`, value: p.imageUrl.trim() });
-        }
-      });
-      if (Array.isArray(item.imageUrls)) {
-        item.imageUrls.slice(0, 20).forEach((url, i) => {
-          if (typeof url === "string" && url.trim()) {
-            properties.push({ name: `Site Photo Image ${i + 1}`, value: url.trim() });
-          }
-        });
-      }
-      if (job.isInstall) {
-        const area = getSignTravelArea(String(item.travelArea));
-        properties.push({
-          name: "Install Area",
-          value: `${area?.label ?? item.travelArea}${job.travelFree ? " (free travel zone)" : ` (~${job.travelMiles} mi)`}`,
-        });
-        if (typeof item.installAddress === "string" && item.installAddress.trim()) {
-          properties.push({ name: "Install Address", value: item.installAddress.trim().slice(0, 300) });
-        }
-      }
-      if (item.notes?.trim()) {
-        properties.push({ name: "Project Notes", value: item.notes.trim().slice(0, 2000) });
-      }
-
-      lineItems.push({
-        title: `Signs & Decals · ${service.label} · ${job.totalAreaSqFt.toFixed(2)} sq ft`,
-        price: (job.graphics + job.tax).toFixed(2),
-        quantity: 1,
-        requires_shipping: true, // same as the old calculators — address doubles as install site
-        taxable: false, // 7% already included above
-        properties,
-      });
-      if (job.removal > 0) {
-        const rType = SIGN_REMOVAL_TYPES.find((r) => r.key === item.removal?.type);
-        lineItems.push({
-          title: `Old Graphic Removal · ${rType?.label ?? "Removal"}`,
-          price: job.removal.toFixed(2),
-          quantity: 1,
-          requires_shipping: false,
-          taxable: false,
-          properties: [
-            { name: "Area", value: `${job.removalAreaSqFt.toFixed(2)} sq ft` },
-            { name: "Rate", value: `$${(rType?.ratePerSqFt ?? 0).toFixed(2)} / sq ft (min $${SIGN_REMOVAL_MIN})` },
-          ],
-        });
-      }
-      if (job.travel > 0) {
-        const area = getSignTravelArea(String(item.travelArea));
-        lineItems.push({
-          title: `Install Travel Fee · ${area?.label ?? "Outside Treasure Coast"}`,
-          price: job.travel.toFixed(2),
-          quantity: 1,
-          requires_shipping: false,
-          taxable: false,
-          properties: [
-            { name: "Distance", value: `~${job.travelMiles} mi one way from Stuart` },
-            { name: "Rate", value: `$${SIGN_TRAVEL_RATE.toFixed(2)} / mile (min $${SIGN_TRAVEL_MIN})` },
-          ],
-        });
-      }
-      if (job.minimumTopUp > 0) {
-        lineItems.push({
-          title: `Install Minimum ($${SIGN_INSTALL_MIN} job)`,
-          price: job.minimumTopUp.toFixed(2),
-          quantity: 1,
-          requires_shipping: false,
-          taxable: false,
-          properties: [
-            { name: "Why", value: `Full Install jobs have a $${SIGN_INSTALL_MIN} minimum before tax` },
-          ],
-        });
-      }
-      noteParts.push(
-        `Signs & Decals ${service.label} ${job.totalAreaSqFt.toFixed(2)} sqft${job.removal > 0 ? " + removal" : ""}${job.travel > 0 ? " + travel" : ""}`,
+        `Signage Quote ${matSummary} ${job.totalAreaSqFt.toFixed(2)} sqft`,
       );
     }
   }

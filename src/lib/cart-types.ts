@@ -10,7 +10,6 @@ export type CartItemKind =
   | "product"
   | "signage"
   | "decal"
-  | "sign-job"
   | "vehicle-sticker";
 
 export interface CartItemBase {
@@ -142,6 +141,13 @@ export interface DecalPanelLine {
   imageUrl?: string;
   /** Optional free-text note tied to this panel/photo. */
   note?: string;
+  /** Each item can have its own material (falls back to the cart item's). */
+  material?: string;
+  materialLabel?: string;
+  /** How many of this item. */
+  quantity?: number;
+  /** Shop-admin-only custom rate; the server ignores it for customers. */
+  customPricePerSqFt?: number;
 }
 
 /**
@@ -161,47 +167,10 @@ export interface DecalCartItem extends CartItemBase {
   /** Tax amount (7% Martin County, already baked into totalPrice). */
   taxAmount: number;
   notes?: string;
-}
-
-export interface SignJobPieceLine {
-  surface: string;
-  surfaceLabel: string;
-  shape: string;
-  material: string;
-  materialLabel: string;
-  /** inches */
-  widthIn: number;
-  /** inches */
-  heightIn: number;
-  qty: number;
-  label?: string;
-  note?: string;
-  /** Artwork / reference photo (Cloudinary URL). */
-  imageUrl?: string;
-}
-
-/**
- * Sign & Decal Builder — the merged signage + decal calculator. Pieces ×
- * material rate for the chosen service tier, 7% tax, plus optional old-
- * graphic removal and travel (Full Install only). Re-priced on the server.
- */
-export interface SignJobCartItem extends CartItemBase {
-  kind: "sign-job";
-  pieces: SignJobPieceLine[];
-  service: string;
-  serviceLabel: string;
-  removal: {
-    type: string;
-    sameAsNew: boolean;
-    widthFt: number;
-    heightFt: number;
-  };
-  travelArea: string;
-  travelLabel?: string;
-  installAddress?: string;
-  totalAreaSqFt: number;
-  notes?: string;
-  imageUrls?: string[];
+  /** Optional name the customer gave the job. */
+  jobName?: string;
+  /** Optional preferred install date (YYYY-MM-DD) — a request, not a promise. */
+  installDate?: string;
 }
 
 export interface VehicleStickerCartItem extends CartItemBase {
@@ -219,7 +188,6 @@ export type CartItem =
   | ProductCartItem
   | SignageCartItem
   | DecalCartItem
-  | SignJobCartItem
   | VehicleStickerCartItem;
 
 // Distributive Omit — correctly narrows each union member separately.

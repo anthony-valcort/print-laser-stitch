@@ -26,7 +26,21 @@ export type MaterialKey =
   | "full-vinyl"
   | "window-tint"
   | "wall-vinyl"
+  | "banner"
+  | "frosted-labels"
+  | "canvas"
   | "special-vinyl";
+
+/** How a material is drawn in the live preview. */
+export type MaterialLook =
+  | "perforated"
+  | "vinyl"
+  | "tint"
+  | "wall"
+  | "banner"
+  | "frosted"
+  | "canvas"
+  | "special";
 
 export type DecalMaterial = {
   key: MaterialKey;
@@ -35,7 +49,13 @@ export type DecalMaterial = {
   blurb: string;
   /** When true, switches to quote-only mode (no instant cart). */
   quoteOnly?: boolean;
+  /** The shortest side may not be wider than this (inches) — roll width. */
+  maxSideIn?: number;
+  look: MaterialLook;
 };
+
+/** Banner rolls are 5 ft wide. */
+export const BANNER_MAX_SIDE_IN = 60;
 
 export const DECAL_MATERIALS: DecalMaterial[] = [
   {
@@ -43,24 +63,50 @@ export const DECAL_MATERIALS: DecalMaterial[] = [
     label: "Perforated Window Film",
     pricePerSqFt: 18.0,
     blurb: "One-way visibility",
+    look: "perforated",
   },
   {
     key: "full-vinyl",
     label: "Full Vinyl",
     pricePerSqFt: 16.0,
     blurb: "Complete privacy",
+    look: "vinyl",
   },
   {
     key: "window-tint",
     label: "Window Tint",
     pricePerSqFt: 12.0,
     blurb: "UV protection",
+    look: "tint",
   },
   {
     key: "wall-vinyl",
     label: "Wall Vinyl",
     pricePerSqFt: 13.0,
     blurb: "Interior walls",
+    look: "wall",
+  },
+  {
+    key: "banner",
+    label: "Vinyl Banner",
+    pricePerSqFt: 13.0,
+    blurb: "Up to 5 ft wide",
+    maxSideIn: BANNER_MAX_SIDE_IN,
+    look: "banner",
+  },
+  {
+    key: "frosted-labels",
+    label: "Frosted Labels",
+    pricePerSqFt: 23.0,
+    blurb: "Frosted glass look",
+    look: "frosted",
+  },
+  {
+    key: "canvas",
+    label: "Canvas (not laminated)",
+    pricePerSqFt: 10.0,
+    blurb: "Matte canvas, no laminate",
+    look: "canvas",
   },
   {
     key: "special-vinyl",
@@ -68,6 +114,7 @@ export const DECAL_MATERIALS: DecalMaterial[] = [
     pricePerSqFt: 0,
     blurb: "Custom job — we'll quote you",
     quoteOnly: true,
+    look: "special",
   },
 ];
 
@@ -148,4 +195,93 @@ export function calcDecalPrice(input: DecalPriceInput): DecalPriceResult {
 
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
+}
+
+/* ------------------------------------------------------------------ */
+/* Multi-item jobs — each item has its own size, quantity and material */
+/* ------------------------------------------------------------------ */
+
+export type JobItemInput = {
+  material: MaterialKey;
+  /** Inches. */
+  width: number;
+  /** Inches. */
+  height: number;
+  quantity: number;
+  /** Only honored when the caller allows it (signed-in shop admin). */
+  customPricePerSqFt?: number;
+};
+
+export type JobLine = {
+  areaEachSqFt: number;
+  totalAreaSqFt: number;
+  rate: number;
+  amount: number;
+  /** Plain-English reason this item can't be ordered yet. */
+  problem: string | null;
+  /** Special Vinyl with no rate: needs a quote from the shop. */
+  callForQuote: boolean;
+};
+
+/** Returns a message when the size doesn't work for the material. */
+export function sizeError(
+  material: MaterialKey,
+  width: number,
+  height: number,
+): string | null {
+  const m = DECAL_MATERIALS.find((x) => x.key === material);
+  if (!m) return "Pick a material.";
+  if (!(width > 0) || !(height > 0)) return "Enter a width and a height.";
+  if (m.maxSideIn && Math.min(width, height) > m.maxSideIn) {
+    return `${m.label} is up to ${m.maxSideIn / 12} ft wide. One side must be ${m.maxSideIn / 12} ft (${m.maxSideIn} in) or less.`;
+  }
+  return null;
+}
+
+export function calcJob(
+  items: JobItemInput[],
+  opts: { allowCustom: boolean },
+): {
+  lines: JobLine[];
+  totalAreaSqFt: number;
+  subtotal: number;
+  taxAmount: number;
+  total: number;
+  blocked: boolean;
+} {
+  const lines: JobLine[] = items.map((it) => {
+    const m = DECAL_MATERIALS.find((x) => x.key === it.material);
+    const w = Math.max(0, Number(it.width) || 0);
+    const h = Math.max(0, Number(it.height) || 0);
+    const qty = Math.min(999, Math.max(1, Math.floor(Number(it.quantity) || 1)));
+    const areaEach = (w * h) / 144;
+    const totalArea = areaEach * qty;
+    const custom = opts.allowCustom
+      ? Math.max(0, Number(it.customPricePerSqFt) || 0)
+      : 0;
+    const rate = custom > 0 ? custom : m && !m.quoteOnly ? m.pricePerSqFt : 0;
+    const callForQuote = !!m?.quoteOnly && rate <= 0;
+    const problem = sizeError(it.material, w, h);
+    return {
+      areaEachSqFt: Math.round(areaEach * 100) / 100,
+      totalAreaSqFt: Math.round(totalArea * 100) / 100,
+      rate,
+      amount: round2(totalArea * rate),
+      problem,
+      callForQuote,
+    };
+  });
+  const subtotal = round2(lines.reduce((a, l) => a + l.amount, 0));
+  const taxAmount = round2(subtotal * TAX_RATE);
+  return {
+    lines,
+    totalAreaSqFt:
+      Math.round(lines.reduce((a, l) => a + l.totalAreaSqFt, 0) * 100) / 100,
+    subtotal,
+    taxAmount,
+    total: round2(subtotal + taxAmount),
+    blocked:
+      lines.length === 0 ||
+      lines.some((l) => l.problem !== null || l.callForQuote),
+  };
 }

@@ -29,6 +29,7 @@ export type MaterialKey =
   | "banner"
   | "frosted-labels"
   | "canvas"
+  | "armor-frosted"
   | "special-vinyl";
 
 /** How a material is drawn in the live preview. */
@@ -107,6 +108,13 @@ export const DECAL_MATERIALS: DecalMaterial[] = [
     pricePerSqFt: 10.0,
     blurb: "Matte canvas, no laminate",
     look: "canvas",
+  },
+  {
+    key: "armor-frosted",
+    label: "Armor Frosted Vinyl",
+    pricePerSqFt: 46.0,
+    blurb: "Extreme-duty frosted. Grease-proof, waterproof",
+    look: "frosted",
   },
   {
     key: "special-vinyl",

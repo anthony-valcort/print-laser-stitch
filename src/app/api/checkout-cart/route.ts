@@ -695,6 +695,12 @@ export async function POST(req: NextRequest) {
           properties.push({ name: `Item ${i + 1} Image`, value: u.trim() });
         }
       });
+      if (job.bundleDiscount > 0) {
+        properties.push({
+          name: "Bundle Deal",
+          value: `${job.bundlePercent}% off = -$${job.bundleDiscount.toFixed(2)}`,
+        });
+      }
       properties.push({
         name: "Tax (7% Martin County)",
         value: `$${job.taxAmount.toFixed(2)}`,

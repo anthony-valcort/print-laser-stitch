@@ -110,7 +110,11 @@ export default function CartView({
     try {
       const resp = await fetch("/api/checkout-cart", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          // Shop admin signed in on this tab: lets custom signage rates apply.
+          ...(adminAuthHeader() ?? {}),
+        },
         body: JSON.stringify({
           items,
           // Always send the email — for logged-in customers the server uses
@@ -573,4 +577,13 @@ function CartRow({
       </div>
     </article>
   );
+}
+
+function adminAuthHeader(): Record<string, string> | null {
+  try {
+    const t = sessionStorage.getItem("adminToken");
+    return t ? { Authorization: `Bearer ${t}` } : null;
+  } catch {
+    return null;
+  }
 }

@@ -26,10 +26,14 @@ export type MaterialKey =
   | "full-vinyl"
   | "window-tint"
   | "wall-vinyl"
+  | "floor-vinyl"
   | "banner"
   | "frosted-labels"
   | "canvas"
   | "armor-frosted"
+  | "black-vinyl"
+  | "white-vinyl"
+  | "fabric-vinyl"
   | "special-vinyl";
 
 /** How a material is drawn in the live preview. */
@@ -38,9 +42,14 @@ export type MaterialLook =
   | "vinyl"
   | "tint"
   | "wall"
+  | "floor"
   | "banner"
   | "frosted"
   | "canvas"
+  | "armor"
+  | "cutblack"
+  | "cutwhite"
+  | "fabric"
   | "special";
 
 export type DecalMaterial = {
@@ -88,6 +97,13 @@ export const DECAL_MATERIALS: DecalMaterial[] = [
     look: "wall",
   },
   {
+    key: "floor-vinyl",
+    label: "Floor Vinyl",
+    pricePerSqFt: 9.0,
+    blurb: "Walk-on floor graphics",
+    look: "floor",
+  },
+  {
     key: "banner",
     label: "Vinyl Banner",
     pricePerSqFt: 13.0,
@@ -114,7 +130,28 @@ export const DECAL_MATERIALS: DecalMaterial[] = [
     label: "Armor Frosted Vinyl",
     pricePerSqFt: 46.0,
     blurb: "Extreme-duty frosted. Grease-proof, waterproof",
-    look: "frosted",
+    look: "armor",
+  },
+  {
+    key: "black-vinyl",
+    label: "Black Adhesive Vinyl + Transfer Tape",
+    pricePerSqFt: 10.0,
+    blurb: "Cut black vinyl, transfer tape included",
+    look: "cutblack",
+  },
+  {
+    key: "white-vinyl",
+    label: "White Adhesive Vinyl + Transfer Tape",
+    pricePerSqFt: 12.0,
+    blurb: "Cut white vinyl, transfer tape included",
+    look: "cutwhite",
+  },
+  {
+    key: "fabric-vinyl",
+    label: "Printable Fabric Adhesive Vinyl",
+    pricePerSqFt: 22.0,
+    blurb: "Printed, fabric-feel, sticks on",
+    look: "fabric",
   },
   {
     key: "special-vinyl",
@@ -209,6 +246,20 @@ function round2(n: number): number {
 /* Multi-item jobs — each item has its own size, quantity and material */
 /* ------------------------------------------------------------------ */
 
+/** Bundle deal: the more square feet in one job, the lower the price. */
+export const BUNDLE_TIERS: { minSqFt: number; pct: number }[] = [
+  { minSqFt: 10, pct: 5 },
+  { minSqFt: 25, pct: 10 },
+  { minSqFt: 50, pct: 15 },
+  { minSqFt: 100, pct: 20 },
+];
+
+export function bundlePercentFor(areaSqFt: number): number {
+  let pct = 0;
+  for (const t of BUNDLE_TIERS) if (areaSqFt >= t.minSqFt) pct = t.pct;
+  return pct;
+}
+
 export type JobItemInput = {
   material: MaterialKey;
   /** Inches. */
@@ -229,6 +280,8 @@ export type JobLine = {
   problem: string | null;
   /** Special Vinyl with no rate: needs a quote from the shop. */
   callForQuote: boolean;
+  /** True when the bundle deal applies to this line (not a shop custom rate). */
+  discountable: boolean;
 };
 
 /** Returns a message when the size doesn't work for the material. */
@@ -252,6 +305,13 @@ export function calcJob(
 ): {
   lines: JobLine[];
   totalAreaSqFt: number;
+  /** Before the bundle deal. */
+  gross: number;
+  bundlePercent: number;
+  bundleDiscount: number;
+  /** Next bundle tier and how many more sq ft it needs. */
+  nextTier: { minSqFt: number; pct: number; moreSqFt: number } | null;
+  /** After the bundle deal, before tax. */
   subtotal: number;
   taxAmount: number;
   total: number;
@@ -277,14 +337,35 @@ export function calcJob(
       amount: round2(totalArea * rate),
       problem,
       callForQuote,
+      discountable: custom <= 0 && rate > 0,
     };
   });
-  const subtotal = round2(lines.reduce((a, l) => a + l.amount, 0));
+  const gross = round2(lines.reduce((a, l) => a + l.amount, 0));
+  const bundleArea = lines
+    .filter((l) => l.discountable)
+    .reduce((a, l) => a + l.totalAreaSqFt, 0);
+  const bundlePercent = bundlePercentFor(bundleArea);
+  const bundleBase = lines
+    .filter((l) => l.discountable)
+    .reduce((a, l) => a + l.amount, 0);
+  const bundleDiscount = round2((bundleBase * bundlePercent) / 100);
+  const subtotal = round2(gross - bundleDiscount);
+  const nextTier = BUNDLE_TIERS.find((t) => t.minSqFt > bundleArea) ?? null;
   const taxAmount = round2(subtotal * TAX_RATE);
   return {
     lines,
     totalAreaSqFt:
       Math.round(lines.reduce((a, l) => a + l.totalAreaSqFt, 0) * 100) / 100,
+    gross,
+    bundlePercent,
+    bundleDiscount,
+    nextTier: nextTier
+      ? {
+          minSqFt: nextTier.minSqFt,
+          pct: nextTier.pct,
+          moreSqFt: Math.round((nextTier.minSqFt - bundleArea) * 100) / 100,
+        }
+      : null,
     subtotal,
     taxAmount,
     total: round2(subtotal + taxAmount),

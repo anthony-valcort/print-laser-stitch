@@ -51,6 +51,7 @@ function makePublicId(filename: string): string {
  * client bypasses our checks. Videos are for the admin gallery. */
 export const ALLOWED_UPLOAD_FORMATS = [
   "png", "jpg", "jpeg", "webp", "gif", "svg", "pdf", "ai",
+  "eps", "cdr", "dxf", "psd", "tif", "tiff", "emf", "wmf",
   "mp4", "mov", "webm",
 ];
 

@@ -457,7 +457,23 @@ export default function DecalCalculator() {
           prev.map((p) => {
             if (p.id !== it.id || p.imageUrl !== it.imageUrl) return p;
             const w = Number(p.w);
-            // A fresh logo with a width already typed: fit the height to it.
+            if (!p.w && !p.h) {
+              // No size typed yet: use the logo's own size (150 dpi guess),
+              // kept between 4 and 48 in on its longest side.
+              const pw = img.naturalWidth / 150;
+              const ph = img.naturalHeight / 150;
+              const k = Math.min(48, Math.max(4, Math.max(pw, ph))) / Math.max(pw, ph, 0.01);
+              const wi = Math.round(pw * k * 2) / 2 || 1;
+              const hi = Math.round(ph * k * 2) / 2 || 1;
+              const f = unit === "ft" ? 12 : 1;
+              return {
+                ...p,
+                aspect: a,
+                w: fmt(Math.round((wi / f) * 100) / 100),
+                h: fmt(Math.round((hi / f) * 100) / 100),
+              };
+            }
+            // A width is already typed: fit the height to it.
             const h = w > 0 && p.lock ? fmt(Math.round((w / a) * 100) / 100) : p.h;
             return { ...p, aspect: a, h };
           }),
@@ -466,6 +482,7 @@ export default function DecalCalculator() {
       img.onerror = () => measuring.current.delete(it.id);
       img.src = it.imageUrl;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items]);
 
   /* ---------- saved jobs ---------- */
@@ -694,139 +711,7 @@ export default function DecalCalculator() {
               </button>
             </Card>
 
-            <Card n={2} title="Job details (optional)">
-              <label className="block">
-                <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-foreground-muted">
-                  Job name
-                </span>
-                <input
-                  type="text"
-                  value={jobName}
-                  onChange={(e) => setJobName(e.target.value.slice(0, 80))}
-                  placeholder="e.g., Front window lettering"
-                  className="w-full rounded-xl border border-border-soft bg-white/4 px-4 py-2.5 text-sm placeholder:text-foreground-muted/60 outline-none ring-accent/40 focus:ring-2"
-                  suppressHydrationWarning
-                />
-              </label>
-
-              <label className="mt-3 block">
-                <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-foreground-muted">
-                  Preferred install date
-                </span>
-                <input
-                  type="date"
-                  value={installDate}
-                  min={today || undefined}
-                  onChange={(e) => setInstallDate(e.target.value)}
-                  className="w-full rounded-xl border border-border-soft bg-white/4 px-4 py-2.5 text-sm outline-none ring-accent/40 focus:ring-2 sm:w-64"
-                  suppressHydrationWarning
-                />
-              </label>
-              <p className="mt-2 rounded-lg border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-[11px] leading-relaxed text-amber-100">
-                Your date is a request, not a promise. Weather and our install
-                schedule can change it. For example, an outdoor install can&apos;t
-                happen in the rain, so we&apos;ll call you to reschedule.
-              </p>
-
-              <label className="mt-3 block">
-                <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-foreground-muted">
-                  Project notes
-                </span>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={3}
-                  placeholder="Install location, deadline, special instructions…"
-                  className="w-full resize-none rounded-xl border border-border-soft bg-white/4 px-4 py-3 text-sm placeholder:text-foreground-muted/60 outline-none ring-accent/40 focus:ring-2"
-                  suppressHydrationWarning
-                />
-              </label>
-            </Card>
-          </div>
-
-          {/* ───────────── COL 2: material, logo, size ───────────── */}
-          <div className="space-y-5">
-            <Card n={3} title={`Material · ${sel.name.trim() || `Item ${items.indexOf(sel) + 1}`}`}>
-              <div className="grid grid-cols-2 gap-2">
-                {DECAL_MATERIALS.map((m) => {
-                  const on = sel.material === m.key;
-                  return (
-                    <button
-                      key={m.key}
-                      type="button"
-                      onClick={() => patch(sel.id, { material: m.key })}
-                      className={`flex flex-col gap-1 rounded-xl border p-2.5 text-left transition ${
-                        on
-                          ? "border-accent bg-accent/10 ring-1 ring-accent"
-                          : "border-border-soft bg-white/4 opacity-80 hover:opacity-100"
-                      }`}
-                    >
-                      <span
-                        className="mb-1 block h-7 w-full rounded-md border border-black/10"
-                        style={lookStyle(m.look)}
-                        aria-hidden
-                      />
-                      <span className="text-[13px] font-bold leading-tight">{m.label}</span>
-                      <span
-                        className={`text-sm font-bold ${m.quoteOnly ? "text-rose-300" : "text-cyan-300"}`}
-                      >
-                        {m.quoteOnly ? "Custom pricing" : `$${m.pricePerSqFt.toFixed(2)}/sq ft`}
-                      </span>
-                      <span className="text-[11px] text-foreground-muted">{m.blurb}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {selMat.quoteOnly && !isAdmin && (
-                <div className="mt-3 rounded-xl border border-rose-400/30 bg-rose-500/10 p-3 text-xs text-rose-100">
-                  Special Vinyl is priced per job.{" "}
-                  <a href="tel:7729852854" className="font-bold underline">
-                    Call (772) 985-2854
-                  </a>{" "}
-                  for a quote.
-                </div>
-              )}
-              {isAdmin && (
-                <div className="mt-3 rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/10 p-3">
-                  <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-fuchsia-200">
-                    Shop special price ($ / sq ft) · admin only
-                  </label>
-                  <input
-                    type="number"
-                    value={sel.custom}
-                    onChange={(e) => patch(sel.id, { custom: e.target.value.slice(0, 8) })}
-                    min={0}
-                    step="0.01"
-                    placeholder={selMat.quoteOnly ? "Required for Special Vinyl" : "Leave blank to use the normal rate"}
-                    className="w-full rounded-xl border border-fuchsia-400/40 bg-white/4 px-4 py-2.5 text-sm outline-none ring-fuchsia-400/40 focus:ring-2"
-                    suppressHydrationWarning
-                  />
-                  <p className="mt-1.5 text-[11px] text-fuchsia-100/80">
-                    Only you see this, because you&apos;re signed in to admin on this
-                    browser. Customers can&apos;t change prices.
-                  </p>
-                </div>
-              )}
-            </Card>
-
-            <Card n={4} title="Upload your logo">
-              <UploadBox
-                slot={slot}
-                onSelect={(f) => uploadDesign(f, setSlotFor(sel.id), { requirePreviewable: true })}
-                onClear={() => {
-                  setUploads((u) => ({ ...u, [sel.id]: EMPTY_UPLOAD_SLOT }));
-                  patch(sel.id, { imageUrl: "", imageName: "", aspect: 0 });
-                }}
-                accept={ACCEPT_PREVIEWABLE_DESIGN_FILES}
-                hint="PNG · JPG · SVG · PDF"
-              />
-              <p className="mt-2 text-[11px] text-foreground-muted">
-                A transparent PNG looks best. No logo yet? Skip it and tell us in the note.
-              </p>
-            </Card>
-
-            <Card n={5} title="Size & quantity">
+            <Card n={2} title="Size & quantity">
               <div className="mb-3 flex items-center justify-between">
                 <span className="text-xs text-foreground-muted">
                   Type the size. The preview updates as you go.
@@ -960,6 +845,140 @@ export default function DecalCalculator() {
                 />
               </div>
             </Card>
+          </div>
+
+          {/* ───────────── COL 2: material, logo, size ───────────── */}
+          <div className="space-y-5">
+            <Card n={3} title={`Material · ${sel.name.trim() || `Item ${items.indexOf(sel) + 1}`}`}>
+              <div className="grid grid-cols-2 gap-2">
+                {DECAL_MATERIALS.map((m) => {
+                  const on = sel.material === m.key;
+                  return (
+                    <button
+                      key={m.key}
+                      type="button"
+                      onClick={() => patch(sel.id, { material: m.key })}
+                      className={`flex flex-col gap-1 rounded-xl border p-2.5 text-left transition ${
+                        on
+                          ? "border-accent bg-accent/10 ring-1 ring-accent"
+                          : "border-border-soft bg-white/4 opacity-80 hover:opacity-100"
+                      }`}
+                    >
+                      <span
+                        className="mb-1 block h-7 w-full rounded-md border border-black/10"
+                        style={lookStyle(m.look)}
+                        aria-hidden
+                      />
+                      <span className="text-[13px] font-bold leading-tight">{m.label}</span>
+                      <span
+                        className={`text-sm font-bold ${m.quoteOnly ? "text-rose-300" : "text-cyan-300"}`}
+                      >
+                        {m.quoteOnly ? "Custom pricing" : `$${m.pricePerSqFt.toFixed(2)}/sq ft`}
+                      </span>
+                      <span className="text-[11px] text-foreground-muted">{m.blurb}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {selMat.quoteOnly && !isAdmin && (
+                <div className="mt-3 rounded-xl border border-rose-400/30 bg-rose-500/10 p-3 text-xs text-rose-100">
+                  Special Vinyl is priced per job.{" "}
+                  <a href="tel:7729852854" className="font-bold underline">
+                    Call (772) 985-2854
+                  </a>{" "}
+                  for a quote.
+                </div>
+              )}
+              {isAdmin && (
+                <div className="mt-3 rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/10 p-3">
+                  <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-fuchsia-200">
+                    Shop special price ($ / sq ft) · admin only
+                  </label>
+                  <input
+                    type="number"
+                    value={sel.custom}
+                    onChange={(e) => patch(sel.id, { custom: e.target.value.slice(0, 8) })}
+                    min={0}
+                    step="0.01"
+                    placeholder={selMat.quoteOnly ? "Required for Special Vinyl" : "Leave blank to use the normal rate"}
+                    className="w-full rounded-xl border border-fuchsia-400/40 bg-white/4 px-4 py-2.5 text-sm outline-none ring-fuchsia-400/40 focus:ring-2"
+                    suppressHydrationWarning
+                  />
+                  <p className="mt-1.5 text-[11px] text-fuchsia-100/80">
+                    Only you see this, because you&apos;re signed in to admin on this
+                    browser. Customers can&apos;t change prices.
+                  </p>
+                </div>
+              )}
+            </Card>
+
+            <Card n={4} title="Upload your logo">
+              <UploadBox
+                slot={slot}
+                onSelect={(f) => uploadDesign(f, setSlotFor(sel.id), { requirePreviewable: true })}
+                onClear={() => {
+                  setUploads((u) => ({ ...u, [sel.id]: EMPTY_UPLOAD_SLOT }));
+                  patch(sel.id, { imageUrl: "", imageName: "", aspect: 0 });
+                }}
+                accept={ACCEPT_PREVIEWABLE_DESIGN_FILES}
+                hint="PNG · JPG · SVG · PDF"
+              />
+              <p className="mt-2 text-[11px] text-foreground-muted">
+                A transparent PNG looks best. No logo yet? Skip it and tell us in the note.
+              </p>
+            </Card>
+
+            <Card n={5} title="Job details (optional)">
+              <label className="block">
+                <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-foreground-muted">
+                  Job name
+                </span>
+                <input
+                  type="text"
+                  value={jobName}
+                  onChange={(e) => setJobName(e.target.value.slice(0, 80))}
+                  placeholder="e.g., Front window lettering"
+                  className="w-full rounded-xl border border-border-soft bg-white/4 px-4 py-2.5 text-sm placeholder:text-foreground-muted/60 outline-none ring-accent/40 focus:ring-2"
+                  suppressHydrationWarning
+                />
+              </label>
+
+              <label className="mt-3 block">
+                <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-foreground-muted">
+                  Preferred install date
+                </span>
+                <input
+                  type="date"
+                  value={installDate}
+                  min={today || undefined}
+                  onChange={(e) => setInstallDate(e.target.value)}
+                  className="w-full rounded-xl border border-border-soft bg-white/4 px-4 py-2.5 text-sm outline-none ring-accent/40 focus:ring-2 sm:w-64"
+                  suppressHydrationWarning
+                />
+              </label>
+              <p className="mt-2 rounded-lg border border-amber-400/25 bg-amber-500/10 px-3 py-2 text-[11px] leading-relaxed text-amber-100">
+                Your date is a request, not a promise. Weather and our install
+                schedule can change it. For example, an outdoor install can&apos;t
+                happen in the rain, so we&apos;ll call you to reschedule.
+              </p>
+
+              <label className="mt-3 block">
+                <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-foreground-muted">
+                  Project notes
+                </span>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={3}
+                  placeholder="Install location, deadline, special instructions…"
+                  className="w-full resize-none rounded-xl border border-border-soft bg-white/4 px-4 py-3 text-sm placeholder:text-foreground-muted/60 outline-none ring-accent/40 focus:ring-2"
+                  suppressHydrationWarning
+                />
+              </label>
+            </Card>
+
+            
           </div>
 
           {/* ───────────── COL 3: preview + quote ───────────── */}

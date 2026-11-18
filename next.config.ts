@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   // The two old calculators were merged into the Sign & Decal Builder.
   async redirects() {
     return [
-      { source: "/decal-quote", destination: "/signage-quotes", permanent: true },
+      { source: "/signage-quotes", destination: "/decal-quote", permanent: false },
     ];
   },
   images: {

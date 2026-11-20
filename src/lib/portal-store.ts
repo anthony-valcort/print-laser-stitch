@@ -49,9 +49,66 @@ export type PortalCompany = {
   /** "salt:hash" (scrypt). Never sent to a browser. */
   passwordHash: string;
   products: PortalProduct[];
+  /** Saved by the customer: who to contact, ship-to, notes. */
+  info?: PortalInfo;
+  /** Custom requests sent from the portal. Newest first. */
+  requests?: PortalRequest[];
   createdAt: string;
   updatedAt: string;
 };
+
+export type PortalInfo = {
+  contact: string;
+  phone: string;
+  email: string;
+  shipTo: string;
+  poNumber: string;
+  notes: string;
+};
+
+export type PortalRequest = {
+  id: string;
+  title: string;
+  details: string;
+  qty: string;
+  needBy: string;
+  contact: string;
+  phone: string;
+  email: string;
+  status: "new" | "quoted" | "done";
+  createdAt: string;
+};
+
+export const EMPTY_INFO: PortalInfo = {
+  contact: "",
+  phone: "",
+  email: "",
+  shipTo: "",
+  poNumber: "",
+  notes: "",
+};
+
+export function cleanInfo(raw: unknown): PortalInfo {
+  const o = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  return {
+    contact: s(o.contact, 80),
+    phone: s(o.phone, 40),
+    email: s(o.email, 160),
+    shipTo: s(o.shipTo, 300),
+    poNumber: s(o.poNumber, 60),
+    notes: s(o.notes, 600),
+  };
+}
+
+/** Checks the portal cookie for this company. Returns it, or null. */
+export async function authedCompany(
+  companyId: string,
+  cookieValue: string | undefined,
+): Promise<PortalCompany | null> {
+  const c = await getCompanyById(companyId.slice(0, 40));
+  if (!c) return null;
+  return (await verifyPortalToken(cookieValue, c)) ? c : null;
+}
 
 /** What a browser is allowed to see. */
 export type PortalCompanyPublic = Omit<PortalCompany, "passwordHash">;

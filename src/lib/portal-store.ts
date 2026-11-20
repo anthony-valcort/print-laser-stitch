@@ -53,6 +53,8 @@ export type PortalCompany = {
   info?: PortalInfo;
   /** Custom requests sent from the portal. Newest first. */
   requests?: PortalRequest[];
+  /** Shopify order ids an admin linked to this company (past orders). */
+  orderIds?: string[];
   createdAt: string;
   updatedAt: string;
 };

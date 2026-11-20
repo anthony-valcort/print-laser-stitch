@@ -11,7 +11,8 @@ export type CartItemKind =
   | "signage"
   | "decal"
   | "sign-job"
-  | "vehicle-sticker";
+  | "vehicle-sticker"
+  | "portal";
 
 export interface CartItemBase {
   /** Unique cart-line id — used for remove/edit. */
@@ -152,6 +153,18 @@ export interface DecalPanelLine {
 }
 
 /**
+ * Reorder from a company portal. The server re-prices it from the portal's
+ * own price list; only the ids and quantities come from the browser.
+ */
+export interface PortalCartItem extends CartItemBase {
+  kind: "portal";
+  companyId: string;
+  productId: string;
+  /** Sized products: { S: 5, M: 10 }. Others: { "": 12 }. */
+  qtyBySize: Record<string, number>;
+}
+
+/**
  * Quick Quote calculator (multi-panel + material). Material's $/sqft × total
  * area, optional discount, 7% Martin County tax always on top.
  */
@@ -231,7 +244,8 @@ export type CartItem =
   | SignageCartItem
   | DecalCartItem
   | SignJobCartItem
-  | VehicleStickerCartItem;
+  | VehicleStickerCartItem
+  | PortalCartItem;
 
 // Distributive Omit — correctly narrows each union member separately.
 // `Omit<CartItem, K>` collapses the union to only shared properties,

@@ -347,6 +347,12 @@ export default function AdminDashboard() {
               Gallery →
             </Link>
             <Link
+              href="/admin/portal"
+              className="rounded-lg border border-border-soft px-3 py-1.5 font-headline text-xs text-foreground-muted transition hover:border-[#18d3e8] hover:text-[#18d3e8]"
+            >
+              Customer Portals →
+            </Link>
+            <Link
               href="/admin/recover-design"
               className="rounded-lg border border-border-soft px-3 py-1.5 font-headline text-xs text-foreground-muted transition hover:border-[#18d3e8] hover:text-[#18d3e8]"
             >

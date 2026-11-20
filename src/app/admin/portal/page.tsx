@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { PRICE_LIST } from "@/lib/price-list";
 
 type ProductForm = {
   id: string;
@@ -214,6 +215,8 @@ export default function AdminPortalPage() {
   const [uploading, setUploading] = useState("");
   const [origin, setOrigin] = useState("");
   const [q, setQ] = useState("");
+  const [picker, setPicker] = useState(false);
+  const [pq, setPq] = useState("");
   const [show, setShow] = useState<"all" | "on" | "off">("all");
 
   const shown = list
@@ -585,6 +588,13 @@ export default function AdminPortalPage() {
                 <h2 className="mr-auto font-headline text-sm font-bold uppercase tracking-wider">
                   Their products ({form.products.length})
                 </h2>
+                <button
+                  type="button"
+                  onClick={() => setPicker((v) => !v)}
+                  className="rounded-full bg-accent px-3 py-1 text-xs font-bold text-black"
+                >
+                  📚 From my price list
+                </button>
                 {TEMPLATES.map((t) => (
                   <button
                     key={t.label}
@@ -600,6 +610,57 @@ export default function AdminPortalPage() {
                   </button>
                 ))}
               </div>
+
+              {picker && (
+                <div className="mb-4 rounded-xl border border-accent/40 bg-accent/5 p-3">
+                  <input
+                    type="search"
+                    value={pq}
+                    onChange={(e) => setPq(e.target.value)}
+                    placeholder="🔍 Search your price list…"
+                    className={`${input} mb-2`}
+                  />
+                  <div className="grid max-h-64 gap-1.5 overflow-y-auto sm:grid-cols-2">
+                    {PRICE_LIST.filter((x) =>
+                      `${x.name} ${x.category}`.toLowerCase().includes(pq.trim().toLowerCase()),
+                    ).map((x) => (
+                      <button
+                        key={x.name}
+                        type="button"
+                        onClick={() =>
+                          setForm((f) =>
+                            f
+                              ? {
+                                  ...f,
+                                  products: [
+                                    ...f.products,
+                                    blankProduct({
+                                      name: x.name,
+                                      category: x.category,
+                                      price: String(x.price),
+                                      minQty: String(x.minQty),
+                                      sizesText: (x.sizes ?? []).join(", "),
+                                      upchargeText: Object.entries(x.upcharge ?? {})
+                                        .map(([k, v]) => `${k}=${v}`)
+                                        .join(", "),
+                                    }),
+                                  ],
+                                }
+                              : f,
+                          )
+                        }
+                        className="flex items-center justify-between gap-2 rounded-lg border border-border-soft bg-white/5 px-3 py-2 text-left text-xs hover:bg-white/10"
+                      >
+                        <span className="font-semibold">{x.name}</span>
+                        <span className="shrink-0 font-mono text-cyan-300">${x.price}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-[11px] text-foreground-muted">
+                    Tap to add. Then upload their mockup and set their own price.
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-4">
                 {form.products.map((p) => (

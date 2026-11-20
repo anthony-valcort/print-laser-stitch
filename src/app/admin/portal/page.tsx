@@ -216,6 +216,12 @@ export default function AdminPortalPage() {
   const [origin, setOrigin] = useState("");
   const [q, setQ] = useState("");
   const [picker, setPicker] = useState(false);
+  type OrdRow = { id: string; name: string; createdAt: string; total: number; who: string; email: string; summary: string };
+  const [coOrders, setCoOrders] = useState<{ id: string; name: string; createdAt: string; total: number; items: { title: string }[] }[]>([]);
+  const [oq, setOq] = useState("");
+  const [ores, setOres] = useState<OrdRow[]>([]);
+  const [obusy, setObusy] = useState(false);
+  const [omsg, setOmsg] = useState("");
   const [pq, setPq] = useState("");
   const [show, setShow] = useState<"all" | "on" | "off">("all");
 
@@ -356,6 +362,54 @@ export default function AdminPortalPage() {
       body: JSON.stringify({ companyId: form.id, requestId: rid, status }),
     });
     await load(token);
+  }
+
+  const loadOrders = useCallback(
+    async (cid: string, t: string) => {
+      if (!cid || !t) return;
+      const r = await fetch(`/api/admin/portal/orders?companyId=${encodeURIComponent(cid)}`, {
+        headers: { Authorization: `Bearer ${t}` },
+      });
+      if (r.ok) {
+        const d = (await r.json()) as { orders?: typeof coOrders; error?: string };
+        setCoOrders(d.orders ?? []);
+        if (d.error) setOmsg(d.error);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    setOres([]);
+    setOq("");
+    setOmsg("");
+    setCoOrders([]);
+    if (form?.id) void loadOrders(form.id, token);
+  }, [form?.id, token, loadOrders]);
+
+  async function searchOrd() {
+    setObusy(true);
+    setOmsg("");
+    const r = await fetch(`/api/admin/portal/orders?q=${encodeURIComponent(oq)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const d = (await r.json()) as { results?: OrdRow[]; error?: string };
+    if (!r.ok) setOmsg(d.error ?? "Search failed.");
+    else {
+      setOres(d.results ?? []);
+      if ((d.results ?? []).length === 0) setOmsg("No orders found.");
+    }
+    setObusy(false);
+  }
+
+  async function linkOrd(orderId: string, link: boolean) {
+    if (!form?.id) return;
+    await fetch("/api/admin/portal/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ companyId: form.id, orderId, link }),
+    });
+    await loadOrders(form.id, token);
   }
 
   const current = list.find((c) => c.id === form?.id);
@@ -582,6 +636,69 @@ export default function AdminPortalPage() {
                 </div>
               )}
             </section>
+
+            {form.id && (
+              <section className="rounded-2xl border border-border-soft bg-white/4 p-4">
+                <h2 className="mb-1 font-headline text-sm font-bold uppercase tracking-wider">
+                  📦 Their past orders ({coOrders.length})
+                </h2>
+                <p className="mb-3 text-xs text-foreground-muted">
+                  Orders they place here show up on their own. Link older orders from Shopify so they can see and reorder them.
+                </p>
+                {coOrders.length > 0 && (
+                  <ul className="mb-3 space-y-1.5">
+                    {coOrders.map((o) => (
+                      <li key={o.id} className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2 text-xs">
+                        <span className="font-bold">{o.name}</span>
+                        <span className="text-foreground-muted">{new Date(o.createdAt).toLocaleDateString()}</span>
+                        <span className="min-w-0 flex-1 truncate text-foreground-muted">{o.items.map((i) => i.title).join(", ")}</span>
+                        <span className="font-mono">${o.total.toFixed(2)}</span>
+                        <button type="button" onClick={() => void linkOrd(o.id, false)} className="text-foreground-muted underline hover:text-foreground">
+                          Unlink
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    value={oq}
+                    onChange={(e) => setOq(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") void searchOrd(); }}
+                    placeholder="Search Shopify: order #, name, or email"
+                    className={input}
+                  />
+                  <button type="button" onClick={() => void searchOrd()} disabled={obusy} className="rounded-lg bg-accent px-4 text-xs font-bold text-black disabled:opacity-60">
+                    {obusy ? "…" : "Find"}
+                  </button>
+                </div>
+                {omsg && <p className="mt-2 text-xs text-amber-300">{omsg}</p>}
+                {ores.length > 0 && (
+                  <ul className="mt-2 space-y-1.5">
+                    {ores.map((o) => {
+                      const on = coOrders.some((c) => c.id === o.id);
+                      return (
+                        <li key={o.id} className="flex items-center gap-2 rounded-lg border border-border-soft px-3 py-2 text-xs">
+                          <span className="font-bold">{o.name}</span>
+                          <span className="text-foreground-muted">{new Date(o.createdAt).toLocaleDateString()}</span>
+                          <span className="min-w-0 flex-1 truncate">
+                            {[o.who || o.email, o.summary].filter(Boolean).join(" · ")}
+                          </span>
+                          <span className="font-mono">${o.total.toFixed(2)}</span>
+                          <button
+                            type="button"
+                            onClick={() => void linkOrd(o.id, !on)}
+                            className={`rounded-full px-3 py-1 font-bold ${on ? "bg-emerald-400 text-black" : "border border-border-strong"}`}
+                          >
+                            {on ? "Linked ✓" : "Link"}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </section>
+            )}
 
             <section className="rounded-2xl border border-border-soft bg-white/4 p-4">
               <div className="mb-3 flex flex-wrap items-center gap-2">

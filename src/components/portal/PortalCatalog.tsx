@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCart } from "@/lib/cart-store";
 import type { PortalCartItem } from "@/lib/cart-types";
 import {
@@ -58,6 +58,7 @@ type Info = {
 
 const TABS = [
   { id: "mine", label: "My products", icon: "⭐" },
+  { id: "orders", label: "My orders", icon: "📦" },
   { id: "shop", label: "Our products", icon: "🛍️" },
   { id: "ask", label: "Ask for something", icon: "💬" },
   { id: "info", label: "My info", icon: "📇" },
@@ -256,6 +257,7 @@ export default function PortalCatalog({ company }: { company: Company }) {
         </div>
       )}
 
+      {tab === "orders" && <OrdersTab company={company} onAsk={() => setTab("ask")} />}
       {tab === "ask" && <AskForm company={company} />}
       {tab === "info" && <InfoForm company={company} />}
 
@@ -264,6 +266,262 @@ export default function PortalCatalog({ company }: { company: Company }) {
         Call (772) 985-2854.
       </p>
     </section>
+  );
+}
+
+type OrderItem = {
+  title: string;
+  qty: number;
+  image: string;
+  productId: string;
+  productName: string;
+  qtyBySize: Record<string, number>;
+};
+type Order = {
+  id: string;
+  name: string;
+  createdAt: string;
+  total: number;
+  paid: boolean;
+  cancelled: boolean;
+  fulfillment: "none" | "partial" | "done";
+  statusUrl: string;
+  items: OrderItem[];
+};
+
+function orderStatus(o: Order): { label: string; tone: string; step: number } {
+  if (o.cancelled) return { label: "Cancelled", tone: "text-red-300", step: 0 };
+  if (!o.paid) return { label: "Waiting for payment", tone: "text-amber-300", step: 1 };
+  if (o.fulfillment === "done") return { label: "Ready / delivered", tone: "text-emerald-300", step: 4 };
+  if (o.fulfillment === "partial") return { label: "Part is ready", tone: "text-cyan-300", step: 3 };
+  return { label: "We're making it", tone: "text-cyan-300", step: 2 };
+}
+
+function OrdersTab({ company, onAsk }: { company: Company; onAsk: () => void }) {
+  const { addItem } = useCart();
+  const [orders, setOrders] = useState<Order[] | null>(null);
+  const [err, setErr] = useState("");
+  const [filter, setFilter] = useState<"all" | "open" | "done">("all");
+  const [find, setFind] = useState("");
+  const [added, setAdded] = useState("");
+
+  useEffect(() => {
+    let live = true;
+    (async () => {
+      try {
+        const r = await fetch(`/api/portal/orders?companyId=${encodeURIComponent(company.id)}`);
+        const d = (await r.json()) as { orders?: Order[]; error?: string };
+        if (!live) return;
+        if (!r.ok) setErr(d.error ?? "Couldn't load orders.");
+        else {
+          setOrders(d.orders ?? []);
+          if (d.error) setErr(d.error);
+        }
+      } catch {
+        if (live) setErr("Couldn't load orders.");
+      }
+    })();
+    return () => {
+      live = false;
+    };
+  }, [company.id]);
+
+  function reorder(it: OrderItem): boolean {
+    const p =
+      company.products.find((x) => x.active && x.id === it.productId) ??
+      company.products.find(
+        (x) => x.active && x.name.toLowerCase() === it.productName.toLowerCase(),
+      );
+    if (!p) return false;
+    const q = quotePortalLine(p, it.qtyBySize);
+    if (!q.ok) return false;
+    const item: Omit<PortalCartItem, "id" | "addedAt"> = {
+      kind: "portal",
+      companyId: company.id,
+      productId: p.id,
+      qtyBySize: it.qtyBySize,
+      title: `${company.name} · ${p.name}`,
+      subtitle:
+        p.sizes.length > 0
+          ? q.lines.map((l) => `${l.label} ×${l.qty}`).join(", ")
+          : `${q.totalQty} pcs`,
+      thumbnail: p.imageUrl || "📦",
+      unitLabel: `${money(q.unit)} each`,
+      totalPrice: q.total,
+      quantity: q.totalQty,
+      editHref: window.location.pathname,
+    };
+    addItem(item);
+    return true;
+  }
+
+  function again(o: Order) {
+    let n = 0;
+    for (const it of o.items) if (reorder(it)) n++;
+    setAdded(n > 0 ? o.id : "");
+    if (n === 0) setErr("Those items aren't on your list anymore. Use Ask for something.");
+  }
+
+  if (orders === null && !err) {
+    return <p className="py-10 text-center text-foreground-muted">Loading your orders…</p>;
+  }
+
+  const list = (orders ?? []).filter((o) => {
+    const s = orderStatus(o).step;
+    if (filter === "open" && (s === 4 || s === 0)) return false;
+    if (filter === "done" && s !== 4) return false;
+    const t = find.trim().toLowerCase();
+    return (
+      !t ||
+      o.name.toLowerCase().includes(t) ||
+      o.items.some((i) => i.title.toLowerCase().includes(t))
+    );
+  });
+  const spent = (orders ?? []).filter((o) => !o.cancelled).reduce((a, o) => a + o.total, 0);
+
+  return (
+    <div>
+      <div className="mb-4 grid grid-cols-3 gap-3 text-center">
+        {[
+          ["Orders", String((orders ?? []).length)],
+          ["Total spent", money(spent)],
+          ["In progress", String((orders ?? []).filter((o) => [1, 2, 3].includes(orderStatus(o).step)).length)],
+        ].map(([k, v]) => (
+          <div key={k} className="rounded-2xl border border-border-soft bg-white/4 p-3">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-foreground-muted">{k}</p>
+            <p className="font-headline text-xl font-bold">{v}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <input
+          type="search"
+          value={find}
+          onChange={(e) => setFind(e.target.value)}
+          placeholder="🔍 Search your orders…"
+          className={`${inputCls} max-w-xs`}
+        />
+        {(["all", "open", "done"] as const).map((k) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => setFilter(k)}
+            className={`rounded-full border px-4 py-2 text-sm font-semibold ${
+              filter === k ? "border-accent bg-accent text-black" : "border-border-soft bg-white/4"
+            }`}
+          >
+            {k === "all" ? "All" : k === "open" ? "In progress" : "Delivered"}
+          </button>
+        ))}
+      </div>
+
+      {err && <p className="mb-3 rounded-xl bg-amber-400/10 p-3 text-sm text-amber-200">{err}</p>}
+
+      {list.length === 0 ? (
+        <div className="rounded-2xl border border-border-soft bg-white/4 p-8 text-center">
+          <p className="text-3xl">📦</p>
+          <p className="mt-2 font-bold">No orders to show yet.</p>
+          <p className="text-sm text-foreground-muted">Orders you place here show up right away.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {list.map((o) => {
+            const st = orderStatus(o);
+            return (
+              <article key={o.id} className="pc-card overflow-hidden rounded-2xl border border-border-soft bg-white/4">
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-1 bg-white/6 px-4 py-3 text-xs">
+                  <span>
+                    <span className="block font-bold uppercase tracking-wider text-foreground-muted">Placed</span>
+                    {new Date(o.createdAt).toLocaleDateString()}
+                  </span>
+                  <span>
+                    <span className="block font-bold uppercase tracking-wider text-foreground-muted">Total</span>
+                    {money(o.total)}
+                  </span>
+                  <span className="ml-auto text-right">
+                    <span className="block font-bold uppercase tracking-wider text-foreground-muted">Order</span>
+                    {o.name}
+                  </span>
+                </div>
+                <div className="p-4">
+                  <p className={`font-headline text-lg font-bold ${st.tone}`}>{st.label}</p>
+                  {st.step > 0 && (
+                    <div className="mt-2 flex gap-1" aria-hidden>
+                      {[1, 2, 3, 4].map((n) => (
+                        <span
+                          key={n}
+                          className={`h-1.5 flex-1 rounded-full ${n <= st.step ? "bg-accent" : "bg-white/10"}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <ul className="mt-4 space-y-3">
+                    {o.items.map((it, i) => (
+                      <li key={i} className="flex items-center gap-3">
+                        <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-lg bg-white/90 text-2xl">
+                          {it.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={it.image} alt="" className="h-full w-full object-contain" />
+                          ) : (
+                            "📦"
+                          )}
+                        </span>
+                        <span className="min-w-0 flex-1 text-sm">
+                          <span className="block font-semibold">{it.title}</span>
+                          <span className="text-xs text-foreground-muted">
+                            {Object.keys(it.qtyBySize).length > 0
+                              ? Object.entries(it.qtyBySize)
+                                  .map(([k, v]) => `${k ? k + " " : ""}×${v}`)
+                                  .join(", ")
+                              : `Qty ${it.qty}`}
+                          </span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {added === o.id ? (
+                      <Link
+                        href="/cart"
+                        className="pc-pop rounded-md bg-emerald-400 px-4 py-2.5 font-headline text-xs font-bold uppercase tracking-wider text-black"
+                      >
+                        ✓ Added. Go to cart
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => again(o)}
+                        className="rounded-md accent-gradient px-4 py-2.5 font-headline text-xs font-bold uppercase tracking-wider text-black"
+                      >
+                        🔁 Buy it again
+                      </button>
+                    )}
+                    {o.statusUrl && (
+                      <a
+                        href={o.statusUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-md border border-border-strong px-4 py-2.5 font-headline text-xs font-bold uppercase tracking-wider hover:bg-white/10"
+                      >
+                        Receipt
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      onClick={onAsk}
+                      className="rounded-md px-3 py-2.5 text-xs text-foreground-muted hover:text-foreground"
+                    >
+                      Problem or change?
+                    </button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 

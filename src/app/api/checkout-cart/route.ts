@@ -246,6 +246,7 @@ export async function POST(req: NextRequest) {
   // Build draft-order line items by expanding each cart item.
   const lineItems: DraftLineItem[] = [];
   const noteParts: string[] = [];
+  const portalCoIds = new Set<string>();
   // Indices into lineItems that came from a vinyl-sticker cart item — used to
   // apply sticker-scoped discount codes at the line level (see below) instead
   // of order-wide, since Custom Vinyl Stickers isn't a real Shopify product.
@@ -776,6 +777,15 @@ export async function POST(req: NextRequest) {
       const properties: { name: string; value: string }[] = [
         { name: "Company Portal", value: company.name },
         { name: "Product", value: product.name },
+        { name: "Product ID", value: product.id },
+        {
+          name: "Qty JSON",
+          value: JSON.stringify(
+            Object.fromEntries(
+              Object.entries(item.qtyBySize ?? {}).filter(([, v]) => Number(v) > 0),
+            ),
+          ),
+        },
         {
           name: "Quantities",
           value: quote.lines
@@ -797,6 +807,7 @@ export async function POST(req: NextRequest) {
         properties,
       });
       noteParts.push(`${company.name} portal: ${product.name} × ${quote.totalQty}`);
+      portalCoIds.add(company.id);
     } else if (item.kind === "sign-job") {
       // Sign & Decal Builder — every number below is recomputed from
       // sign-decal-pricing.ts; only the configuration comes from the browser.
@@ -1066,7 +1077,11 @@ export async function POST(req: NextRequest) {
     draft_order: {
       email: orderEmail,
       line_items: lineItems,
-      tags: "cart-checkout,custom-configurator",
+      tags: [
+        "cart-checkout",
+        "custom-configurator",
+        ...Array.from(portalCoIds).flatMap((id) => ["portal-order", `pls-co-${id}`]),
+      ].join(","),
       note: discountCode
         ? `Cart checkout · ${noteParts.join(" + ")} · Discount: ${discountCode.toUpperCase()}${discountScopedToStickers ? " (stickers only)" : ""}`
         : `Cart checkout · ${noteParts.join(" + ")}`,

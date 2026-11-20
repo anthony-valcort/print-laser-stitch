@@ -85,6 +85,7 @@ export async function POST(req: NextRequest) {
     products,
     info: existing?.info,
     requests: existing?.requests,
+    orderIds: existing?.orderIds,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };

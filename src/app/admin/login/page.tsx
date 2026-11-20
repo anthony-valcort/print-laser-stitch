@@ -2,6 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import AdminGoogleButton from "@/components/AdminGoogleButton";
+
+/** Where to go after sign-in. Only admin pages are allowed. */
+function nextPath(): string {
+  try {
+    const n = new URLSearchParams(window.location.search).get("next") ?? "";
+    return /^\/admin\/[a-z-]+$/.test(n) ? n : "/admin/dashboard";
+  } catch {
+    return "/admin/dashboard";
+  }
+}
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -29,7 +40,7 @@ export default function AdminLoginPage() {
 
       const { token } = (await res.json()) as { token: string };
       sessionStorage.setItem("adminToken", token);
-      router.push("/admin/dashboard");
+      router.push(nextPath());
     } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);
@@ -47,6 +58,16 @@ export default function AdminLoginPage() {
           <p className="mt-1 font-headline text-sm text-foreground-muted">
             Print Laser Stitch — Dashboard
           </p>
+        </div>
+
+        <div className="mb-4 flex justify-center">
+          <AdminGoogleButton
+            onError={setError}
+            onDone={(token) => {
+              sessionStorage.setItem("adminToken", token);
+              router.push(nextPath());
+            }}
+          />
         </div>
 
         <form

@@ -193,6 +193,21 @@ export default function AdminPortalPage() {
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState("");
   const [origin, setOrigin] = useState("");
+  const [q, setQ] = useState("");
+  const [show, setShow] = useState<"all" | "on" | "off">("all");
+
+  const shown = list
+    .filter((c) => {
+      if (show === "on" && !c.active) return false;
+      if (show === "off" && c.active) return false;
+      const t = q.trim().toLowerCase();
+      if (!t) return true;
+      return (
+        c.name.toLowerCase().includes(t) ||
+        c.products.some((p) => p.name.toLowerCase().includes(t))
+      );
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const load = useCallback(
     async (t: string) => {
@@ -339,7 +354,30 @@ export default function AdminPortalPage() {
           >
             + New company
           </button>
-          {list.map((c) => (
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="🔍 Search customers…"
+            className={input}
+          />
+          <div className="flex gap-1.5 text-xs">
+            {(["all", "on", "off"] as const).map((k) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setShow(k)}
+                className={`flex-1 rounded-md border px-2 py-1 font-semibold ${
+                  show === k
+                    ? "border-accent bg-accent/10"
+                    : "border-border-soft text-foreground-muted"
+                }`}
+              >
+                {k === "all" ? `All ${list.length}` : k === "on" ? "Live" : "Off"}
+              </button>
+            ))}
+          </div>
+          {shown.map((c) => (
             <button
               key={c.id}
               type="button"
@@ -366,6 +404,9 @@ export default function AdminPortalPage() {
           ))}
           {list.length === 0 && (
             <p className="text-xs text-foreground-muted">No companies yet. Add your first one.</p>
+          )}
+          {list.length > 0 && shown.length === 0 && (
+            <p className="text-xs text-foreground-muted">No match. Try another word.</p>
           )}
         </aside>
 

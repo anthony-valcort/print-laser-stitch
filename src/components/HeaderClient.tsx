@@ -50,6 +50,7 @@ const UTILITY_LINKS: { label: string; href: string; external?: boolean }[] = [
   { label: "Blog", href: "/blog" },
   { label: "Built Together", href: "/built-together" },
   { label: "Contact", href: "/contact" },
+  { label: "Admin", href: "/admin/login?next=/admin/portal" },
   { label: "University", href: "https://printlaserstitchuniversity.com/", external: true },
   { label: "Portal", href: "https://printlaserstitch.app/", external: true },
 ];
@@ -460,6 +461,7 @@ export default function HeaderClient({
                 { label: "Built Together", href: "/built-together" },
                 { label: "About Us", href: "/about" },
                 { label: "Contact Us", href: "/contact" },
+                { label: "Admin", href: "/admin/login?next=/admin/portal" },
               ].map((l) => (
                 <Link
                   key={l.label}

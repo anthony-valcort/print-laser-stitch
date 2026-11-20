@@ -54,6 +54,26 @@ type ApiCompany = {
   active: boolean;
   hasPassword?: boolean;
   products: ApiProduct[];
+  info?: {
+    contact: string;
+    phone: string;
+    email: string;
+    shipTo: string;
+    poNumber: string;
+    notes: string;
+  };
+  requests?: {
+    id: string;
+    title: string;
+    details: string;
+    qty: string;
+    needBy: string;
+    contact: string;
+    phone: string;
+    email: string;
+    status: "new" | "quoted" | "done";
+    createdAt: string;
+  }[];
 };
 
 const SIZES = "S, M, L, XL, 2XL, 3XL";
@@ -325,6 +345,17 @@ export default function AdminPortalPage() {
     } else setMsg("Couldn't delete.");
   }
 
+  async function setStatus(rid: string, status: "new" | "quoted" | "done") {
+    if (!form) return;
+    await fetch("/api/admin/portal", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ companyId: form.id, requestId: rid, status }),
+    });
+    await load(token);
+  }
+
+  const current = list.find((c) => c.id === form?.id);
   const link = form?.slug ? `${origin}/portal/${form.slug}` : "";
 
   return (
@@ -398,6 +429,11 @@ export default function AdminPortalPage() {
                 <span className="block truncate font-bold">{c.name}</span>
                 <span className="text-[11px] text-foreground-muted">
                   {c.products.length} products{c.active ? "" : " · OFF"}
+                  {(c.requests ?? []).some((r) => r.status === "new") && (
+                    <span className="ml-1.5 rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-bold text-black">
+                      {(c.requests ?? []).filter((r) => r.status === "new").length} new
+                    </span>
+                  )}
                 </span>
               </span>
             </button>
@@ -417,6 +453,48 @@ export default function AdminPortalPage() {
           </div>
         ) : (
           <div className="space-y-5">
+            {current && ((current.requests ?? []).length > 0 || current.info?.contact || current.info?.phone || current.info?.shipTo) && (
+              <section className="rounded-2xl border border-amber-400/40 bg-amber-400/5 p-4">
+                <h2 className="mb-2 font-headline text-lg font-bold">💬 Requests & info from them</h2>
+                {(current.info?.contact || current.info?.phone || current.info?.email || current.info?.shipTo || current.info?.poNumber || current.info?.notes) && (
+                  <div className="mb-3 rounded-xl bg-white/5 p-3 text-sm">
+                    {current.info?.contact && <p>👤 {current.info.contact}</p>}
+                    {current.info?.phone && <p>📞 <a className="underline" href={`tel:${current.info.phone}`}>{current.info.phone}</a></p>}
+                    {current.info?.email && <p>✉️ <a className="underline" href={`mailto:${current.info.email}`}>{current.info.email}</a></p>}
+                    {current.info?.shipTo && <p>📦 {current.info.shipTo}</p>}
+                    {current.info?.poNumber && <p>PO: {current.info.poNumber}</p>}
+                    {current.info?.notes && <p className="text-foreground-muted">{current.info.notes}</p>}
+                  </div>
+                )}
+                <ul className="space-y-2">
+                  {(current.requests ?? []).map((r) => (
+                    <li key={r.id} className="rounded-xl bg-white/5 p-3 text-sm">
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <span className="font-bold">{r.title}</span>
+                        <span className="flex gap-1">
+                          {(["new", "quoted", "done"] as const).map((s) => (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => void setStatus(r.id, s)}
+                              className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold capitalize ${
+                                r.status === s ? "border-accent bg-accent text-black" : "border-border-soft text-foreground-muted"
+                              }`}
+                            >
+                              {s}
+                            </button>
+                          ))}
+                        </span>
+                      </div>
+                      {r.details && <p className="mt-1 text-foreground-muted">{r.details}</p>}
+                      <p className="mt-1 text-[11px] text-foreground-muted">
+                        {[r.qty && `Qty ${r.qty}`, r.needBy && `By ${r.needBy}`, r.contact, r.phone, new Date(r.createdAt).toLocaleDateString()].filter(Boolean).join(" · ")}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
             <section className="rounded-2xl border border-border-soft bg-white/4 p-4">
               <h2 className="mb-3 font-headline text-sm font-bold uppercase tracking-wider">Company</h2>
               <div className="grid gap-3 sm:grid-cols-2">

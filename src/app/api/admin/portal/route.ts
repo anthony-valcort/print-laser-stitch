@@ -83,6 +83,8 @@ export async function POST(req: NextRequest) {
     active: raw.active !== false,
     passwordHash: password ? hashPassword(password) : (existing?.passwordHash ?? ""),
     products,
+    info: existing?.info,
+    requests: existing?.requests,
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
@@ -117,6 +119,32 @@ export async function DELETE(req: NextRequest) {
     await saveAllCompanies(list.filter((c) => c.id !== id));
   } catch {
     return NextResponse.json({ error: "Couldn't delete. Try again." }, { status: 502 });
+  }
+  return NextResponse.json({ ok: true });
+}
+
+/** PATCH: set a request's status. Body: { companyId, requestId, status } */
+export async function PATCH(req: NextRequest) {
+  const denied = await guard(req);
+  if (denied) return denied;
+  let b: { companyId?: string; requestId?: string; status?: string };
+  try {
+    b = (await req.json()) as typeof b;
+  } catch {
+    return NextResponse.json({ error: "Bad request" }, { status: 400 });
+  }
+  if (!["new", "quoted", "done"].includes(b.status ?? "")) {
+    return NextResponse.json({ error: "Bad status" }, { status: 400 });
+  }
+  const list = await getAllCompanies();
+  const co = list.find((c) => c.id === b.companyId);
+  const r = co?.requests?.find((x) => x.id === b.requestId);
+  if (!co || !r) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  r.status = b.status as "new" | "quoted" | "done";
+  try {
+    await saveAllCompanies(list);
+  } catch {
+    return NextResponse.json({ error: "Couldn't save." }, { status: 502 });
   }
   return NextResponse.json({ ok: true });
 }

@@ -17,6 +17,12 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
+import {
+  getCompanyById,
+  portalCookieName,
+  quotePortalLine,
+  verifyPortalToken,
+} from "@/lib/portal-store";
 import { gidToNumericId, shopifyAdminFetch } from "@/lib/shopify";
 import { getCurrentCustomer } from "@/lib/customer-session";
 import { normalizeInvoiceUrl, waitForInvoiceReady } from "@/lib/shopify-checkout";
@@ -738,6 +744,59 @@ export async function POST(req: NextRequest) {
       noteParts.push(
         `Signage Quote ${matSummary} ${job.totalAreaSqFt.toFixed(2)} sqft`,
       );
+    } else if (item.kind === "portal") {
+      // Company portal reorder. Price comes from the portal's own list, and
+      // only a browser signed in to that portal may order from it.
+      const company = await getCompanyById(String(item.companyId ?? ""));
+      if (
+        !company ||
+        !(await verifyPortalToken(
+          req.cookies.get(portalCookieName(company.id))?.value,
+          company,
+        ))
+      ) {
+        return NextResponse.json(
+          { error: "Please sign in to your company portal again." },
+          { status: 401 },
+        );
+      }
+      const product = company.products.find(
+        (p) => p.id === String(item.productId ?? "") && p.active,
+      );
+      if (!product) {
+        return NextResponse.json(
+          { error: "That product is no longer available." },
+          { status: 404 },
+        );
+      }
+      const quote = quotePortalLine(product, item.qtyBySize ?? {});
+      if (!quote.ok) {
+        return NextResponse.json({ error: quote.error }, { status: 400 });
+      }
+      const properties: { name: string; value: string }[] = [
+        { name: "Company Portal", value: company.name },
+        { name: "Product", value: product.name },
+        {
+          name: "Quantities",
+          value: quote.lines
+            .map((l) => `${l.label ? l.label + ": " : ""}${l.qty} @ $${l.each.toFixed(2)}`)
+            .join("\n"),
+        },
+        { name: "Subtotal", value: `$${quote.subtotal.toFixed(2)}` },
+        { name: "Tax (7% Martin County)", value: `$${quote.tax.toFixed(2)}` },
+      ];
+      if (product.imageUrl) {
+        properties.push({ name: "Mockup", value: product.imageUrl });
+      }
+      lineItems.push({
+        title: `${company.name} · ${product.name} × ${quote.totalQty}`,
+        price: quote.total.toFixed(2),
+        quantity: 1,
+        requires_shipping: true,
+        taxable: false, // tax already included
+        properties,
+      });
+      noteParts.push(`${company.name} portal: ${product.name} × ${quote.totalQty}`);
     } else if (item.kind === "sign-job") {
       // Sign & Decal Builder — every number below is recomputed from
       // sign-decal-pricing.ts; only the configuration comes from the browser.

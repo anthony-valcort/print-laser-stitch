@@ -17,6 +17,7 @@ type Company = {
   name: string;
   logoUrl: string;
   welcome: string;
+  plan?: "" | "partner";
   products: PortalProduct[];
   info?: {
     contact: string;
@@ -125,6 +126,11 @@ export default function PortalCatalog({ company }: { company: Company }) {
             <h1 className="font-headline text-2xl font-bold sm:text-4xl">
               {company.name}
             </h1>
+            {company.plan === "partner" && (
+              <p className="mt-1 inline-block rounded-full bg-accent px-3 py-1 text-[11px] font-bold text-black">
+                ⭐ Partner member · priority orders · design team
+              </p>
+            )}
             <p className="mt-1 text-sm text-foreground-muted">
               {company.welcome || "Your products, your prices. Pick a number and reorder."}
             </p>
@@ -287,14 +293,23 @@ type Order = {
   fulfillment: "none" | "partial" | "done";
   statusUrl: string;
   items: OrderItem[];
+  progress?: { step: number; label: string };
 };
 
 function orderStatus(o: Order): { label: string; tone: string; step: number } {
   if (o.cancelled) return { label: "Cancelled", tone: "text-red-300", step: 0 };
+  if (o.progress && o.paid) {
+    const s = o.progress.step;
+    return {
+      label: o.progress.label,
+      tone: s >= 4 ? "text-emerald-300" : "text-cyan-300",
+      step: s,
+    };
+  }
   if (!o.paid) return { label: "Waiting for payment", tone: "text-amber-300", step: 1 };
-  if (o.fulfillment === "done") return { label: "Ready / delivered", tone: "text-emerald-300", step: 4 };
-  if (o.fulfillment === "partial") return { label: "Part is ready", tone: "text-cyan-300", step: 3 };
-  return { label: "We're making it", tone: "text-cyan-300", step: 2 };
+  if (o.fulfillment === "done") return { label: "Ready / delivered", tone: "text-emerald-300", step: 5 };
+  if (o.fulfillment === "partial") return { label: "Part is ready", tone: "text-cyan-300", step: 4 };
+  return { label: "We're making it", tone: "text-cyan-300", step: 3 };
 }
 
 function OrdersTab({ company, onAsk }: { company: Company; onAsk: () => void }) {
@@ -368,8 +383,8 @@ function OrdersTab({ company, onAsk }: { company: Company; onAsk: () => void }) 
 
   const list = (orders ?? []).filter((o) => {
     const s = orderStatus(o).step;
-    if (filter === "open" && (s === 4 || s === 0)) return false;
-    if (filter === "done" && s !== 4) return false;
+    if (filter === "open" && (s === 5 || s === 0)) return false;
+    if (filter === "done" && s !== 5) return false;
     const t = find.trim().toLowerCase();
     return (
       !t ||
@@ -385,7 +400,7 @@ function OrdersTab({ company, onAsk }: { company: Company; onAsk: () => void }) 
         {[
           ["Orders", String((orders ?? []).length)],
           ["Total spent", money(spent)],
-          ["In progress", String((orders ?? []).filter((o) => [1, 2, 3].includes(orderStatus(o).step)).length)],
+          ["In progress", String((orders ?? []).filter((o) => [1, 2, 3, 4].includes(orderStatus(o).step)).length)],
         ].map(([k, v]) => (
           <div key={k} className="rounded-2xl border border-border-soft bg-white/4 p-3">
             <p className="text-[11px] font-bold uppercase tracking-wider text-foreground-muted">{k}</p>
@@ -448,12 +463,21 @@ function OrdersTab({ company, onAsk }: { company: Company; onAsk: () => void }) 
                   <p className={`font-headline text-lg font-bold ${st.tone}`}>{st.label}</p>
                   {st.step > 0 && (
                     <div className="mt-2 flex gap-1" aria-hidden>
-                      {[1, 2, 3, 4].map((n) => (
+                      {[1, 2, 3, 4, 5].map((n) => (
                         <span
                           key={n}
                           className={`h-1.5 flex-1 rounded-full ${n <= st.step ? "bg-accent" : "bg-white/10"}`}
                         />
                       ))}
+                    </div>
+                  )}
+                  {st.step > 0 && o.progress && (
+                    <div className="mt-1 flex justify-between text-[10px] text-foreground-muted">
+                      <span>Received</span>
+                      <span>Design</span>
+                      <span>Making</span>
+                      <span>Ready</span>
+                      <span>Done</span>
                     </div>
                   )}
                   <ul className="mt-4 space-y-3">

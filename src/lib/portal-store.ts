@@ -161,21 +161,32 @@ async function getShopId(): Promise<string> {
   return id;
 }
 
+/* Shopify caps a JSON metafield at 131072 bytes, so the list is split
+   across several metafields: "companies", "companies_1", "companies_2"... */
+const MAX_SHARDS = 24;
+const SHARD_BYTES = 110000;
+const shardKey = (i: number) => (i === 0 ? KEY : `${KEY}_${i}`);
+
 export async function getAllCompanies(): Promise<PortalCompany[]> {
   try {
     const d = await shopifyAdminFetch<{
-      shop: { metafield: { value: string } | null };
+      shop: { metafields: { nodes: { key: string; value: string }[] } };
     }>(
-      `query PortalMeta($ns: String!, $key: String!) {
-        shop { metafield(namespace: $ns, key: $key) { value } }
+      `query PortalMeta($ns: String!) {
+        shop { metafields(namespace: $ns, first: 50) { nodes { key value } } }
       }`,
-      { ns: NS, key: KEY },
+      { ns: NS },
       { revalidate: 0 },
     );
-    const raw = d.shop.metafield?.value;
-    if (!raw) return [];
-    const list = JSON.parse(raw) as PortalCompany[];
-    return Array.isArray(list) ? list : [];
+    const byKey = new Map(d.shop.metafields.nodes.map((n) => [n.key, n.value]));
+    const out: PortalCompany[] = [];
+    for (let i = 0; i < MAX_SHARDS; i++) {
+      const raw = byKey.get(shardKey(i));
+      if (!raw) continue;
+      const list = JSON.parse(raw) as PortalCompany[];
+      if (Array.isArray(list)) out.push(...list);
+    }
+    return out;
   } catch (err) {
     console.error("[portal] read failed:", err);
     return [];
@@ -184,6 +195,28 @@ export async function getAllCompanies(): Promise<PortalCompany[]> {
 
 export async function saveAllCompanies(list: PortalCompany[]): Promise<void> {
   const ownerId = await getShopId();
+  const shards: PortalCompany[][] = [[]];
+  let size = 2;
+  for (const c of list) {
+    const n = Buffer.byteLength(JSON.stringify(c)) + 1;
+    if (size + n > SHARD_BYTES && shards[shards.length - 1].length) {
+      shards.push([]);
+      size = 2;
+    }
+    shards[shards.length - 1].push(c);
+    size += n;
+  }
+  if (shards.length > MAX_SHARDS) throw new Error("Portal list is too big");
+  const metafields = [];
+  for (let i = 0; i < MAX_SHARDS; i++) {
+    metafields.push({
+      ownerId,
+      namespace: NS,
+      key: shardKey(i),
+      type: "json",
+      value: JSON.stringify(shards[i] ?? []),
+    });
+  }
   const d = await shopifyAdminFetch<{
     metafieldsSet: { userErrors: { message: string }[] };
   }>(
@@ -193,17 +226,7 @@ export async function saveAllCompanies(list: PortalCompany[]): Promise<void> {
         userErrors { field message }
       }
     }`,
-    {
-      metafields: [
-        {
-          ownerId,
-          namespace: NS,
-          key: KEY,
-          type: "json",
-          value: JSON.stringify(list),
-        },
-      ],
-    },
+    { metafields },
     { revalidate: 0 },
   );
   const errs = d.metafieldsSet.userErrors;

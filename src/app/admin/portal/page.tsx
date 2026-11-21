@@ -28,6 +28,9 @@ type CompanyForm = {
   welcome: string;
   active: boolean;
   hasPassword: boolean;
+  category: string;
+  adminNotes: string;
+  plan: "" | "partner";
   products: ProductForm[];
 };
 
@@ -54,6 +57,9 @@ type ApiCompany = {
   welcome: string;
   active: boolean;
   hasPassword?: boolean;
+  category?: string;
+  adminNotes?: string;
+  plan?: "" | "partner";
   products: ApiProduct[];
   info?: {
     contact: string;
@@ -144,6 +150,9 @@ function toForm(c: ApiCompany): CompanyForm {
     welcome: c.welcome,
     active: c.active,
     hasPassword: !!c.hasPassword,
+    category: c.category ?? "",
+    adminNotes: c.adminNotes ?? "",
+    plan: c.plan ?? "",
     products: c.products.map((p) => ({
       id: p.id,
       name: p.name,
@@ -182,6 +191,9 @@ function toPayload(c: CompanyForm) {
     logoUrl: c.logoUrl,
     welcome: c.welcome,
     active: c.active,
+    category: c.category,
+    adminNotes: c.adminNotes,
+    plan: c.plan,
     products: c.products.map((p) => ({
       id: p.id,
       name: p.name,
@@ -224,11 +236,15 @@ export default function AdminPortalPage() {
   const [omsg, setOmsg] = useState("");
   const [pq, setPq] = useState("");
   const [show, setShow] = useState<"all" | "on" | "off">("all");
+  const [cat, setCat] = useState("");
+  const [limit, setLimit] = useState(60);
+  const [importMsg, setImportMsg] = useState("");
 
   const shown = list
     .filter((c) => {
       if (show === "on" && !c.active) return false;
       if (show === "off" && c.active) return false;
+      if (cat === "__none" ? !!c.category : cat && c.category !== cat) return false;
       const t = q.trim().toLowerCase();
       if (!t) return true;
       return (
@@ -237,6 +253,33 @@ export default function AdminPortalPage() {
       );
     })
     .sort((a, b) => a.name.localeCompare(b.name));
+
+  const cats = Array.from(
+    list.reduce((m, c) => {
+      const k = c.category || "";
+      if (k) m.set(k, (m.get(k) ?? 0) + 1);
+      return m;
+    }, new Map<string, number>()),
+  ).sort((a, b) => a[0].localeCompare(b[0]));
+
+  async function importFile(file: File) {
+    setImportMsg("Importing…");
+    try {
+      const customers = JSON.parse(await file.text());
+      const r = await fetch("/api/admin/portal/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ customers }),
+      });
+      const d = (await r.json()) as { created?: number; merged?: number; error?: string };
+      setImportMsg(
+        r.ok ? `Done: ${d.created} added, ${d.merged} merged.` : (d.error ?? "Import failed."),
+      );
+      if (r.ok) await load(token);
+    } catch {
+      setImportMsg("That file didn't work.");
+    }
+  }
 
   const load = useCallback(
     async (t: string) => {
@@ -273,6 +316,9 @@ export default function AdminPortalPage() {
       welcome: "",
       active: true,
       hasPassword: false,
+      category: "",
+      adminNotes: "",
+      plan: "",
       products: [],
     });
     setPassword("");
@@ -465,7 +511,37 @@ export default function AdminPortalPage() {
               </button>
             ))}
           </div>
-          {shown.map((c) => (
+          <select
+            value={cat}
+            onChange={(e) => {
+              setCat(e.target.value);
+              setLimit(60);
+            }}
+            className={input}
+          >
+            <option value="">All trades ({list.length})</option>
+            {cats.map(([k, n]) => (
+              <option key={k} value={k}>
+                {k} ({n})
+              </option>
+            ))}
+            <option value="__none">Not sorted yet</option>
+          </select>
+          <label className="block cursor-pointer rounded-md border border-border-strong bg-white/5 px-3 py-2 text-center text-xs font-bold hover:bg-white/10">
+            📥 Import Team Hub customers
+            <input
+              type="file"
+              accept="application/json,.json"
+              className="sr-only"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void importFile(f);
+                e.target.value = "";
+              }}
+            />
+          </label>
+          {importMsg && <p className="text-xs font-semibold text-emerald-200">{importMsg}</p>}
+          {shown.slice(0, limit).map((c) => (
             <button
               key={c.id}
               type="button"
@@ -485,6 +561,8 @@ export default function AdminPortalPage() {
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-bold">{c.name}</span>
                 <span className="text-[11px] text-foreground-muted">
+                  {c.plan === "partner" ? "⭐ " : ""}
+                  {c.category ? `${c.category} · ` : ""}
                   {c.products.length} products{c.active ? "" : " · OFF"}
                   {(c.requests ?? []).some((r) => r.status === "new") && (
                     <span className="ml-1.5 rounded-full bg-amber-400 px-1.5 py-0.5 text-[10px] font-bold text-black">
@@ -495,6 +573,15 @@ export default function AdminPortalPage() {
               </span>
             </button>
           ))}
+          {shown.length > limit && (
+            <button
+              type="button"
+              onClick={() => setLimit((n) => n + 100)}
+              className="w-full rounded-md border border-border-soft py-2 text-xs font-semibold hover:bg-white/10"
+            >
+              Show more ({shown.length - limit} left)
+            </button>
+          )}
           {list.length === 0 && (
             <p className="text-xs text-foreground-muted">No companies yet. Add your first one.</p>
           )}
@@ -605,6 +692,39 @@ export default function AdminPortalPage() {
                     />
                   </label>
                 </div>
+                <label>
+                  <span className={label}>Trade</span>
+                  <input
+                    className={input}
+                    list="pls-trades"
+                    value={form.category}
+                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                    placeholder="HVAC, Plumbing & Electric"
+                  />
+                  <datalist id="pls-trades">
+                    {cats.map(([k]) => (
+                      <option key={k} value={k} />
+                    ))}
+                  </datalist>
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.plan === "partner"}
+                    onChange={(e) => setForm({ ...form, plan: e.target.checked ? "partner" : "" })}
+                    className="h-4 w-4 accent-[#d9f000]"
+                  />
+                  ⭐ Partner member ($100/yr)
+                </label>
+                <label className="sm:col-span-2">
+                  <span className={label}>Private notes (customers never see these)</span>
+                  <textarea
+                    className={input}
+                    rows={3}
+                    value={form.adminNotes}
+                    onChange={(e) => setForm({ ...form, adminNotes: e.target.value })}
+                  />
+                </label>
                 <label className="flex items-center gap-2 text-sm">
                   <input
                     type="checkbox"
@@ -612,7 +732,7 @@ export default function AdminPortalPage() {
                     onChange={(e) => setForm({ ...form, active: e.target.checked })}
                     className="h-4 w-4 accent-[#d9f000]"
                   />
-                  Portal is on
+                  Portal is on{!form.hasPassword && form.id ? " (set a password first)" : ""}
                 </label>
               </div>
 

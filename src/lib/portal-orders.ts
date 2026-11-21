@@ -26,7 +26,37 @@ export type PortalOrder = {
   fulfillment: "none" | "partial" | "done";
   statusUrl: string;
   items: OrderItem[];
+  /** From the Team Hub job: 1 Received, 2 Design, 3 Being made, 4 Ready, 5 Done. */
+  progress?: { step: number; label: string };
 };
+
+const HUB_PROGRESS =
+  "https://base44.app/api/apps/698a01d9c50002e4d14f9d23/functions/portalOrderProgress";
+
+/** Asks the Team Hub how far along each order's job is. Never throws. */
+async function addProgress(orders: PortalOrder[]): Promise<void> {
+  const nums = orders.map((o) => o.name.replace(/[^0-9]/g, "")).filter(Boolean);
+  if (nums.length === 0) return;
+  try {
+    const r = await fetch(HUB_PROGRESS, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(6000),
+      body: JSON.stringify({ orders: nums.slice(0, 50) }),
+      cache: "no-store",
+    });
+    if (!r.ok) return;
+    const d = (await r.json()) as {
+      progress?: Record<string, { step: number; label: string }>;
+    };
+    for (const o of orders) {
+      const p = d.progress?.[o.name.replace(/[^0-9]/g, "")];
+      if (p) o.progress = p;
+    }
+  } catch (err) {
+    console.error("[portal-orders] progress failed:", err);
+  }
+}
 
 const FIELDS = `
   id name createdAt cancelledAt displayFinancialStatus displayFulfillmentStatus
@@ -137,6 +167,7 @@ export async function getCompanyOrders(
     const orders = Array.from(all.values())
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .map(shape);
+    await addProgress(orders);
     return { orders };
   } catch (err) {
     console.error("[portal-orders] failed:", err);

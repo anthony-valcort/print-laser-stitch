@@ -55,6 +55,14 @@ export type PortalCompany = {
   requests?: PortalRequest[];
   /** Shopify order ids an admin linked to this company (past orders). */
   orderIds?: string[];
+  /** Trade, like "HVAC, Plumbing & Electric". Admin-set. */
+  category?: string;
+  /** The matching customer in the Team Hub (Base44). Never sent to browsers. */
+  customerId?: string;
+  /** Private notes for us. Never sent to customers. */
+  adminNotes?: string;
+  /** "partner" = yearly Partner member. */
+  plan?: "" | "partner";
   createdAt: string;
   updatedAt: string;
 };
@@ -113,12 +121,27 @@ export async function authedCompany(
 }
 
 /** What a browser is allowed to see. */
-export type PortalCompanyPublic = Omit<PortalCompany, "passwordHash">;
+export type PortalCompanyPublic = Omit<
+  PortalCompany,
+  "passwordHash" | "adminNotes" | "customerId"
+>;
 
 export function toPublic(c: PortalCompany): PortalCompanyPublic {
-  const { passwordHash: _omit, ...rest } = c;
-  void _omit;
+  const { passwordHash: _a, adminNotes: _b, customerId: _c, ...rest } = c;
+  void _a;
+  void _b;
+  void _c;
   return rest;
+}
+
+/** Same company name written differently ("Acme, LLC" vs "ACME") matches. */
+export function normName(n: string): string {
+  return n
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9 ]/g, "")
+    .replace(/\b(llc|inc|corp|corporation|co|company|ltd|the|of|and)\b/g, "")
+    .replace(/\s+/g, "");
 }
 
 /* ------------------------------------------------------------------ */

@@ -107,7 +107,11 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error("[admin/portal/import] save failed:", err);
     return NextResponse.json(
-      { error: "Couldn't save to Shopify. Nothing was changed." },
+      {
+        error: `Couldn't save to Shopify. Nothing was changed. (${
+          err instanceof Error ? err.message.slice(0, 200) : "unknown"
+        })`,
+      },
       { status: 502 },
     );
   }

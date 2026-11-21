@@ -28,7 +28,12 @@ export async function GET(req: NextRequest) {
   if (denied) return denied;
   const list = await getAllCompanies();
   return NextResponse.json({
-    companies: list.map((c) => ({ ...toPublic(c), hasPassword: !!c.passwordHash })),
+    companies: list.map((c) => ({
+      ...toPublic(c),
+      adminNotes: c.adminNotes ?? "",
+      customerId: c.customerId ?? "",
+      hasPassword: !!c.passwordHash,
+    })),
   });
 }
 
@@ -58,7 +63,7 @@ export async function POST(req: NextRequest) {
   const list = await getAllCompanies();
   const id = str(raw.id, 40);
   const existing = id ? list.find((c) => c.id === id) : undefined;
-  if (!existing && !password) {
+  if (!existing && !password && raw.allowNoPassword !== true) {
     return NextResponse.json(
       { error: "Set a password for the new company." },
       { status: 400 },
@@ -86,6 +91,10 @@ export async function POST(req: NextRequest) {
     info: existing?.info,
     requests: existing?.requests,
     orderIds: existing?.orderIds,
+    customerId: existing?.customerId,
+    category: str(raw.category, 60),
+    adminNotes: str(raw.adminNotes, 1500),
+    plan: raw.plan === "partner" ? "partner" : "",
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
@@ -103,7 +112,12 @@ export async function POST(req: NextRequest) {
     );
   }
   return NextResponse.json({
-    company: { ...toPublic(saved), hasPassword: true },
+    company: {
+      ...toPublic(saved),
+      adminNotes: saved.adminNotes ?? "",
+      customerId: saved.customerId ?? "",
+      hasPassword: !!saved.passwordHash,
+    },
   });
 }
 
